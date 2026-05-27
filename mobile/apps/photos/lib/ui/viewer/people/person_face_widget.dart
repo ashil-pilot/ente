@@ -2,6 +2,7 @@ import "dart:typed_data";
 
 import "package:flutter/foundation.dart" show kDebugMode;
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/db/files_db.dart";
 import "package:photos/db/ml/db.dart";
@@ -445,7 +446,10 @@ class _EmptyPersonThumbnail extends StatelessWidget {
                   );
                 },
               )
-            : Icon(Icons.person_outline, color: colorScheme.strokeMuted),
+            : HugeIcon(
+                icon: HugeIcons.strokeRoundedUser,
+                color: colorScheme.strokeMuted,
+              ),
       ),
     );
   }

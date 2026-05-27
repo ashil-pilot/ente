@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:intl/intl.dart';
 import "package:photos/l10n/l10n.dart";
 import "package:photos/theme/ente_theme.dart";
@@ -169,7 +170,7 @@ class _DatePickerFieldState extends State<DatePickerField> {
           borderRadius: BorderRadius.circular(8),
         ),
         suffixIcon: IconButton(
-          icon: const Icon(Icons.calendar_today),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03),
           onPressed: _showDatePicker,
           color: _hasError
               ? getEnteColorScheme(context).warning500

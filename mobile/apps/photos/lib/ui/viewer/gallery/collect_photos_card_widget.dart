@@ -1,5 +1,6 @@
 import "package:figma_squircle/figma_squircle.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/buttons/button_widget.dart";
@@ -92,7 +93,7 @@ class _CollectPhotosCardWidgetState extends State<CollectPhotosCardWidget> {
                           buttonType: ButtonType.primary,
                           buttonSize: ButtonSize.small,
                           labelText: AppLocalizations.of(context).collect,
-                          icon: Icons.add_photo_alternate_outlined,
+                          hugeIcon: HugeIcons.strokeRoundedImageAdd01,
                           shouldShowSuccessConfirmation: false,
                           shouldSurfaceExecutionStates: false,
                           onTap: () => onTapCollectEventPhotos(context),

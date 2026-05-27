@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/models/collection/collection.dart';
 import "package:photos/theme/ente_theme.dart";
@@ -81,7 +82,7 @@ class EmptyAlbumState extends StatelessWidget {
                       buttonType: ButtonType.primary,
                       buttonSize: ButtonSize.large,
                       labelText: AppLocalizations.of(context).addPhotos,
-                      icon: Icons.add_photo_alternate_outlined,
+                      hugeIcon: HugeIcons.strokeRoundedImageAdd01,
                       shouldSurfaceExecutionStates: false,
                       onTap: () async {
                         try {

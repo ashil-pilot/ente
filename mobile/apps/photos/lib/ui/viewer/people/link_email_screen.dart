@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:email_validator/email_validator.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
@@ -151,9 +152,9 @@ class _LinkEmailScreen extends State<LinkEmailScreen> {
                               pressedColor: getEnteColorScheme(
                                 context,
                               ).fillFaint,
-                              trailingIcon:
+                              trailingHugeIcon:
                                   (_selectedEmail == currentUser.email)
-                                  ? Icons.check
+                                  ? HugeIcons.strokeRoundedTick02
                                   : null,
                               onTap: () async {
                                 textFieldFocusNode.unfocus();
@@ -281,12 +282,12 @@ class _LinkEmailScreen extends State<LinkEmailScreen> {
         context: context,
         title: AppLocalizations.of(context).noEnteAccountExclamation,
         body: context.l10n.emailDoesNotHaveEnteAccount(email: email),
-        icon: Icons.info_outline,
+        hugeIcon: HugeIcons.strokeRoundedInformationCircle,
         isDismissible: true,
         buttons: [
           ButtonWidget(
             buttonType: ButtonType.neutral,
-            icon: Icons.adaptive.share,
+            hugeIcon: HugeIcons.strokeRoundedShare03,
             labelText: AppLocalizations.of(context).invite,
             isInAlert: true,
             onTap: () async {
@@ -335,13 +336,13 @@ class _LinkEmailScreen extends State<LinkEmailScreen> {
       await showDialogWidget(
         context: context,
         title: AppLocalizations.of(context).noEnteAccountExclamation,
-        icon: Icons.info_outline,
+        hugeIcon: HugeIcons.strokeRoundedInformationCircle,
         body: AppLocalizations.of(context).emailNoEnteAccount(email: email),
         isDismissible: true,
         buttons: [
           ButtonWidget(
             buttonType: ButtonType.neutral,
-            icon: Icons.adaptive.share,
+            hugeIcon: HugeIcons.strokeRoundedShare03,
             labelText: AppLocalizations.of(context).invite,
             isInAlert: true,
             onTap: () async {

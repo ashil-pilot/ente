@@ -5,6 +5,7 @@ import "package:ente_contacts/contacts.dart" as contacts;
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:figma_squircle/figma_squircle.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/constants.dart";
@@ -752,15 +753,15 @@ class _BirthDateField extends StatelessWidget {
                   onTap: onClear,
                   child: Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: Icon(
-                      Icons.close_rounded,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCancel01,
                       size: 18,
                       color: getEnteColorScheme(context).textMuted,
                     ),
                   ),
                 ),
-              Icon(
-                Icons.calendar_today_outlined,
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedCalendar03,
                 size: 18,
                 color: getEnteColorScheme(context).textMuted,
               ),
@@ -790,7 +791,11 @@ class _AvatarEditButton extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: const Center(
-          child: Icon(Icons.edit_outlined, color: Colors.white, size: 12),
+          child: HugeIcon(
+            icon: HugeIcons.strokeRoundedPencilEdit01,
+            color: Colors.white,
+            size: 12,
+          ),
         ),
       ),
     );
@@ -863,8 +868,8 @@ class _AutofillLeadingWidget extends StatelessWidget {
                 color: colorScheme.primary500,
                 border: Border.all(color: Colors.white, width: 1.5),
               ),
-              child: const Icon(
-                Icons.edit_outlined,
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedPencilEdit01,
                 size: 10,
                 color: Colors.white,
               ),
@@ -914,8 +919,8 @@ class _AutofillLeadingWidget extends StatelessWidget {
                 color: colorScheme.primary500,
                 border: Border.all(color: Colors.white, width: 1.5),
               ),
-              child: const Icon(
-                Icons.edit_outlined,
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedPencilEdit01,
                 size: 10,
                 color: Colors.white,
               ),

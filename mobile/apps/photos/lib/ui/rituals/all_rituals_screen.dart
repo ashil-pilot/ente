@@ -395,7 +395,7 @@ class _RitualActionsSheet extends StatelessWidget {
                   style: textTheme.body.copyWith(color: Colors.red),
                 ),
                 leading: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedDelete02,
+                  icon: HugeIcons.strokeRoundedDelete01,
                   color: Colors.red,
                   size: 22,
                 ),

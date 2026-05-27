@@ -2,6 +2,7 @@ import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
 import "package:flutter_map/flutter_map.dart";
 import "package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:latlong2/latlong.dart";
 import "package:maps_launcher/maps_launcher.dart";
 import "package:photos/ui/map/image_marker.dart";
@@ -160,7 +161,7 @@ class _MapViewState extends State<MapView> {
                 right: 10,
                 child: SafeArea(
                   child: MapButton(
-                    icon: Icons.navigation_outlined,
+                    hugeIcon: HugeIcons.strokeRoundedNavigation03,
                     onPressed: () {
                       MapsLauncher.launchCoordinates(
                         widget.controller.camera.center.latitude,
@@ -179,7 +180,7 @@ class _MapViewState extends State<MapView> {
                 child: Column(
                   children: [
                     MapButton(
-                      icon: Icons.add,
+                      hugeIcon: HugeIcons.strokeRoundedAdd01,
                       onPressed: () {
                         widget.controller.move(
                           widget.controller.camera.center,
@@ -189,7 +190,7 @@ class _MapViewState extends State<MapView> {
                       heroTag: 'zoom-in',
                     ),
                     MapButton(
-                      icon: Icons.remove,
+                      hugeIcon: HugeIcons.strokeRoundedMinusSign,
                       onPressed: () {
                         widget.controller.move(
                           widget.controller.camera.center,

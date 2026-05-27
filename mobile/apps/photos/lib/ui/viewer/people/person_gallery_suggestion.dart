@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:typed_data";
 
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/ml/db.dart";
@@ -518,8 +519,8 @@ class _PersonGallerySuggestionState extends State<PersonGallerySuggestion>
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.close,
+                                  HugeIcon(
+                                    icon: HugeIcons.strokeRoundedCancel01,
                                     color: colorScheme.textBase,
                                     size: 20,
                                   ),
@@ -557,8 +558,8 @@ class _PersonGallerySuggestionState extends State<PersonGallerySuggestion>
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
-                                    Icons.check,
+                                  const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedTick02,
                                     color: Colors.white,
                                     size: 20,
                                   ),
@@ -618,8 +619,8 @@ class _PersonGallerySuggestionState extends State<PersonGallerySuggestion>
                           closeButtonSize / 2,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.close,
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
                         size: 14,
                         color: Colors.black,
                       ),

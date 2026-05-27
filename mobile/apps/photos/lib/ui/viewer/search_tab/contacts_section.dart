@@ -4,6 +4,7 @@ import "package:dotted_border/dotted_border.dart";
 import "package:ente_components/theme/text_styles.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/events/event.dart";
 import "package:photos/generated/l10n.dart";
@@ -311,8 +312,8 @@ class ContactCTA extends StatelessWidget {
                   child: SizedBox(
                     height: 67.75,
                     width: 67.75,
-                    child: Icon(
-                      Icons.adaptive.share,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedShare03,
                       color: enteColorScheme.strokeFaint,
                     ),
                   ),

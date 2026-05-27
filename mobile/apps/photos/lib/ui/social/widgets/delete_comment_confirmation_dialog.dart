@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/common/gradient_button.dart";
@@ -70,7 +71,7 @@ class _DeleteCommentConfirmationSheet extends StatelessWidget {
                     right: 0,
                     child: IconButtonWidget(
                       iconButtonType: IconButtonType.rounded,
-                      icon: Icons.close_rounded,
+                      hugeIcon: HugeIcons.strokeRoundedCancel01,
                       onTap: () => Navigator.of(context).pop(),
                     ),
                   ),

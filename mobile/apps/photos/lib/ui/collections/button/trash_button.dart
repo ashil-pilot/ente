@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/core/event_bus.dart';
 import 'package:photos/db/trash_db.dart';
 import 'package:photos/events/trash_updated_event.dart';
@@ -61,7 +62,10 @@ class _TrashSectionButtonState extends State<TrashSectionButton> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.delete, color: Theme.of(context).iconTheme.color),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedDelete01,
+                    color: Theme.of(context).iconTheme.color,
+                  ),
                   const Padding(padding: EdgeInsets.all(6)),
                   FutureBuilder<int>(
                     future: TrashDB.instance.count(),

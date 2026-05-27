@@ -203,7 +203,10 @@ class ReferralWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, color: colorScheme.strokeMuted),
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlertCircle,
+                        color: colorScheme.strokeMuted,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         AppLocalizations.of(

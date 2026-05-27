@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import "package:photos/generated/l10n.dart";
 import "package:photos/service_locator.dart";
 import 'package:photos/services/update_service.dart';
@@ -93,8 +94,8 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.auto_awesome_outlined,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedSparkles,
               size: 48,
               color: enteColor.strokeMuted,
             ),

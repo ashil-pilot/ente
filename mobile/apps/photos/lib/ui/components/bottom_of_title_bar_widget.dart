@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/theme/ente_theme.dart';
 import 'package:photos/ui/components/title_bar_title_widget.dart';
 
@@ -43,8 +44,8 @@ class BottomOfTitleBarWidget extends StatelessWidget {
         ),
         if (showCloseButton)
           IconButton(
-            icon: Icon(
-              Icons.close,
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
               color: getEnteColorScheme(context).strokeFaint,
             ),
             onPressed: () {

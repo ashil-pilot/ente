@@ -1,6 +1,7 @@
 import "package:ente_components/theme/text_styles.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/models/search/search_types.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/buttons/icon_button_widget.dart";
@@ -43,7 +44,7 @@ class SectionHeader extends StatelessWidget {
                   children: [
                     if (showSearch)
                       IconButtonWidget(
-                        icon: Icons.search,
+                        hugeIcon: HugeIcons.strokeRoundedSearch01,
                         iconButtonType: IconButtonType.secondary,
                         iconColor: colorScheme.blurStrokePressed,
                         onTap: () {

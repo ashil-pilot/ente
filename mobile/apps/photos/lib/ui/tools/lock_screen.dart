@@ -5,6 +5,7 @@ import "dart:math";
 import 'package:flutter/material.dart';
 import "package:flutter/scheduler.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:hugeicons/hugeicons.dart";
 import 'package:logging/logging.dart';
 import "package:photos/core/configuration.dart";
 import "package:photos/generated/l10n.dart";
@@ -66,7 +67,7 @@ class _LockScreenState extends State<LockScreen>
         elevation: 0,
         leading: Configuration.instance.isLoggedIn()
             ? IconButton(
-                icon: const Icon(Icons.logout_outlined),
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedLogout03),
                 color: Theme.of(context).iconTheme.color,
                 onPressed: () {
                   _onLogoutTapped(context);
@@ -144,7 +145,7 @@ class _LockScreenState extends State<LockScreen>
                       ),
                       IconButtonWidget(
                         size: 30,
-                        icon: Icons.lock,
+                        hugeIcon: HugeIcons.strokeRoundedLockPassword,
                         iconButtonType: IconButtonType.primary,
                         iconColor: colorTheme.tabIcon,
                       ),

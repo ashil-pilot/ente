@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/pause_video_event.dart";
@@ -31,7 +32,7 @@ class _CreationTimeItemState extends State<CreationTimeItem> {
       },
       child: InfoItemWidget(
         key: const ValueKey("Creation time"),
-        leadingIcon: Icons.calendar_today_outlined,
+        leadingHugeIcon: HugeIcons.strokeRoundedCalendar03,
         title: DateFormat.yMMMEd(
           Localizations.localeOf(context).languageCode,
         ).format(dateTime),

@@ -1,10 +1,9 @@
 import "dart:async";
-import "dart:io";
 
 import "package:collection/collection.dart";
 import "package:ente_icons/ente_icons.dart";
-import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/files_db.dart";
@@ -183,10 +182,8 @@ class FileBottomBarState extends State<FileBottomBar> {
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
               child: IconButton(
-                icon: Icon(
-                  Platform.isAndroid
-                      ? Icons.delete_outline
-                      : CupertinoIcons.delete,
+                icon: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedDelete01,
                   color: Colors.white,
                 ),
                 onPressed: () async {
@@ -215,10 +212,8 @@ class FileBottomBarState extends State<FileBottomBar> {
             padding: const EdgeInsets.only(top: 12),
             child: IconButton(
               key: shareButtonKey,
-              icon: Icon(
-                Platform.isAndroid
-                    ? Icons.share_outlined
-                    : CupertinoIcons.share,
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedShare03,
                 color: Colors.white,
               ),
               onPressed: () {
@@ -342,8 +337,8 @@ class FileBottomBarState extends State<FileBottomBar> {
         child: Padding(
           padding: const EdgeInsets.only(top: 12),
           child: IconButton(
-            icon: const Icon(
-              Icons.delete_forever_outlined,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedDelete01,
               color: Colors.white,
             ),
             onPressed: () async {
@@ -365,7 +360,10 @@ class FileBottomBarState extends State<FileBottomBar> {
       child: Padding(
         padding: const EdgeInsets.only(top: 12),
         child: IconButton(
-          icon: const Icon(Icons.flag_outlined, color: Colors.white),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedFlag01,
+            color: Colors.white,
+          ),
           onPressed: () => _onSuggestDelete(collection),
         ),
       ),

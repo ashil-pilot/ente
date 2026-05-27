@@ -1,5 +1,6 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
 import 'package:photos/models/collection/collection.dart';
@@ -168,9 +169,9 @@ class _AddParticipantPage extends State<AddParticipantPage> {
                               pressedColor: getEnteColorScheme(
                                 context,
                               ).fillFaint,
-                              trailingIcon:
+                              trailingHugeIcon:
                                   (_selectedEmails.contains(currentUser.email))
-                                  ? Icons.check
+                                  ? HugeIcons.strokeRoundedTick02
                                   : null,
                               onTap: () async {
                                 textFieldFocusNode.unfocus();
@@ -418,16 +419,16 @@ class _AddParticipantPage extends State<AddParticipantPage> {
                 borderSide: BorderSide.none,
                 borderRadius: BorderRadius.circular(4),
               ),
-              prefixIcon: Icon(
-                Icons.email_outlined,
+              prefixIcon: HugeIcon(
+                icon: HugeIcons.strokeRoundedMail01,
                 color: getEnteColorScheme(context).strokeMuted,
               ),
               suffixIcon: _newEmail == ''
                   ? null
                   : IconButton(
                       onPressed: clearFocus,
-                      icon: Icon(
-                        Icons.cancel,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
                         color: getEnteColorScheme(context).strokeMuted,
                       ),
                     ),

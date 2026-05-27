@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/theme/colors.dart';
 import 'package:photos/theme/ente_theme.dart';
@@ -18,8 +19,8 @@ class EmptyHiddenWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.visibility_off,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedViewOffSlash,
               color: enteColorScheme.strokeMuted,
               size: 24,
             ),
@@ -60,8 +61,8 @@ class EmptyHiddenWidget extends StatelessWidget {
                               AppLocalizations.of(context).click,
                             ),
                             const SizedBox(width: 4),
-                            Icon(
-                              Icons.visibility_off,
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedViewOffSlash,
                               color: enteColorScheme.strokeBase,
                               size: 16,
                             ),

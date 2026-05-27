@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/files_db.dart";
@@ -35,7 +36,7 @@ class AlbumsItemWidget extends StatelessWidget {
     }
     return InfoItemWidget(
       key: const ValueKey("Albums"),
-      leadingIcon: Icons.folder_outlined,
+      leadingHugeIcon: HugeIcons.strokeRoundedFolder01,
       title: AppLocalizations.of(context).albums,
       subtitleSection: fileIsBackedup
           ? _collectionsListOfFile(
@@ -104,7 +105,7 @@ class AlbumsItemWidget extends StatelessWidget {
       chipButtons.add(
         ChipButtonWidget(
           null,
-          leadingIcon: Icons.add,
+          leadingHugeIcon: HugeIcons.strokeRoundedAdd01,
           iconSize: 15,
           onTap: () {
             final selectedFiles = SelectedFiles();

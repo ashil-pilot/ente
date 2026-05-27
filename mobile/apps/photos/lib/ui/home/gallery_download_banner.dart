@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/gallery_downloads_events.dart";
 import "package:photos/generated/l10n.dart";
@@ -98,8 +99,8 @@ class _GalleryDownloadBannerState extends State<GalleryDownloadBanner>
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                Icon(
-                  Icons.cloud_download_outlined,
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedCloudDownload,
                   color: isErrorState
                       ? colorScheme.warning500
                       : colorScheme.primary500,
@@ -140,10 +141,13 @@ class _GalleryDownloadBannerState extends State<GalleryDownloadBanner>
                 else
                   IconButton(
                     onPressed: service.dismissBanner,
-                    icon: const Icon(Icons.close),
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCancel01,
+                      size: 18,
+                      color: colorScheme.strokeBase,
+                    ),
                     iconSize: 18,
                     visualDensity: VisualDensity.compact,
-                    color: colorScheme.strokeBase,
                   ),
               ],
             ),
@@ -360,10 +364,13 @@ class _DownloadTaskRow extends StatelessWidget {
             IconButton(
               onPressed: () =>
                   galleryDownloadQueueService.cancelTask(task.id).ignore(),
-              icon: const Icon(Icons.close),
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedCancel01,
+                size: 18,
+                color: colorScheme.strokeMuted,
+              ),
               iconSize: 18,
               visualDensity: VisualDensity.compact,
-              color: colorScheme.strokeMuted,
             ),
         ],
       ),
@@ -384,7 +391,11 @@ class _TaskStatus extends StatelessWidget {
       case DownloadStatus.completed:
         return Row(
           children: [
-            Icon(Icons.check_circle, size: 14, color: colorScheme.primary500),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+              size: 14,
+              color: colorScheme.primary500,
+            ),
             const SizedBox(width: 6),
             Text(
               "Saved",

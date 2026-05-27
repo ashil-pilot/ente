@@ -3,6 +3,7 @@ import "dart:async";
 import "package:ente_components/ente_components.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/backup/backup_item.dart";
@@ -133,8 +134,8 @@ class _BackupItemCardState extends State<BackupItemCard> {
                 height: 48,
                 width: 48,
                 child: IconButton(
-                  icon: Icon(
-                    Icons.error_outline,
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedAlertCircle,
                     color: getEnteColorScheme(context).fillBase,
                   ),
                   onPressed: () {
@@ -196,7 +197,10 @@ class _BackupItemCardState extends State<BackupItemCard> {
                   BackupItemStatus.uploaded => const SizedBox(
                     width: 24,
                     height: 24,
-                    child: Icon(Icons.check, color: Color(0xFF00B33C)),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedTick02,
+                      color: Color(0xFF00B33C),
+                    ),
                   ),
                   BackupItemStatus.inQueue => SizedBox(
                     width: 24,
@@ -209,7 +213,10 @@ class _BackupItemCardState extends State<BackupItemCard> {
                     ),
                   ),
                   BackupItemStatus.retry => IconButton(
-                    icon: const Icon(Icons.sync, color: Color(0xFFFDB816)),
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedReload,
+                      color: Color(0xFFFDB816),
+                    ),
                     onPressed: () async {
                       await FileUploader.instance.upload(
                         widget.item.file,

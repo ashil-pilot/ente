@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/video_preview_state_changed_event.dart";
 import "package:photos/generated/l10n.dart";
@@ -169,8 +170,8 @@ class _VideoStreamChangeWidgetState extends State<VideoStreamChangeWidget> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.play_arrow,
+                        const HugeIcon(
+                          icon: HugeIcons.strokeRoundedPlay,
                           size: 16,
                           color: Colors.white,
                         ),

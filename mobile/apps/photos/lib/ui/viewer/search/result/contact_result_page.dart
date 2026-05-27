@@ -4,6 +4,7 @@ import "package:email_validator/email_validator.dart";
 import "package:ente_contacts/contacts.dart" as contacts;
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/contacts_changed_event.dart";
 import "package:photos/events/files_updated_event.dart";
@@ -280,7 +281,7 @@ class _ContactResultPageState extends State<ContactResultPage> {
         child: EndToEndBanner(
           title: context.l10n.linkPerson,
           caption: context.l10n.linkPersonCaption,
-          leadingIcon: Icons.person,
+          leadingHugeIcon: HugeIcons.strokeRoundedUser,
           onTap: () async {
             final PersonEntity? updatedPerson = await routeToPage(
               context,
@@ -395,7 +396,10 @@ class _ContactHeaderOverflowButton extends StatelessWidget {
         iconSize: 18,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: colorScheme.fill,
-        icon: Icon(Icons.more_vert_rounded, color: colorScheme.textBase),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedMoreVertical,
+          color: colorScheme.textBase,
+        ),
         onSelected: (value) {
           switch (value) {
             case _ContactHeaderAction.edit:
@@ -521,8 +525,8 @@ class _AddContactMenuIcon extends StatelessWidget {
         color: colorScheme.greenLight,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(
-        Icons.person_add_alt_1_rounded,
+      child: HugeIcon(
+        icon: HugeIcons.strokeRoundedUserAdd01,
         size: 18,
         color: colorScheme.greenBase,
       ),

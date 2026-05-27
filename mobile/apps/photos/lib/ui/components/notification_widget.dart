@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import "package:flutter_animate/flutter_animate.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/ente_theme_data.dart";
 import 'package:photos/theme/colors.dart';
 import "package:photos/theme/ente_theme.dart";
@@ -185,8 +186,8 @@ class NotificationTipWidget extends StatelessWidget {
           Flexible(flex: 12, child: Text(name, style: textTheme.miniFaint)),
           Flexible(
             flex: 2,
-            child: Icon(
-              Icons.tips_and_updates_outlined,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedBulb,
               color: colorScheme.strokeFaint,
               size: 36,
             ),
@@ -213,7 +214,11 @@ class NotificationNoteWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info, color: colorScheme.strokeMuted, size: 36),
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedInformationCircle,
+            color: colorScheme.strokeMuted,
+            size: 36,
+          ),
           const SizedBox(width: 12),
           Flexible(
             child: Column(

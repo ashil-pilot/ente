@@ -63,8 +63,8 @@ class CodeSuccessScreen extends StatelessWidget {
                           color: greenColor,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
-                          Icons.check,
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedTick02,
                           color: Colors.white,
                           size: 40,
                         ),

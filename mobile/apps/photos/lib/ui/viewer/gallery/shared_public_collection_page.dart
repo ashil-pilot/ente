@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
@@ -162,7 +163,7 @@ class _SharedPublicCollectionPageState
           ? Padding(
               padding: const EdgeInsets.all(8.0),
               child: EndToEndBanner(
-                leadingIcon: Icons.people_outlined,
+                leadingHugeIcon: HugeIcons.strokeRoundedUserGroup,
                 title: context.l10n.joinAlbum,
                 caption: widget.c.collection.isCollectEnabledForPublicLink()
                     ? context.l10n.joinAlbumSubtext

@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/gateways/billing/models/billing_plan.dart';
 import 'package:photos/gateways/billing/models/subscription.dart';
 import 'package:photos/generated/l10n.dart';
@@ -110,15 +111,15 @@ class _FamilyPlanPageState extends State<FamilyPlanPage> {
       body: l10n.shareYourSubscription,
       benefits: [
         _BenefitItem(
-          icon: Icons.group_outlined,
+          hugeIcon: HugeIcons.strokeRoundedUserMultiple,
           text: l10n.shareStorageWith5Members,
         ),
         _BenefitItem(
-          icon: Icons.lock_outline,
+          hugeIcon: HugeIcons.strokeRoundedLockPassword,
           text: l10n.privateSpaceForEveryMember,
         ),
         _BenefitItem(
-          icon: Icons.forum_outlined,
+          hugeIcon: HugeIcons.strokeRoundedComment01,
           text: l10n.feedToEngageWithFamily,
         ),
       ],
@@ -145,15 +146,15 @@ class _FamilyPlanPageState extends State<FamilyPlanPage> {
       body: l10n.yourPlanSupportsFamily,
       benefits: [
         _BenefitItem(
-          icon: Icons.group_add_outlined,
+          hugeIcon: HugeIcons.strokeRoundedUserAdd01,
           text: l10n.addUpTo5MembersFree,
         ),
         _BenefitItem(
-          icon: Icons.lock_outline,
+          hugeIcon: HugeIcons.strokeRoundedLockPassword,
           text: l10n.privateSpaceForEveryMember,
         ),
         _BenefitItem(
-          icon: Icons.forum_outlined,
+          hugeIcon: HugeIcons.strokeRoundedComment01,
           text: l10n.feedToEngageWithFamily,
         ),
       ],
@@ -342,8 +343,8 @@ class _FamilyPlanPageState extends State<FamilyPlanPage> {
             ButtonWidgetV2(
               buttonType: ButtonTypeV2.primary,
               labelText: l10n.addMember,
-              leadingWidget: const Icon(
-                Icons.person_add_outlined,
+              leadingWidget: const HugeIcon(
+                icon: HugeIcons.strokeRoundedUserAdd01,
                 color: Colors.white,
                 size: 20,
               ),
@@ -462,7 +463,7 @@ class _FamilyPlanPageState extends State<FamilyPlanPage> {
             children: member.isPending
                 ? [
                     _ActionTile(
-                      icon: Icons.send_outlined,
+                      hugeIcon: HugeIcons.strokeRoundedSent,
                       title: l10n.resendInvite,
                       onTap: () async {
                         Navigator.of(context).pop();
@@ -470,7 +471,7 @@ class _FamilyPlanPageState extends State<FamilyPlanPage> {
                       },
                     ),
                     _ActionTile(
-                      icon: Icons.link_off_outlined,
+                      hugeIcon: HugeIcons.strokeRoundedLink02,
                       title: l10n.revokeInvite,
                       isDestructive: true,
                       onTap: () async {
@@ -512,7 +513,7 @@ class _FamilyPlanPageState extends State<FamilyPlanPage> {
                       },
                     ),
                     _ActionTile(
-                      icon: Icons.person_remove_outlined,
+                      hugeIcon: HugeIcons.strokeRoundedUserRemove01,
                       title: l10n.removeFromFamily,
                       isDestructive: true,
                       onTap: () async {
@@ -723,9 +724,11 @@ class _AdvertBody extends StatelessWidget {
 }
 
 class _BenefitItem extends StatelessWidget {
-  const _BenefitItem({required this.icon, required this.text});
+  const _BenefitItem({required this.text, this.icon, this.hugeIcon})
+    : assert(icon != null || hugeIcon != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final String text;
 
   @override
@@ -736,7 +739,13 @@ class _BenefitItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: colorScheme.greenBase),
+          hugeIcon != null
+              ? HugeIcon(
+                  icon: hugeIcon!,
+                  size: 20,
+                  color: colorScheme.greenBase,
+                )
+              : Icon(icon, size: 20, color: colorScheme.greenBase),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -1236,15 +1245,17 @@ class _ActionGroup extends StatelessWidget {
 
 class _ActionTile extends StatelessWidget {
   const _ActionTile({
-    required this.icon,
     required this.title,
     required this.onTap,
+    this.icon,
+    this.hugeIcon,
     this.subtitle,
     this.isDestructive = false,
     this.trailingChevron = false,
-  });
+  }) : assert(icon != null || hugeIcon != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final String title;
   final String? subtitle;
   final VoidCallback onTap;
@@ -1268,7 +1279,9 @@ class _ActionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              Icon(icon, size: 20, color: foregroundColor),
+              hugeIcon != null
+                  ? HugeIcon(icon: hugeIcon!, size: 20, color: foregroundColor)
+                  : Icon(icon, size: 20, color: foregroundColor),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

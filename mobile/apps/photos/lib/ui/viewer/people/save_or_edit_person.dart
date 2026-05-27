@@ -4,6 +4,7 @@ import "dart:math" as math;
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
@@ -191,7 +192,10 @@ class _SaveOrEditPersonState extends State<SaveOrEditPerson> {
                                       ).backgroundElevated2,
                                     ),
                                     child: IconButton(
-                                      icon: const Icon(Icons.edit),
+                                      icon: const HugeIcon(
+                                        icon:
+                                            HugeIcons.strokeRoundedPencilEdit01,
+                                      ),
                                       iconSize:
                                           16, // specify the size of the icon
                                       padding: EdgeInsets.zero,
@@ -1004,7 +1008,11 @@ class _MergeSheetCloseButton extends StatelessWidget {
           color: colorScheme.fillFaint,
           shape: BoxShape.circle,
         ),
-        child: Icon(Icons.close, size: 20, color: colorScheme.textBase),
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedCancel01,
+          size: 20,
+          color: colorScheme.textBase,
+        ),
       ),
     );
   }
@@ -1180,8 +1188,8 @@ class _EmailSectionState extends State<_EmailSection> {
             onTap: () {
               _updateEmailField("");
             },
-            child: Icon(
-              Icons.close_outlined,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
               color: getEnteColorScheme(context).strokeMuted,
             ),
           ),

@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/models/typedefs.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/buttons/icon_button_widget.dart";
@@ -7,12 +8,14 @@ class EndToEndBanner extends StatelessWidget {
   final String? title;
   final String? caption;
   final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingHugeIcon;
   final FutureVoidCallback? onTap;
   final Widget? trailingWidget;
   const EndToEndBanner({
     this.title,
     this.caption,
     this.leadingIcon,
+    this.leadingHugeIcon,
     this.onTap,
     this.trailingWidget,
     super.key,
@@ -22,6 +25,7 @@ class EndToEndBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = getEnteColorScheme(context);
     final textTheme = getEnteTextTheme(context);
+    final hasLeadingIcon = leadingIcon != null || leadingHugeIcon != null;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -32,7 +36,7 @@ class EndToEndBanner extends StatelessWidget {
           children: [
             Row(
               children: [
-                leadingIcon != null
+                hasLeadingIcon
                     ? Container(
                         width: 48,
                         height: 48,
@@ -40,10 +44,12 @@ class EndToEndBanner extends StatelessWidget {
                           color: colorScheme.backdropBase,
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: Icon(leadingIcon!, size: 28),
+                        child: leadingHugeIcon != null
+                            ? HugeIcon(icon: leadingHugeIcon!, size: 28)
+                            : Icon(leadingIcon!, size: 28),
                       )
                     : const SizedBox.shrink(),
-                leadingIcon != null
+                hasLeadingIcon
                     ? const SizedBox(width: 12)
                     : const SizedBox.shrink(),
                 Column(

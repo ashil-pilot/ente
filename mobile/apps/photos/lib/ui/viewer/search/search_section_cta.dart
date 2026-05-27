@@ -1,5 +1,6 @@
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/models/search/search_types.dart";
 import "package:photos/theme/ente_theme.dart";
 
@@ -33,11 +34,17 @@ class SearchSectionCTAIcon extends StatelessWidget {
                 child: SizedBox(
                   width: 62.5,
                   height: 62.5,
-                  child: Icon(
-                    sectionType.getCTAIcon() ?? Icons.add,
-                    color: colorScheme.strokeFaint,
-                    size: 20,
-                  ),
+                  child: sectionType.getCTAHugeIcon() != null
+                      ? HugeIcon(
+                          icon: sectionType.getCTAHugeIcon()!,
+                          color: colorScheme.strokeFaint,
+                          size: 20,
+                        )
+                      : Icon(
+                          sectionType.getCTAIcon() ?? Icons.add,
+                          color: colorScheme.strokeFaint,
+                          size: 20,
+                        ),
                 ),
               ),
               const SizedBox(height: 8.5),
@@ -82,11 +89,17 @@ class SearchSectionEmptyCTAIcon extends StatelessWidget {
               child: SizedBox(
                 width: 62.5,
                 height: 62.5,
-                child: Icon(
-                  sectionType.getCTAIcon() ?? Icons.add,
-                  color: colorScheme.strokeFaint,
-                  size: 20,
-                ),
+                child: sectionType.getCTAHugeIcon() != null
+                    ? HugeIcon(
+                        icon: sectionType.getCTAHugeIcon()!,
+                        color: colorScheme.strokeFaint,
+                        size: 20,
+                      )
+                    : Icon(
+                        sectionType.getCTAIcon() ?? Icons.add,
+                        color: colorScheme.strokeFaint,
+                        size: 20,
+                      ),
               ),
             ),
             const SizedBox(height: 10),

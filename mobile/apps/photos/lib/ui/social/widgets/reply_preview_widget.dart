@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/extensions/user_extension.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
@@ -82,7 +83,11 @@ class ReplyPreviewWidget extends StatelessWidget {
             ),
             GestureDetector(
               onTap: onDismiss,
-              child: Icon(Icons.close, size: 18, color: colorScheme.textMuted),
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedCancel01,
+                size: 18,
+                color: colorScheme.textMuted,
+              ),
             ),
           ],
         ),

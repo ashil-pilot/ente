@@ -158,7 +158,9 @@ Future<void> _showRitualEditor(BuildContext context, {Ritual? ritual}) async {
                                       ),
                                       const Spacer(),
                                       IconButton(
-                                        icon: const Icon(Icons.close),
+                                        icon: const HugeIcon(
+                                          icon: HugeIcons.strokeRoundedCancel01,
+                                        ),
                                         onPressed: () =>
                                             Navigator.of(context).pop(),
                                       ),
@@ -387,8 +389,9 @@ Future<void> _showRitualEditor(BuildContext context, {Ritual? ritual}) async {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.notifications_off_outlined,
+                                          HugeIcon(
+                                            icon: HugeIcons
+                                                .strokeRoundedNotificationOff01,
                                             color: colorScheme.textMuted,
                                           ),
                                           const SizedBox(width: 10),
@@ -502,8 +505,9 @@ Future<void> _showRitualEditor(BuildContext context, {Ritual? ritual}) async {
                                                   borderRadius:
                                                       BorderRadius.circular(8),
                                                 ),
-                                                child: Icon(
-                                                  Icons.schedule,
+                                                child: HugeIcon(
+                                                  icon: HugeIcons
+                                                      .strokeRoundedClock01,
                                                   color: colorScheme.textMuted,
                                                 ),
                                               ),
@@ -772,7 +776,9 @@ class _AlbumPickerSheetState extends State<_AlbumPickerSheet> {
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCancel01,
+                        ),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
@@ -785,7 +791,9 @@ class _AlbumPickerSheetState extends State<_AlbumPickerSheet> {
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
                       hintText: l10n.searchByAlbumNameHint,
-                      prefixIcon: const Icon(Icons.search_rounded),
+                      prefixIcon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedSearch01,
+                      ),
                       filled: true,
                       fillColor: colorScheme.fillFaint,
                       border: OutlineInputBorder(
@@ -919,7 +927,10 @@ class _AlbumThumbnail extends StatelessWidget {
           color: colorScheme.fillFaintPressed,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(Icons.photo_album_outlined, color: colorScheme.textMuted),
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedAlbum01,
+          color: colorScheme.textMuted,
+        ),
       );
     }
     return ClipRRect(
@@ -944,8 +955,8 @@ class _AlbumThumbnail extends StatelessWidget {
                 color: colorScheme.fillFaintPressed,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                Icons.photo_album_outlined,
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedAlbum01,
                 color: colorScheme.textMuted,
               ),
             );
@@ -1161,7 +1172,7 @@ class _EmojiPickerSheetState extends State<_EmojiPickerSheet> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],

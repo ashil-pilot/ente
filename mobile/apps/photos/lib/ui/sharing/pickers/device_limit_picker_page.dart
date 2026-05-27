@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/core/constants.dart';
 import "package:photos/core/errors.dart";
 import "package:photos/generated/l10n.dart";
@@ -109,7 +110,9 @@ class _ItemsWidgetState extends State<ItemsWidget> {
             ? AppLocalizations.of(context).noDeviceLimit
             : "$deviceLimit",
       ),
-      trailingIcon: currentDeviceLimit == deviceLimit ? Icons.check : null,
+      trailingHugeIcon: currentDeviceLimit == deviceLimit
+          ? HugeIcons.strokeRoundedTick02
+          : null,
       alignCaptionedTextToLeft: true,
       isTopBorderRadiusRemoved: true,
       isBottomBorderRadiusRemoved: true,

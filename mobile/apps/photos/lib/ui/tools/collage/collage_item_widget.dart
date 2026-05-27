@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/models/file/file.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/viewer/file/zoomable_image.dart";
@@ -67,8 +68,8 @@ class CollageItemWidget extends StatelessWidget {
                     color: colorScheme.backgroundElevated,
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  child: Icon(
-                    Icons.swap_horiz,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedExchange01,
                     size: 16,
                     color: colorScheme.primary500,
                   ),

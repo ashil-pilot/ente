@@ -6,6 +6,7 @@ import "dart:math" as math;
 import "package:chewie/chewie.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:media_extension/media_extension.dart";
 import "package:media_extension/media_extension_action_types.dart";
@@ -409,7 +410,7 @@ class FileViewerState extends State<FileViewer> {
     final uri = Uri.tryParse(data);
     if (uri?.scheme != "content") {
       _logger.severe("unsupported image uri $data");
-      return const Icon(Icons.error);
+      return const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle);
     }
     final future = grantedImageBytesFuture ??= _readGrantedImageBytes(data);
     return FutureBuilder<Uint8List?>(
@@ -422,7 +423,7 @@ class FileViewerState extends State<FileViewer> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const CircularProgressIndicator();
         }
-        return const Icon(Icons.error);
+        return const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle);
       },
     );
   }
@@ -436,7 +437,7 @@ class FileViewerState extends State<FileViewer> {
     final data = action.data;
     if (data == null) {
       _logger.severe("image data is null");
-      return const Icon(Icons.error);
+      return const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle);
     }
 
     final uri = Uri.tryParse(data);
@@ -470,14 +471,14 @@ class FileViewerState extends State<FileViewer> {
 
     if (uri != null && uri.scheme.isNotEmpty) {
       _logger.severe("unsupported image uri $data");
-      return const Icon(Icons.error);
+      return const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle);
     }
 
     try {
       return _boundedPhotoView(MemoryImage(base64Decode(data)));
     } catch (e, s) {
       _logger.severe("failed to decode shared image payload", e, s);
-      return const Icon(Icons.error);
+      return const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle);
     }
   }
 
@@ -512,7 +513,9 @@ class FileViewerState extends State<FileViewer> {
                   _logger.severe(
                     'unsupported file type ${action.type} or ${widget.sharedMediaFile?.type}',
                   );
-                  return const Icon(Icons.error);
+                  return const HugeIcon(
+                    icon: HugeIcons.strokeRoundedAlertCircle,
+                  );
                 }
               })(),
             ),

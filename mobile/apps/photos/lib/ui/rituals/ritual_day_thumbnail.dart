@@ -118,8 +118,8 @@ class _Tile extends StatelessWidget {
         child: IconButton(
           padding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
-          icon: const Icon(
-            Icons.photo_camera_outlined,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCamera01,
             size: 21,
             color: _greenBorder,
           ),

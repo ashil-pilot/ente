@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:intl/intl.dart';
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/file/file.dart";
@@ -300,8 +301,8 @@ class DateAndTimeWidget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Icon(
-                    Icons.calendar_today_outlined,
+                  leading: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCalendar03,
                     color: colorScheme.textBase,
                   ),
                   title: Text(
@@ -321,8 +322,8 @@ class DateAndTimeWidget extends StatelessWidget {
                   height: 0.5,
                 ),
                 ListTile(
-                  leading: Icon(
-                    Icons.access_time_outlined,
+                  leading: HugeIcon(
+                    icon: HugeIcons.strokeRoundedClock01,
                     color: colorScheme.textBase,
                   ),
                   title: Text(
@@ -362,8 +363,8 @@ class DateAndTimeWidget extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.calendar_today_outlined,
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCalendar03,
                         color: colorScheme.textBase,
                       ),
                     ),
@@ -435,8 +436,8 @@ class SelectDateOrShiftWidget extends StatelessWidget {
           children: [
             // Select one date option
             ListTile(
-              leading: Icon(
-                Icons.calendar_today_outlined,
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedCalendar03,
                 color: colorScheme.textBase,
               ),
               title: Text(
@@ -461,8 +462,8 @@ class SelectDateOrShiftWidget extends StatelessWidget {
             ),
             // Shift dates option
             ListTile(
-              leading: Icon(
-                Icons.calendar_month_outlined,
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedCalendar03,
                 color: colorScheme.textBase,
               ),
               title: Text(

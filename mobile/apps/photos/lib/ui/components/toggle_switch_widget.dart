@@ -3,6 +3,7 @@ import "dart:io";
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import "package:flutter/cupertino.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/ente_theme_data.dart';
 import 'package:photos/models/execution_states.dart';
 import 'package:photos/models/typedefs.dart';
@@ -100,8 +101,8 @@ class _ToggleSwitchWidgetState extends State<ToggleSwitchWidget> {
     } else if (executionState == ExecutionState.successful) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 1),
-        child: Icon(
-          Icons.check_outlined,
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedTick02,
           size: 22,
           color: enteColorScheme.primary500,
         ),

@@ -7,6 +7,7 @@ import "package:ente_components/theme/text_styles.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:figma_squircle/figma_squircle.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/events/event.dart";
 import "package:photos/generated/l10n.dart";
@@ -591,8 +592,8 @@ class LocationCTA extends StatelessWidget {
                           child: SizedBox(
                             width: 90,
                             height: 84,
-                            child: Icon(
-                              Icons.add_location_alt_outlined,
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedLocationAdd01,
                               color: enteColorScheme.strokeFaint,
                               size: 28,
                             ),

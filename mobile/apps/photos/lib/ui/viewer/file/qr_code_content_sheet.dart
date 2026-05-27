@@ -1,6 +1,7 @@
 import "package:ente_qr/ente_qr.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/base_bottom_sheet.dart";
@@ -78,8 +79,8 @@ class _QrContentEntry extends StatelessWidget {
                       showShortToast(context, l10n.copied);
                     }
                   },
-                  child: Icon(
-                    Icons.copy_rounded,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCopy01,
                     size: 20,
                     color: colorScheme.textMuted,
                   ),

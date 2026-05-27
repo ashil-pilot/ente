@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/gateways/storage_bonus/models/storage_bonus.dart";
 import "package:photos/generated/l10n.dart";
@@ -59,7 +60,7 @@ class _ApplyCodeScreenState extends State<ApplyCodeScreen> {
             ),
             actionIcons: [
               IconButtonWidget(
-                icon: Icons.close_outlined,
+                hugeIcon: HugeIcons.strokeRoundedCancel01,
                 iconButtonType: IconButtonType.secondary,
                 onTap: () {
                   // Go three screen back, similar to pop thrice

@@ -2,6 +2,7 @@ import "package:ente_components/ente_components.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/l10n/l10n.dart";
 import "package:photos/ui/settings/components/settings_page_scaffold.dart";
 
@@ -89,7 +90,10 @@ class _ItemsWidgetState extends State<ItemsWidget> {
       key: ValueKey(locale.toString()),
       title: getLocaleDisplayName(locale) + (kDebugMode ? ' ($locale)' : ''),
       trailing: isSelected
-          ? Icon(Icons.check, color: context.componentColors.primary)
+          ? HugeIcon(
+              icon: HugeIcons.strokeRoundedTick02,
+              color: context.componentColors.primary,
+            )
           : null,
       showOnlyLoadingState: true,
       onTap: () async => _selectLocale(locale),

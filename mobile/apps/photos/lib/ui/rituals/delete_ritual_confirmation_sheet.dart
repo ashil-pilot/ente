@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/ente_theme.dart";
 
 const _tightTextHeightBehavior = TextHeightBehavior(
@@ -71,8 +72,8 @@ class _DeleteRitualConfirmationSheet extends StatelessWidget {
                       minimumSize: const Size(40, 40),
                     ),
                     onPressed: () => Navigator.of(context).pop(false),
-                    icon: Icon(
-                      Icons.close_rounded,
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCancel01,
                       color: colorScheme.textBase,
                     ),
                     tooltip: MaterialLocalizations.of(
@@ -92,8 +93,8 @@ class _DeleteRitualConfirmationSheet extends StatelessWidget {
                         height: 170,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.high,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.delete_outline_rounded,
+                        errorBuilder: (context, error, stackTrace) => HugeIcon(
+                          icon: HugeIcons.strokeRoundedDelete01,
                           size: 96,
                           color: colorScheme.textFaint,
                         ),

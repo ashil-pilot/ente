@@ -5,6 +5,7 @@ import "package:crypto/crypto.dart";
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/generated/l10n.dart";
@@ -77,7 +78,7 @@ class _VerifyIdentifyDialogState extends State<VerifyIdentifyDialog> {
                       const SizedBox(height: 24),
                       ButtonWidget(
                         buttonType: ButtonType.neutral,
-                        icon: Icons.adaptive.share,
+                        hugeIcon: HugeIcons.strokeRoundedShare03,
                         labelText: AppLocalizations.of(context).sendInvite,
                         isInAlert: true,
                         onTap: () async {

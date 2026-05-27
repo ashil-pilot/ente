@@ -1,5 +1,6 @@
 import "package:ente_icons/ente_icons.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/theme/ente_theme.dart";
 
@@ -62,7 +63,7 @@ class CommentActionsPopup extends StatelessWidget {
             ),
             if (showDelete)
               _ActionItem(
-                icon: Icons.delete_outline_rounded,
+                hugeIcon: HugeIcons.strokeRoundedDelete01,
                 label: l10n.delete,
                 onTap: onDeleteTap!,
                 textStyle: textTheme.mini.copyWith(
@@ -79,7 +80,8 @@ class CommentActionsPopup extends StatelessWidget {
 }
 
 class _ActionItem extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final Color? iconColor;
   final String label;
   final VoidCallback onTap;
@@ -87,13 +89,14 @@ class _ActionItem extends StatelessWidget {
   final Color defaultIconColor;
 
   const _ActionItem({
-    required this.icon,
+    this.icon,
+    this.hugeIcon,
     this.iconColor,
     required this.label,
     required this.onTap,
     required this.textStyle,
     required this.defaultIconColor,
-  });
+  }) : assert(icon != null || hugeIcon != null);
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +107,13 @@ class _ActionItem extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: iconColor ?? defaultIconColor),
+            hugeIcon != null
+                ? HugeIcon(
+                    icon: hugeIcon!,
+                    size: 16,
+                    color: iconColor ?? defaultIconColor,
+                  )
+                : Icon(icon, size: 16, color: iconColor ?? defaultIconColor),
             const SizedBox(width: 8),
             Text(label, style: textStyle.copyWith(color: defaultIconColor)),
           ],

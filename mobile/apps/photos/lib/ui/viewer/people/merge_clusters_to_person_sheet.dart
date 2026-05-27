@@ -5,6 +5,7 @@ import "package:collection/collection.dart";
 import "package:dotted_border/dotted_border.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:ml_linalg/linalg.dart" as ml;
 import "package:photos/core/event_bus.dart";
@@ -276,7 +277,9 @@ class _MergeClustersToPersonPageState extends State<MergeClustersToPersonPage> {
             );
             slivers.add(
               const SliverFillRemaining(
-                child: Center(child: Icon(Icons.error_outline_rounded)),
+                child: Center(
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle),
+                ),
               ),
             );
             return CustomScrollView(slivers: slivers);
@@ -425,7 +428,7 @@ class _MergeClustersToPersonPageState extends State<MergeClustersToPersonPage> {
           unawaited(_persistSortPreferences());
         },
         child: IconButtonWidget(
-          icon: Icons.sort_rounded,
+          hugeIcon: HugeIcons.strokeRoundedSorting01,
           iconButtonType: IconButtonType.secondary,
           iconColor: colorScheme.textMuted,
         ),
@@ -442,7 +445,7 @@ class _MergeClustersToPersonPageState extends State<MergeClustersToPersonPage> {
   ) {
     String label;
     late final String detail;
-    IconData? directionIcon;
+    List<List<dynamic>>? directionIcon;
 
     if (key == _MergeSortKey.similar) {
       label = l10n.similar;
@@ -477,8 +480,12 @@ class _MergeClustersToPersonPageState extends State<MergeClustersToPersonPage> {
 
       final bool isAscending = _isSortAscending(peopleKey);
       directionIcon = peopleKey == PeopleSortKey.name
-          ? (isAscending ? Icons.arrow_downward : Icons.arrow_upward)
-          : (isAscending ? Icons.arrow_upward : Icons.arrow_downward);
+          ? (isAscending
+                ? HugeIcons.strokeRoundedArrowDown01
+                : HugeIcons.strokeRoundedArrowUp01)
+          : (isAscending
+                ? HugeIcons.strokeRoundedArrowUp01
+                : HugeIcons.strokeRoundedArrowDown01);
     }
 
     final bool isSelected = _selectedMergeSortKey == key;
@@ -519,7 +526,11 @@ class _MergeClustersToPersonPageState extends State<MergeClustersToPersonPage> {
               Text(detail, style: textTheme.miniMuted),
               if (directionIcon != null) ...[
                 const SizedBox(width: 4),
-                Icon(directionIcon, size: 16, color: colorScheme.textMuted),
+                HugeIcon(
+                  icon: directionIcon,
+                  size: 16,
+                  color: colorScheme.textMuted,
+                ),
               ],
             ],
           ],
@@ -682,8 +693,8 @@ class _AddNewPersonGridTile extends StatelessWidget {
               height: innerSize,
               width: innerSize,
               child: Center(
-                child: Icon(
-                  Icons.add_rounded,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedAdd01,
                   color: colorScheme.strokeMuted,
                   size: 24,
                 ),

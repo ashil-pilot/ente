@@ -5,6 +5,7 @@ import "package:flutter/foundation.dart" show kDebugMode;
 import 'package:flutter/material.dart';
 import "package:flutter_spinkit/flutter_spinkit.dart" show SpinKitFadingCircle;
 import "package:flutter_svg/svg.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import 'package:logging/logging.dart';
 import "package:photos/core/configuration.dart";
@@ -223,8 +224,8 @@ class _SimilarImagesPageState extends State<SimilarImagesPage>
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(
-            Icons.auto_awesome_outlined,
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedSparkles,
             size: 72,
             color: colorScheme.primary500,
           ),
@@ -327,8 +328,8 @@ class _SimilarImagesPageState extends State<SimilarImagesPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.check_circle_outline,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedCheckmarkCircle01,
               size: 72,
               color: colorScheme.primary500,
             ),
@@ -940,7 +941,11 @@ class _SimilarImagesPageState extends State<SimilarImagesPage>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.delete_outline, size: 12, color: colorScheme.warning500),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedDelete01,
+              size: 12,
+              color: colorScheme.warning500,
+            ),
             const SizedBox(width: 4),
             Text(
               AppLocalizations.of(context).deleteWithCount(count: files.length),
@@ -1228,7 +1233,11 @@ class _SimilarImagesPageState extends State<SimilarImagesPage>
       initialValue: _sortKey.index,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 6, 24, 6),
-        child: Icon(Icons.sort, color: colorScheme.strokeBase, size: 20),
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedSorting01,
+          color: colorScheme.strokeBase,
+          size: 20,
+        ),
       ),
       onSelected: (int index) {
         if (_isDisposed) return;

@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/ffmpeg/ffprobe_props.dart";
 import 'package:photos/models/file/file.dart';
@@ -78,7 +79,7 @@ class _PreviewPropertiesItemWidgetState
 
     child = InfoItemWidget(
       key: const ValueKey("Stream properties"),
-      leadingIcon: Icons.play_circle_outline,
+      leadingHugeIcon: HugeIcons.strokeRoundedPlayCircle,
       title: AppLocalizations.of(context).streamDetails,
       subtitleSection: Future.value(subSectionWidgets),
     );

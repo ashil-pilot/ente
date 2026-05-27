@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/tab_changed_event.dart";
 import "package:photos/generated/l10n.dart";
@@ -96,7 +97,7 @@ class SharedEmptyStateWidget extends StatelessWidget {
                     ButtonWidget(
                       buttonType: ButtonType.trailingIconSecondary,
                       labelText: AppLocalizations.of(context).inviteYourFriends,
-                      icon: Icons.ios_share_outlined,
+                      hugeIcon: HugeIcons.strokeRoundedShare03,
                       onTap: () async {
                         // ignore: unawaited_futures
                         shareText(
@@ -194,7 +195,7 @@ class IncomingAlbumEmptyState extends StatelessWidget {
           child: ButtonWidget(
             buttonType: ButtonType.trailingIconPrimary,
             labelText: AppLocalizations.of(context).inviteYourFriends,
-            icon: Icons.ios_share_outlined,
+            hugeIcon: HugeIcons.strokeRoundedShare03,
             onTap: () async {
               // ignore: unawaited_futures
               shareText(

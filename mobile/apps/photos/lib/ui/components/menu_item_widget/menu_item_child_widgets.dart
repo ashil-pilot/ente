@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/models/execution_states.dart';
 import 'package:photos/theme/ente_theme.dart';
 import 'package:photos/ui/common/loading_widget.dart';
@@ -6,6 +7,7 @@ import 'package:photos/ui/common/loading_widget.dart';
 class TrailingWidget extends StatefulWidget {
   final ValueNotifier executionStateNotifier;
   final IconData? trailingIcon;
+  final List<List<dynamic>>? trailingHugeIcon;
   final Color? trailingIconColor;
   final Widget? trailingWidget;
   final bool trailingIconIsMuted;
@@ -14,6 +16,7 @@ class TrailingWidget extends StatefulWidget {
   const TrailingWidget({
     required this.executionStateNotifier,
     this.trailingIcon,
+    this.trailingHugeIcon,
     this.trailingIconColor,
     this.trailingWidget,
     required this.trailingIconIsMuted,
@@ -103,8 +106,8 @@ class _TrailingWidgetState extends State<TrailingWidget> {
         );
       } else if (widget.executionStateNotifier.value ==
           ExecutionState.successful) {
-        trailingWidget = Icon(
-          Icons.check_outlined,
+        trailingWidget = HugeIcon(
+          icon: HugeIcons.strokeRoundedTick02,
           key: const ValueKey('success'),
           size: 22,
           color: colorScheme.primary500,
@@ -116,16 +119,24 @@ class _TrailingWidgetState extends State<TrailingWidget> {
   }
 
   void _setTrailingIcon() {
-    if (widget.trailingIcon != null) {
+    if (widget.trailingIcon != null || widget.trailingHugeIcon != null) {
       trailingWidget = Padding(
         key: const ValueKey('icon'),
         padding: EdgeInsets.only(right: widget.trailingExtraMargin),
-        child: Icon(
-          widget.trailingIcon,
-          color: widget.trailingIconIsMuted
-              ? getEnteColorScheme(context).strokeMuted
-              : widget.trailingIconColor,
-        ),
+        child: widget.trailingHugeIcon != null
+            ? HugeIcon(
+                icon: widget.trailingHugeIcon!,
+                size: 22,
+                color: widget.trailingIconIsMuted
+                    ? getEnteColorScheme(context).strokeMuted
+                    : widget.trailingIconColor,
+              )
+            : Icon(
+                widget.trailingIcon,
+                color: widget.trailingIconIsMuted
+                    ? getEnteColorScheme(context).strokeMuted
+                    : widget.trailingIconColor,
+              ),
       );
     } else {
       trailingWidget =
@@ -138,10 +149,12 @@ class _TrailingWidgetState extends State<TrailingWidget> {
 class ExpansionTrailingIcon extends StatelessWidget {
   final bool isExpanded;
   final IconData? trailingIcon;
+  final List<List<dynamic>>? trailingHugeIcon;
   final Color? trailingIconColor;
   const ExpansionTrailingIcon({
     required this.isExpanded,
     this.trailingIcon,
+    this.trailingHugeIcon,
     this.trailingIconColor,
     super.key,
   });
@@ -160,6 +173,12 @@ class ExpansionTrailingIcon extends StatelessWidget {
         switchInCurve: Curves.easeOut,
         child: isExpanded
             ? const SizedBox.shrink()
+            : trailingHugeIcon != null
+            ? HugeIcon(
+                icon: trailingHugeIcon!,
+                size: 22,
+                color: trailingIconColor,
+              )
             : Icon(trailingIcon, color: trailingIconColor),
       ),
     );
@@ -168,6 +187,7 @@ class ExpansionTrailingIcon extends StatelessWidget {
 
 class LeadingWidget extends StatelessWidget {
   final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingHugeIcon;
   final Color? leadingIconColor;
 
   final Widget? leadingIconWidget;
@@ -176,6 +196,7 @@ class LeadingWidget extends StatelessWidget {
   const LeadingWidget({
     required this.leadingIconSize,
     this.leadingIcon,
+    this.leadingHugeIcon,
     this.leadingIconColor,
     this.leadingIconWidget,
     super.key,
@@ -188,18 +209,25 @@ class LeadingWidget extends StatelessWidget {
       child: SizedBox(
         height: leadingIconSize,
         width: leadingIconSize,
-        child: leadingIcon == null
+        child: leadingIcon == null && leadingHugeIcon == null
             ? (leadingIconWidget != null
                   ? FittedBox(fit: BoxFit.contain, child: leadingIconWidget)
                   : const SizedBox.shrink())
             : FittedBox(
                 fit: BoxFit.contain,
-                child: Icon(
-                  leadingIcon,
-                  color:
-                      leadingIconColor ??
-                      getEnteColorScheme(context).strokeBase,
-                ),
+                child: leadingHugeIcon != null
+                    ? HugeIcon(
+                        icon: leadingHugeIcon!,
+                        color:
+                            leadingIconColor ??
+                            getEnteColorScheme(context).strokeBase,
+                      )
+                    : Icon(
+                        leadingIcon,
+                        color:
+                            leadingIconColor ??
+                            getEnteColorScheme(context).strokeBase,
+                      ),
               ),
       ),
     );

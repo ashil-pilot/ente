@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/collection_updated_event.dart";
@@ -175,9 +176,24 @@ extension SectionTypeExtensions on SectionType {
       case SectionType.ritual:
         return null;
       case SectionType.contacts:
-        return Icons.adaptive.share;
+        return null;
       case SectionType.album:
         return Icons.add;
+      case SectionType.fileTypesAndExtension:
+        return null;
+    }
+  }
+
+  List<List<dynamic>>? getCTAHugeIcon() {
+    switch (this) {
+      case SectionType.contacts:
+        return HugeIcons.strokeRoundedShare03;
+      case SectionType.face:
+      case SectionType.magic:
+      case SectionType.wrapped:
+      case SectionType.location:
+      case SectionType.ritual:
+      case SectionType.album:
       case SectionType.fileTypesAndExtension:
         return null;
     }

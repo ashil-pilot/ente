@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
 import 'package:photos/models/collection/collection.dart';
@@ -77,9 +78,9 @@ class _ManageIndividualParticipantState
               captionedTextWidget: CaptionedTextWidget(
                 title: AppLocalizations.of(context).admin,
               ),
-              leadingIcon: Icons.admin_panel_settings_outlined,
+              leadingHugeIcon: HugeIcons.strokeRoundedCrown03,
               menuItemColor: colorScheme.fillFaint,
-              trailingIcon: isAdmin ? Icons.check : null,
+              trailingHugeIcon: isAdmin ? HugeIcons.strokeRoundedTick02 : null,
               onTap: isAdmin
                   ? null
                   : () async {
@@ -106,9 +107,11 @@ class _ManageIndividualParticipantState
               captionedTextWidget: CaptionedTextWidget(
                 title: AppLocalizations.of(context).collaborator,
               ),
-              leadingIcon: Icons.edit_outlined,
+              leadingHugeIcon: HugeIcons.strokeRoundedUserGroup,
               menuItemColor: colorScheme.fillFaint,
-              trailingIcon: isCollaborator ? Icons.check : null,
+              trailingHugeIcon: isCollaborator
+                  ? HugeIcons.strokeRoundedTick02
+                  : null,
               onTap: isCollaborator
                   ? null
                   : () async {
@@ -137,10 +140,10 @@ class _ManageIndividualParticipantState
               captionedTextWidget: CaptionedTextWidget(
                 title: AppLocalizations.of(context).viewer,
               ),
-              leadingIcon: Icons.photo_outlined,
+              leadingHugeIcon: HugeIcons.strokeRoundedView,
               leadingIconColor: colorScheme.strokeBase,
               menuItemColor: colorScheme.fillFaint,
-              trailingIcon: isViewer ? Icons.check : null,
+              trailingHugeIcon: isViewer ? HugeIcons.strokeRoundedTick02 : null,
               showOnlyLoadingState: true,
               onTap: isViewer
                   ? null
@@ -200,7 +203,7 @@ class _ManageIndividualParticipantState
                 textColor: warning500,
                 makeTextBold: true,
               ),
-              leadingIcon: Icons.not_interested_outlined,
+              leadingHugeIcon: HugeIcons.strokeRoundedDelete01,
               leadingIconColor: warning500,
               menuItemColor: colorScheme.fillFaint,
               onTap: () async {

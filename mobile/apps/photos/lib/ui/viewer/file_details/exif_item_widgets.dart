@@ -1,5 +1,6 @@
 import "package:exif_reader/exif_reader.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/models/file/file.dart';
 import "package:photos/theme/colors.dart";
@@ -17,7 +18,7 @@ class BasicExifItemWidget extends StatelessWidget {
     final subtitleTextTheme = getEnteTextTheme(context).miniMuted;
     return InfoItemWidget(
       key: const ValueKey("Basic EXIF"),
-      leadingIcon: Icons.camera_outlined,
+      leadingHugeIcon: HugeIcons.strokeRoundedCamera01,
       title: exifData["takenOnDevice"] ?? "--",
       subtitleSection: Future.value([
         if (exifData["fNumber"] != null)

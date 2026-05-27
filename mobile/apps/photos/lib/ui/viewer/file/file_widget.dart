@@ -1,5 +1,6 @@
 import "package:ente_qr/ente_qr.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:logging/logging.dart';
 import 'package:photos/models/file/file.dart';
 import 'package:photos/models/file/file_type.dart';
@@ -71,7 +72,7 @@ class FileWidget extends StatelessWidget {
       );
     } else {
       Logger('FileWidget').severe('unsupported file type ${file.fileType}');
-      return const Icon(Icons.error);
+      return const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle);
     }
   }
 }

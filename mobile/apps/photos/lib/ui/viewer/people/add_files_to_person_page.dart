@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/people_sort_order_change_event.dart";
@@ -241,7 +242,9 @@ class _AddFilesToPersonPageState extends State<AddFilesToPersonPage> {
             );
             slivers.add(
               const SliverFillRemaining(
-                child: Center(child: Icon(Icons.error_outline_rounded)),
+                child: Center(
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle),
+                ),
               ),
             );
             return CustomScrollView(slivers: slivers);
@@ -368,7 +371,7 @@ class _AddFilesToPersonPageState extends State<AddFilesToPersonPage> {
           unawaited(_persistSortPreferences());
         },
         child: IconButtonWidget(
-          icon: Icons.sort_rounded,
+          hugeIcon: HugeIcons.strokeRoundedSorting01,
           iconButtonType: IconButtonType.secondary,
           iconColor: colorScheme.textMuted,
         ),
@@ -413,9 +416,13 @@ class _AddFilesToPersonPageState extends State<AddFilesToPersonPage> {
 
     final bool isSelected = _sortKey == key;
     final bool isAscending = _isSortAscending(key);
-    final IconData directionIcon = key == PeopleSortKey.name
-        ? (isAscending ? Icons.arrow_downward : Icons.arrow_upward)
-        : (isAscending ? Icons.arrow_upward : Icons.arrow_downward);
+    final List<List<dynamic>> directionIcon = key == PeopleSortKey.name
+        ? (isAscending
+              ? HugeIcons.strokeRoundedArrowDown01
+              : HugeIcons.strokeRoundedArrowUp01)
+        : (isAscending
+              ? HugeIcons.strokeRoundedArrowUp01
+              : HugeIcons.strokeRoundedArrowDown01);
 
     return PopupMenuItem<PeopleSortKey>(
       value: key,
@@ -452,7 +459,11 @@ class _AddFilesToPersonPageState extends State<AddFilesToPersonPage> {
               const SizedBox(width: 6),
               Text(detail, style: textTheme.miniMuted),
               const SizedBox(width: 4),
-              Icon(directionIcon, size: 16, color: colorScheme.textMuted),
+              HugeIcon(
+                icon: directionIcon,
+                size: 16,
+                color: colorScheme.textMuted,
+              ),
             ],
           ],
         ),

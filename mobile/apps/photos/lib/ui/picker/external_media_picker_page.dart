@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:media_extension/media_extension.dart";
 import "package:media_extension/media_extension_action_types.dart";
 import "package:photos/core/configuration.dart";
@@ -207,7 +208,7 @@ class _ExternalMediaPickerPageState extends State<ExternalMediaPickerPage> {
               appBar: AppBar(
                 elevation: 0,
                 leading: IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancel01),
                   onPressed: () => unawaited(MediaExtension().cancelResult()),
                 ),
                 title: AnimatedBuilder(

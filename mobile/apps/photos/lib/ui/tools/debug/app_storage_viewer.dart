@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import 'package:path_provider/path_provider.dart';
 import 'package:photos/core/cache/video_cache_manager.dart';
@@ -143,7 +144,7 @@ class _AppStorageViewerState extends State<AppStorageViewer> {
             ),
             actionIcons: [
               IconButtonWidget(
-                icon: Icons.close_outlined,
+                hugeIcon: HugeIcons.strokeRoundedCancel01,
                 iconButtonType: IconButtonType.secondary,
                 onTap: () {
                   Navigator.pop(context);
@@ -188,7 +189,7 @@ class _AppStorageViewerState extends State<AppStorageViewer> {
                         ),
                         const SizedBox(height: 24),
                         MenuItemWidget(
-                          leadingIcon: Icons.delete_sweep_outlined,
+                          leadingHugeIcon: HugeIcons.strokeRoundedDelete01,
                           captionedTextWidget: CaptionedTextWidget(
                             title: AppLocalizations.of(context).clearCaches,
                           ),

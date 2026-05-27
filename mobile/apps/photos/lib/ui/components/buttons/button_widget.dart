@@ -1,6 +1,7 @@
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:modal_bottom_sheet/modal_bottom_sheet.dart";
 import "package:photos/models/button_result.dart";
 import 'package:photos/models/execution_states.dart';
@@ -19,6 +20,7 @@ enum ButtonAction { first, second, third, fourth, cancel, error }
 
 class ButtonWidget extends StatelessWidget {
   final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final Widget? iconWidget;
   final String? labelText;
   final ButtonType buttonType;
@@ -62,6 +64,7 @@ class ButtonWidget extends StatelessWidget {
     required this.buttonType,
     this.buttonSize = ButtonSize.large,
     this.icon,
+    this.hugeIcon,
     this.iconWidget,
     this.labelText,
     this.onTap,
@@ -153,6 +156,7 @@ class ButtonWidget extends StatelessWidget {
       onTap: onTap,
       labelText: labelText,
       icon: icon,
+      hugeIcon: hugeIcon,
       iconWidget: iconWidget,
       buttonAction: buttonAction,
       shouldSurfaceExecutionStates: shouldSurfaceExecutionStates,
@@ -168,6 +172,7 @@ class ButtonChildWidget extends StatefulWidget {
   final ButtonType buttonType;
   final String? labelText;
   final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final Widget? iconWidget;
   final bool isDisabled;
   final ButtonSize buttonSize;
@@ -189,6 +194,7 @@ class ButtonChildWidget extends StatefulWidget {
     this.onTap,
     this.labelText,
     this.icon,
+    this.hugeIcon,
     this.iconWidget,
     this.buttonAction,
     super.key,
@@ -234,6 +240,10 @@ class _ButtonChildWidgetState extends State<ButtonChildWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final hasIcon =
+        widget.icon != null ||
+        widget.hugeIcon != null ||
+        widget.iconWidget != null;
     if (executionState == ExecutionState.successful) {
       Future.delayed(Duration(seconds: widget.isInAlert ? 1 : 2), () {
         if (mounted) {
@@ -279,7 +289,7 @@ class _ButtonChildWidgetState extends State<ButtonChildWidget> {
                                   ? const SizedBox.shrink()
                                   : Flexible(
                                       child: Padding(
-                                        padding: widget.icon == null
+                                        padding: !hasIcon
                                             ? const EdgeInsets.symmetric(
                                                 horizontal: 8,
                                               )
@@ -292,13 +302,7 @@ class _ButtonChildWidgetState extends State<ButtonChildWidget> {
                                         ),
                                       ),
                                     ),
-                              widget.icon == null
-                                  ? widget.iconWidget ?? const SizedBox.shrink()
-                                  : Icon(
-                                      widget.icon,
-                                      size: 20,
-                                      color: iconColor,
-                                    ),
+                              _icon(),
                             ],
                           )
                         : Builder(
@@ -317,17 +321,8 @@ class _ButtonChildWidgetState extends State<ButtonChildWidget> {
                                     : MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  widget.icon == null
-                                      ? widget.iconWidget ??
-                                            const SizedBox.shrink()
-                                      : Icon(
-                                          widget.icon,
-                                          size: 20,
-                                          color: iconColor,
-                                        ),
-                                  widget.icon == null &&
-                                              widget.iconWidget == null ||
-                                          widget.labelText == null
+                                  _icon(),
+                                  !hasIcon || widget.labelText == null
                                       ? const SizedBox.shrink()
                                       : const SizedBox(width: 8),
                                   widget.labelText == null
@@ -387,8 +382,8 @@ class _ButtonChildWidgetState extends State<ButtonChildWidget> {
                   : executionState == ExecutionState.successful
                   ? SizedBox(
                       width: widthOfButton,
-                      child: Icon(
-                        Icons.check_outlined,
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedTick02,
                         size: 20,
                         color: checkIconColor,
                       ),
@@ -430,6 +425,16 @@ class _ButtonChildWidgetState extends State<ButtonChildWidget> {
 
   bool get _shouldRegisterGestures =>
       !widget.isDisabled && executionState == ExecutionState.idle;
+
+  Widget _icon() {
+    if (widget.hugeIcon != null) {
+      return HugeIcon(icon: widget.hugeIcon!, size: 20, color: iconColor);
+    }
+    if (widget.icon != null) {
+      return Icon(widget.icon, size: 20, color: iconColor);
+    }
+    return widget.iconWidget ?? const SizedBox.shrink();
+  }
 
   void _onTap() async {
     if (widget.onTap != null) {

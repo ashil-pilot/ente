@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:photos/models/file/file.dart";
 import "package:photos/models/file_load_result.dart";
@@ -72,12 +73,12 @@ class _MemoriesDebugPageState extends State<MemoriesDebugPage> {
           IconButton(
             tooltip: "Change calculation date",
             onPressed: _pickCalculationDate,
-            icon: const Icon(Icons.calendar_today_outlined),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCalendar03),
           ),
           IconButton(
             tooltip: "Recompute",
             onPressed: _reload,
-            icon: const Icon(Icons.refresh),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedReload),
           ),
         ],
       ),
@@ -111,8 +112,8 @@ class _MemoriesDebugPageState extends State<MemoriesDebugPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.error_outline,
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedAlertCircle,
                       size: 28,
                       color: colorScheme.warning500,
                     ),
@@ -370,20 +371,20 @@ class _MemoriesDebugPageState extends State<MemoriesDebugPage> {
     }
   }
 
-  IconData _memoryTypeIcon(MemoryType type) {
+  List<List<dynamic>> _memoryTypeIcon(MemoryType type) {
     switch (type) {
       case MemoryType.onThisDay:
-        return Icons.today_outlined;
+        return HugeIcons.strokeRoundedCalendar03;
       case MemoryType.people:
-        return Icons.people_outline;
+        return HugeIcons.strokeRoundedUserMultiple;
       case MemoryType.trips:
-        return Icons.map_outlined;
+        return HugeIcons.strokeRoundedMaping;
       case MemoryType.clip:
-        return Icons.auto_awesome_outlined;
+        return HugeIcons.strokeRoundedSparkles;
       case MemoryType.time:
-        return Icons.schedule_outlined;
+        return HugeIcons.strokeRoundedClock01;
       case MemoryType.filler:
-        return Icons.history_outlined;
+        return HugeIcons.strokeRoundedReload;
     }
   }
 
@@ -469,7 +470,7 @@ class _SummaryCard extends StatelessWidget {
 class _MemoryDebugSectionHeader extends StatelessWidget {
   final String title;
   final int count;
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final bool isExpanded;
   final VoidCallback onTap;
 
@@ -509,7 +510,11 @@ class _MemoryDebugSectionHeader extends StatelessWidget {
                     color: colorScheme.fillFaint,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, size: 20, color: colorScheme.strokeBase),
+                  child: HugeIcon(
+                    icon: icon,
+                    size: 20,
+                    color: colorScheme.strokeBase,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -532,7 +537,7 @@ class _MemoryDebugSectionHeader extends StatelessWidget {
 class _MemoryDebugTile extends StatelessWidget {
   final SmartMemory memory;
   final VoidCallback onTap;
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final String subtitle;
 
   const _MemoryDebugTile({
@@ -576,8 +581,8 @@ class _MemoryDebugTile extends StatelessWidget {
                         ? ThumbnailWidget(firstFile, rawThumbnail: true)
                         : Container(
                             color: colorScheme.fillFaint,
-                            child: Icon(
-                              icon,
+                            child: HugeIcon(
+                              icon: icon,
                               size: 20,
                               color: colorScheme.strokeBase,
                             ),

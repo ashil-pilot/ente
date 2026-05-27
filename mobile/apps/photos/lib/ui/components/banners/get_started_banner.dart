@@ -1,6 +1,7 @@
 import "dart:math" as math;
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/service_locator.dart";
 import "package:photos/theme/ente_theme.dart";
@@ -343,7 +344,11 @@ class _GetStartedBannerState extends State<GetStartedBanner> {
                       behavior: HitTestBehavior.opaque,
                       child: const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Icon(Icons.close, color: Colors.white, size: 16),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedCancel01,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ),
                   ),

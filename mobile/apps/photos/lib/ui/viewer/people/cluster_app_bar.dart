@@ -2,6 +2,7 @@ import 'dart:async';
 
 import "package:flutter/foundation.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:logging/logging.dart';
 import 'package:photos/core/configuration.dart';
 import 'package:photos/core/event_bus.dart';
@@ -122,7 +123,7 @@ class _AppBarWidgetState extends State<ClusterAppBar> {
       EntePopupMenuItem(
         AppLocalizations.of(context).ignorePerson,
         value: ClusterPopupAction.ignore,
-        icon: Icons.person_off_outlined,
+        iconWidget: const HugeIcon(icon: HugeIcons.strokeRoundedUserRemove01),
       ),
       EntePopupMenuItem(
         AppLocalizations.of(context).mixedGrouping,

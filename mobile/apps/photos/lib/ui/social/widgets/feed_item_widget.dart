@@ -1,5 +1,6 @@
 import "package:ente_icons/ente_icons.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/db/files_db.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
@@ -343,14 +344,14 @@ class _FeedTypeIconWithTimeline extends StatelessWidget {
           ],
         );
       case FeedItemType.sharedPhoto:
-        return Icon(
-          Icons.add_rounded,
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedAdd01,
           size: 18,
           color: getEnteColorScheme(context).textMuted,
         );
       case FeedItemType.sharedCollection:
-        return Icon(
-          Icons.add_rounded,
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedAdd01,
           size: 18,
           color: getEnteColorScheme(context).textMuted,
         );

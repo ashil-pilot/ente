@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
@@ -195,7 +196,7 @@ class _UserCollectionsTabState extends State<UserCollectionsTab>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButtonWidget(
-                            icon: Icons.search,
+                            hugeIcon: HugeIcons.strokeRoundedSearch01,
                             iconButtonType: IconButtonType.secondary,
                             iconColor: colorScheme.blurStrokePressed,
                             onTap: () {
@@ -250,7 +251,7 @@ class _UserCollectionsTabState extends State<UserCollectionsTab>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButtonWidget(
-                            icon: Icons.search,
+                            hugeIcon: HugeIcons.strokeRoundedSearch01,
                             iconButtonType: IconButtonType.secondary,
                             iconColor: colorScheme.blurStrokePressed,
                             onTap: () {

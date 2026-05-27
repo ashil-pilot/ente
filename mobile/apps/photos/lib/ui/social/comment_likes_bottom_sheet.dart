@@ -1,5 +1,6 @@
 import "package:ente_icons/ente_icons.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
 import "package:photos/models/social/reaction.dart";
@@ -135,7 +136,7 @@ class _CommentLikesBottomSheetState extends State<CommentLikesBottomSheet> {
                   ),
                   IconButtonWidget(
                     iconButtonType: IconButtonType.rounded,
-                    icon: Icons.close_rounded,
+                    hugeIcon: HugeIcons.strokeRoundedCancel01,
                     onTap: () => Navigator.of(context).pop(),
                   ),
                 ],

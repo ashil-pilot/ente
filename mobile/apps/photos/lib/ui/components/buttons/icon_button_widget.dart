@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/theme/colors.dart';
 import 'package:photos/theme/ente_theme.dart';
 
@@ -6,7 +7,8 @@ enum IconButtonType { primary, secondary, rounded }
 
 class IconButtonWidget extends StatefulWidget {
   final IconButtonType iconButtonType;
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final bool disableGestureDetector;
   final VoidCallback? onTap;
   final Color? defaultColor;
@@ -15,7 +17,8 @@ class IconButtonWidget extends StatefulWidget {
   final double size;
   final bool roundedIcon;
   const IconButtonWidget({
-    required this.icon,
+    this.icon,
+    this.hugeIcon,
     required this.iconButtonType,
     this.disableGestureDetector = false,
     this.onTap,
@@ -25,7 +28,7 @@ class IconButtonWidget extends StatefulWidget {
     this.size = 24,
     this.roundedIcon = true,
     super.key,
-  });
+  }) : assert(icon != null || hugeIcon != null);
 
   @override
   State<IconButtonWidget> createState() => _IconButtonWidgetState();
@@ -35,7 +38,9 @@ class _IconButtonWidgetState extends State<IconButtonWidget> {
   Color? iconStateColor;
   @override
   void didUpdateWidget(IconButtonWidget oldWidget) {
-    if (oldWidget.icon != widget.icon && mounted) {
+    if ((oldWidget.icon != widget.icon ||
+            oldWidget.hugeIcon != widget.hugeIcon) &&
+        mounted) {
       setState(() {
         iconStateColor = null;
       });
@@ -65,6 +70,11 @@ class _IconButtonWidgetState extends State<IconButtonWidget> {
   }
 
   Widget _iconButton(EnteColorScheme colorTheme) {
+    final iconColor =
+        widget.iconColor ??
+        (widget.iconButtonType == IconButtonType.secondary
+            ? colorTheme.strokeMuted
+            : colorTheme.strokeBase);
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: widget.roundedIcon
@@ -75,26 +85,21 @@ class _IconButtonWidgetState extends State<IconButtonWidget> {
                 borderRadius: BorderRadius.circular(widget.size),
                 color: iconStateColor,
               ),
-              child: Icon(
-                widget.icon,
-                color:
-                    widget.iconColor ??
-                    (widget.iconButtonType == IconButtonType.secondary
-                        ? colorTheme.strokeMuted
-                        : colorTheme.strokeBase),
-                size: widget.size,
-              ),
+              child: _icon(iconColor),
             )
-          : Icon(
-              widget.icon,
-              color:
-                  widget.iconColor ??
-                  (widget.iconButtonType == IconButtonType.secondary
-                      ? colorTheme.strokeMuted
-                      : colorTheme.strokeBase),
-              size: widget.size,
-            ),
+          : _icon(iconColor),
     );
+  }
+
+  Widget _icon(Color iconColor) {
+    if (widget.hugeIcon != null) {
+      return HugeIcon(
+        icon: widget.hugeIcon!,
+        color: iconColor,
+        size: widget.size,
+      );
+    }
+    return Icon(widget.icon, color: iconColor, size: widget.size);
   }
 
   _onTapDown(details) {

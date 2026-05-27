@@ -1,5 +1,6 @@
 import "package:ente_components/ente_components.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/force_reload_home_gallery_event.dart";
@@ -100,8 +101,8 @@ class _GallerySettingsScreenState extends State<GallerySettingsScreen> {
                 key: ValueKey(gridSize),
                 title: "$gridSize",
                 trailing: _photoGridSize == gridSize
-                    ? Icon(
-                        Icons.check,
+                    ? HugeIcon(
+                        icon: HugeIcons.strokeRoundedTick02,
                         color: sheetContext.componentColors.primary,
                       )
                     : null,
@@ -142,8 +143,8 @@ class _GallerySettingsScreenState extends State<GallerySettingsScreen> {
                 key: ValueKey(groupType.name),
                 title: groupType.getLocalizedName(sheetContext),
                 trailing: currentGroupType == groupType
-                    ? Icon(
-                        Icons.check,
+                    ? HugeIcon(
+                        icon: HugeIcons.strokeRoundedTick02,
                         color: sheetContext.componentColors.primary,
                       )
                     : null,

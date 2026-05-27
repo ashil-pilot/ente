@@ -383,7 +383,7 @@ class _OverflowMenuButton extends StatelessWidget {
           child: Row(
             children: [
               const HugeIcon(
-                icon: HugeIcons.strokeRoundedDelete02,
+                icon: HugeIcons.strokeRoundedDelete01,
                 color: Colors.red,
                 size: 20,
               ),

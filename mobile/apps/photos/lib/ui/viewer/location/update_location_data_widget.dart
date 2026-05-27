@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:flutter_map/flutter_map.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:latlong2/latlong.dart";
 import "package:logging/logging.dart";
 import "package:photos/generated/l10n.dart";
@@ -124,7 +125,7 @@ class _UpdateLocationDataWidgetState extends State<UpdateLocationDataWidget> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               MapButton(
-                icon: Icons.add,
+                hugeIcon: HugeIcons.strokeRoundedAdd01,
                 onPressed: () {
                   _mapController.move(
                     _mapController.camera.center,
@@ -135,7 +136,7 @@ class _UpdateLocationDataWidgetState extends State<UpdateLocationDataWidget> {
               ),
               const SizedBox(height: 8),
               MapButton(
-                icon: Icons.remove,
+                hugeIcon: HugeIcons.strokeRoundedMinusSign,
                 onPressed: () {
                   _mapController.move(
                     _mapController.camera.center,
@@ -146,7 +147,7 @@ class _UpdateLocationDataWidgetState extends State<UpdateLocationDataWidget> {
               ),
               const SizedBox(height: 8),
               MapButton(
-                icon: Icons.check,
+                hugeIcon: HugeIcons.strokeRoundedTick02,
                 onPressed: () async {
                   if (selectedLocation.value == null) {
                     showShortToast(

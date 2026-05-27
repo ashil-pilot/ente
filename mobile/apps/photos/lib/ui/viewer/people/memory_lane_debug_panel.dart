@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/memory_lane_changed_event.dart";
 import "package:photos/models/memory_lane/memory_lane_models.dart";
@@ -153,7 +154,10 @@ class _MemoryLaneDebugPanelState extends State<MemoryLaneDebugPanel> {
           children: [
             Row(
               children: [
-                Icon(Icons.bug_report_outlined, color: colorScheme.primary500),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedBug02,
+                  color: colorScheme.primary500,
+                ),
                 const SizedBox(width: 8),
                 Text("Faces timeline debug", style: textTheme.bodyBold),
                 const Spacer(),
@@ -169,7 +173,7 @@ class _MemoryLaneDebugPanelState extends State<MemoryLaneDebugPanel> {
                             color: colorScheme.primary500,
                           ),
                         )
-                      : const Icon(Icons.refresh),
+                      : const HugeIcon(icon: HugeIcons.strokeRoundedReload),
                 ),
               ],
             ),

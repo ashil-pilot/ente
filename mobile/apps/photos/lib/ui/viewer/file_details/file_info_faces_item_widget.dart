@@ -3,6 +3,7 @@ import "dart:typed_data";
 
 import "package:dotted_border/dotted_border.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/ml/db.dart";
@@ -242,8 +243,8 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
           height: innerSize,
           width: innerSize,
           child: Center(
-            child: Icon(
-              Icons.person_add_alt_1_outlined,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedUserAdd01,
               color: colorScheme.strokeMuted,
               size: 24,
             ),
@@ -445,7 +446,7 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
             children: [
               if (hasSelection)
                 IconButtonWidget(
-                  icon: Icons.person_off_outlined,
+                  hugeIcon: HugeIcons.strokeRoundedUserRemove01,
                   iconButtonType: IconButtonType.secondary,
                   onTap: _onIgnoreSelectedFaces,
                 ),
@@ -481,7 +482,7 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       );
     }
     return IconButtonWidget(
-      icon: Icons.edit,
+      hugeIcon: HugeIcons.strokeRoundedPencilEdit01,
       iconButtonType: IconButtonType.secondary,
       onTap: _toggleEditMode,
     );
@@ -931,8 +932,8 @@ class _ManualPersonTag extends StatelessWidget {
                             width: 2,
                           ),
                         ),
-                        child: Icon(
-                          Icons.remove,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedMinusSign,
                           size: 12,
                           color: colorScheme.backgroundColour,
                         ),

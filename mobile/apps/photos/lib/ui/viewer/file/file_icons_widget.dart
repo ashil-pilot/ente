@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:ente_components/ente_components.dart';
 import 'package:ente_icons/ente_icons.dart';
 import "package:ente_pure_utils/ente_pure_utils.dart";
-import "package:flutter/cupertino.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
 import "package:photos/models/file/file.dart";
@@ -39,7 +39,8 @@ class DeviceIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _BottomLeftOverlayIcon(
-      Icons.mobile_friendly_rounded,
+      null,
+      hugeIcon: HugeIcons.strokeRoundedSmartPhone01,
       baseSize: 18,
       color: Color.fromRGBO(1, 222, 77, 0.8),
     );
@@ -52,7 +53,8 @@ class CloudOnlyIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _BottomLeftOverlayIcon(
-      Icons.cloud_done_outlined,
+      null,
+      hugeIcon: HugeIcons.strokeRoundedCloudSavingDone01,
       baseSize: 18,
       color: Color.fromRGBO(1, 222, 77, 0.8),
     );
@@ -74,7 +76,8 @@ class ArchiveOverlayIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _BottomLeftOverlayIcon(
-      Icons.archive_outlined,
+      null,
+      hugeIcon: HugeIcons.strokeRoundedArchive03,
       color: fixedStrokeMutedWhite,
     );
   }
@@ -86,7 +89,8 @@ class PinOverlayIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _BottomRightOverlayIcon(
-      CupertinoIcons.pin,
+      null,
+      hugeIcon: HugeIcons.strokeRoundedPin,
       color: fixedStrokeMutedWhite,
       rotationAngle: 45 * math.pi / 180,
     );
@@ -98,7 +102,11 @@ class LivePhotoOverlayIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _BottomRightOverlayIcon(Icons.album_outlined, baseSize: 18);
+    return const _BottomRightOverlayIcon(
+      null,
+      hugeIcon: HugeIcons.strokeRoundedAlbum01,
+      baseSize: 18,
+    );
   }
 }
 
@@ -107,8 +115,8 @@ class VideoOverlayIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
-      Icons.play_circle_outline,
+    return const HugeIcon(
+      icon: HugeIcons.strokeRoundedPlayCircle,
       size: 24,
       color: Colors.white70,
     );
@@ -139,8 +147,8 @@ class VideoOverlayDuration extends StatelessWidget {
         }
 
         if (iconFallback) {
-          onDarkBackground = Icon(
-            Icons.play_arrow,
+          onDarkBackground = HugeIcon(
+            icon: HugeIcons.strokeRoundedPlay,
             color: Colors.white,
             size: iconSize,
           );
@@ -268,7 +276,8 @@ class FileOverlayText extends StatelessWidget {
 /// This usually indicates ente specific state of a file, e.g. if it is
 /// favorited/archived.
 class _BottomLeftOverlayIcon extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
 
   /// Overriddable color. Default is a fixed white.
   final Color color;
@@ -280,9 +289,10 @@ class _BottomLeftOverlayIcon extends StatelessWidget {
 
   const _BottomLeftOverlayIcon(
     this.icon, {
+    this.hugeIcon,
     this.baseSize = 24,
     this.color = Colors.white, // fixed
-  });
+  }) : assert(icon != null || hugeIcon != null);
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +328,9 @@ class _BottomLeftOverlayIcon extends StatelessWidget {
             alignment: Alignment.bottomLeft,
             child: Padding(
               padding: EdgeInsets.only(left: inset, bottom: inset),
-              child: Icon(icon, size: size, color: color),
+              child: hugeIcon != null
+                  ? HugeIcon(icon: hugeIcon!, size: size, color: color)
+                  : Icon(icon, size: size, color: color),
             ),
           ),
         );
@@ -332,7 +344,8 @@ class _BottomLeftOverlayIcon extends StatelessWidget {
 /// This usually indicates information about the file itself, e.g. whether it is
 /// a live photo, or the duration of the video.
 class _BottomRightOverlayIcon extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
 
   /// Overriddable color. Default is a fixed white.
   final Color color;
@@ -347,10 +360,11 @@ class _BottomRightOverlayIcon extends StatelessWidget {
 
   const _BottomRightOverlayIcon(
     this.icon, {
+    this.hugeIcon,
     this.rotationAngle,
     this.baseSize = 24,
     this.color = Colors.white, // fixed
-  });
+  }) : assert(icon != null || hugeIcon != null);
 
   @override
   Widget build(BuildContext context) {
@@ -387,15 +401,21 @@ class _BottomRightOverlayIcon extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(bottom: inset, right: inset),
               child: rotationAngle == null
-                  ? Icon(icon, size: size, color: color)
+                  ? _icon(size)
                   : Transform.rotate(
                       angle: rotationAngle!, // rotate by 45 degrees
-                      child: Icon(icon, size: size, color: color),
+                      child: _icon(size),
                     ),
             ),
           ),
         );
       },
     );
+  }
+
+  Widget _icon(double size) {
+    return hugeIcon != null
+        ? HugeIcon(icon: hugeIcon!, size: size, color: color)
+        : Icon(icon, size: size, color: color);
   }
 }

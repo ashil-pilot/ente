@@ -68,7 +68,7 @@ class AccountSettingsPage extends StatelessWidget {
         const SizedBox(height: 8),
         SettingsItem(
           title: l10n.deleteAccount,
-          icon: HugeIcons.strokeRoundedDelete02,
+          icon: HugeIcons.strokeRoundedDelete01,
           isDestructive: true,
           onTap: () async => _onDeleteAccountTapped(context),
         ),

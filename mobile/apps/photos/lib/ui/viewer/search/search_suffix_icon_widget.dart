@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/clear_and_unfocus_search_bar_event.dart";
 import "package:photos/theme/ente_theme.dart";
@@ -55,7 +56,11 @@ class _SearchSuffixIconState extends State<SearchSuffixIcon> {
               onPressed: () {
                 Bus.instance.fire(ClearAndUnfocusSearchBar());
               },
-              icon: Icon(Icons.close, color: colorScheme.strokeMuted, size: 16),
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedCancel01,
+                color: colorScheme.strokeMuted,
+                size: 16,
+              ),
             )
           : const SizedBox(
               width: _suffixContainerSize,

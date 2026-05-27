@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/location/location.dart";
 import "package:photos/service_locator.dart";
@@ -63,7 +64,7 @@ class EditCenterPointTileWidget extends StatelessWidget {
               ).updateCenterPoint(centerPoint);
             }
           },
-          icon: Icons.edit,
+          hugeIcon: HugeIcons.strokeRoundedPencilEdit01,
           iconButtonType: IconButtonType.secondary,
         ),
       ],

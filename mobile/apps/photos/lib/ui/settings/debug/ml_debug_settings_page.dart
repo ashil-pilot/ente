@@ -270,8 +270,8 @@ class _MLDebugSettingsPageState extends State<MLDebugSettingsPage> {
         ),
         MenuItemWidgetNew(
           title: "Show all memories debug",
-          leadingIconWidget: Icon(
-            Icons.bug_report_outlined,
+          leadingIconWidget: HugeIcon(
+            icon: HugeIcons.strokeRoundedBug02,
             color: getEnteColorScheme(context).menuItemIconStroke,
             size: 20,
           ),
@@ -561,7 +561,7 @@ class _MLDebugSettingsPageState extends State<MLDebugSettingsPage> {
           title: "Clear memories cache",
           leadingIconWidget: _buildIconWidget(
             context,
-            HugeIcons.strokeRoundedDelete02,
+            HugeIcons.strokeRoundedDelete01,
           ),
           trailingIcon: Icons.chevron_right_outlined,
           trailingIconIsMuted: true,

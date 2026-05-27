@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/generated/l10n.dart';
 import 'package:photos/models/user_details.dart';
 import 'package:photos/services/account/user_service.dart';
@@ -195,7 +196,11 @@ class _InviteMembersPageState extends State<InviteMembersPage> {
                         color: colorScheme.greenBase,
                       ),
                     )
-                  : Icon(Icons.add, size: 24, color: colorScheme.content),
+                  : HugeIcon(
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      size: 24,
+                      color: colorScheme.content,
+                    ),
             ),
           ),
         ),
@@ -402,7 +407,7 @@ class _InviteMembersPageState extends State<InviteMembersPage> {
           ButtonWidgetV2(
             buttonType: ButtonTypeV2.neutral,
             labelText: l10n.sendInvite,
-            leadingWidget: const Icon(Icons.ios_share_outlined),
+            leadingWidget: const HugeIcon(icon: HugeIcons.strokeRoundedShare03),
             shouldSurfaceExecutionStates: false,
             onTap: () async {
               await shareText(l10n.shareTextRecommendUsingEnteForFamily);
@@ -571,7 +576,11 @@ class _EmailChip extends StatelessWidget {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onRemove,
-            child: Icon(Icons.close, size: 18, color: rowIconColor),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
+              size: 18,
+              color: rowIconColor,
+            ),
           ),
         ],
       ),

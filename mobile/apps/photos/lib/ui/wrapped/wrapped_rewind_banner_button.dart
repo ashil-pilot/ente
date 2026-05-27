@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/service_locator.dart";
 import "package:photos/services/wrapped/models.dart";
 import "package:photos/services/wrapped/wrapped_service.dart";
@@ -127,8 +128,8 @@ class _WrappedRewindBannerButtonState extends State<WrappedRewindBannerButton> {
                                 color: Color(0x99000000),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.play_arrow_rounded,
+                              child: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedPlay,
                                 color: Colors.white,
                                 size: 18,
                               ),

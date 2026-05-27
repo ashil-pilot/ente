@@ -13,6 +13,7 @@ class MenuItemWidget extends StatefulWidget {
   /// leading icon can be passed without specifing size of icon,
   /// this component sets size to 20x20 irrespective of passed icon's size
   final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingHugeIcon;
   final Color? leadingIconColor;
 
   final Widget? leadingIconWidget;
@@ -23,6 +24,7 @@ class MenuItemWidget extends StatefulWidget {
   /// trailing icon can be passed without size as default size set by
   /// flutter is what this component expects
   final IconData? trailingIcon;
+  final List<List<dynamic>>? trailingHugeIcon;
   final Color? trailingIconColor;
   final Widget? trailingWidget;
   final bool trailingIconIsMuted;
@@ -67,10 +69,12 @@ class MenuItemWidget extends StatefulWidget {
     required this.captionedTextWidget,
     this.isExpandable = false,
     this.leadingIcon,
+    this.leadingHugeIcon,
     this.leadingIconColor,
     this.leadingIconSize = 20.0,
     this.leadingIconWidget,
     this.trailingIcon,
+    this.trailingHugeIcon,
     this.trailingIconColor,
     this.trailingWidget,
     this.trailingIconIsMuted = false,
@@ -192,10 +196,13 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (!widget.alignCaptionedTextToLeft || widget.leadingIcon != null)
+          if (!widget.alignCaptionedTextToLeft ||
+              widget.leadingIcon != null ||
+              widget.leadingHugeIcon != null)
             LeadingWidget(
               leadingIconSize: widget.leadingIconSize,
               leadingIcon: widget.leadingIcon,
+              leadingHugeIcon: widget.leadingHugeIcon,
               leadingIconColor: widget.leadingIconColor,
               leadingIconWidget: widget.leadingIconWidget,
             ),
@@ -204,18 +211,22 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
             ExpansionTrailingIcon(
               isExpanded: isExpanded!,
               trailingIcon: widget.trailingIcon,
+              trailingHugeIcon: widget.trailingHugeIcon,
               trailingIconColor: widget.trailingIconColor,
             )
           else
             TrailingWidget(
               executionStateNotifier: executionStateNotifier,
               trailingIcon: widget.trailingIcon,
+              trailingHugeIcon: widget.trailingHugeIcon,
               trailingIconColor: widget.trailingIconColor,
               trailingWidget: widget.trailingWidget,
               trailingIconIsMuted: widget.trailingIconIsMuted,
               trailingExtraMargin: widget.trailingExtraMargin,
               showExecutionStates: widget.surfaceExecutionStates,
-              key: ValueKey(widget.trailingIcon.hashCode),
+              key: ValueKey(
+                Object.hash(widget.trailingIcon, widget.trailingHugeIcon),
+              ),
             ),
         ],
       ),

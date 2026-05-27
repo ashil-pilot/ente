@@ -3,6 +3,7 @@ import "dart:typed_data";
 
 import "package:flutter/foundation.dart" show kDebugMode;
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/db/ml/db.dart";
 import "package:photos/db/offline_files_db.dart";
@@ -137,8 +138,8 @@ class _FileInfoFaceWidgetState extends State<FileInfoFaceWidget> {
                       width: 2,
                     ),
                   ),
-                  child: Icon(
-                    Icons.check,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedTick02,
                     size: 12,
                     color: getEnteColorScheme(context).backgroundColour,
                   ),

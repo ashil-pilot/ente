@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import 'package:photos/models/file/file.dart';
 import "package:photos/theme/ente_theme.dart";
@@ -16,7 +17,7 @@ class BackedUpTimeItemWidget extends StatelessWidget {
     );
     return InfoItemWidget(
       key: const ValueKey("Backedup date"),
-      leadingIcon: Icons.backup_outlined,
+      leadingHugeIcon: HugeIcons.strokeRoundedCloudUpload,
       title: DateFormat.yMMMEd(
         Localizations.localeOf(context).languageCode,
       ).format(dateTimeForUpdationTime),

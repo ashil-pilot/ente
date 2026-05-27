@@ -1,10 +1,12 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/ente_theme.dart";
 
 ///https://www.figma.com/file/SYtMyLBs5SAOkTbfMMzhqt/ente-Visual-Design?node-id=8119%3A59513&t=gQa1to5jY89Qk1k7-4
 class ChipButtonWidget extends StatelessWidget {
   final String? label;
   final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingHugeIcon;
   final double iconSize;
   final VoidCallback? onTap;
   final bool noChips;
@@ -12,6 +14,7 @@ class ChipButtonWidget extends StatelessWidget {
   const ChipButtonWidget(
     this.label, {
     this.leadingIcon,
+    this.leadingHugeIcon,
     this.onTap,
     this.iconSize = 16,
     this.noChips = false,
@@ -34,10 +37,13 @@ class ChipButtonWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              leadingIcon != null
+              leadingHugeIcon != null
+                  ? HugeIcon(icon: leadingHugeIcon!, size: iconSize)
+                  : leadingIcon != null
                   ? Icon(leadingIcon, size: iconSize)
                   : const SizedBox.shrink(),
-              if (label != null && leadingIcon != null)
+              if (label != null &&
+                  (leadingIcon != null || leadingHugeIcon != null))
                 const SizedBox(width: 4),
               if (label != null)
                 Padding(

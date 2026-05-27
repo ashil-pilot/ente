@@ -1,5 +1,6 @@
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/services/local_authentication_service.dart';
 import 'package:photos/ui/viewer/gallery/hidden_page.dart';
@@ -31,8 +32,8 @@ class HiddenCollectionsButtonWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.visibility_off,
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedViewOffSlash,
                     color: Theme.of(context).iconTheme.color,
                   ),
                   const Padding(padding: EdgeInsets.all(6)),
@@ -46,8 +47,8 @@ class HiddenCollectionsButtonWidget extends StatelessWidget {
                         ),
                         const TextSpan(text: "  \u2022  "),
                         WidgetSpan(
-                          child: Icon(
-                            Icons.lock_outline,
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedLockPassword,
                             size: 16,
                             color: Theme.of(context).iconTheme.color,
                           ),

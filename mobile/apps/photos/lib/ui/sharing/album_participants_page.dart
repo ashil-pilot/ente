@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/core/configuration.dart';
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
@@ -135,7 +136,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                   children: [
                     MenuSectionTitle(
                       title: AppLocalizations.of(context).publicLinkEnabled,
-                      iconData: Icons.public,
+                      hugeIcon: HugeIcons.strokeRoundedGlobal,
                     ),
                     PublicLinkEnabledActionsWidget(
                       collection: _collection,
@@ -156,7 +157,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                       children: [
                         MenuSectionTitle(
                           title: AppLocalizations.of(context).albumOwner,
-                          iconData: Icons.admin_panel_settings_outlined,
+                          hugeIcon: HugeIcons.strokeRoundedCrown03,
                         ),
                         MenuItemWidget(
                           captionedTextWidget: CaptionedTextWidget(
@@ -190,7 +191,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                       (canManageParticipants || admins.isNotEmpty)) {
                     return MenuSectionTitle(
                       title: AppLocalizations.of(context).admins,
-                      iconData: Icons.admin_panel_settings_outlined,
+                      hugeIcon: HugeIcons.strokeRoundedCrown03,
                     );
                   } else if (index > 0 && index <= admins.length) {
                     final listIndex = index - 1;
@@ -246,7 +247,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                             : AppLocalizations.of(context).addAdmin,
                         makeTextBold: true,
                       ),
-                      leadingIcon: Icons.add_outlined,
+                      leadingHugeIcon: HugeIcons.strokeRoundedCrown03,
                       menuItemColor: colorScheme.fillFaint,
                       onTap: () async {
                         await _navigateToAddUser([ActionTypesToShow.addAdmin]);
@@ -267,7 +268,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                     (canManageParticipants || collaborators.isNotEmpty)) {
                   return MenuSectionTitle(
                     title: AppLocalizations.of(context).collaborator,
-                    iconData: Icons.edit_outlined,
+                    hugeIcon: HugeIcons.strokeRoundedUserGroup,
                   );
                 } else if (index > 0 && index <= collaborators.length) {
                   final listIndex = index - 1;
@@ -321,7 +322,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                           : AppLocalizations.of(context).addCollaborator,
                       makeTextBold: true,
                     ),
-                    leadingIcon: Icons.add_outlined,
+                    leadingHugeIcon: HugeIcons.strokeRoundedUserGroup,
                     menuItemColor: colorScheme.fillFaint,
                     onTap: () async {
                       await _navigateToAddUser([
@@ -344,7 +345,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                     (canManageParticipants || viewers.isNotEmpty)) {
                   return MenuSectionTitle(
                     title: AppLocalizations.of(context).viewer,
-                    iconData: Icons.photo_outlined,
+                    hugeIcon: HugeIcons.strokeRoundedView,
                   );
                 } else if (index > 0 && index <= viewers.length) {
                   final listIndex = index - 1;
@@ -398,7 +399,7 @@ class _AlbumParticipantsPageState extends State<AlbumParticipantsPage> {
                           : AppLocalizations.of(context).addViewer,
                       makeTextBold: true,
                     ),
-                    leadingIcon: Icons.add_outlined,
+                    leadingHugeIcon: HugeIcons.strokeRoundedView,
                     menuItemColor: colorScheme.fillFaint,
                     onTap: () async {
                       await _navigateToAddUser([ActionTypesToShow.addViewer]);

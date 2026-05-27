@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
@@ -662,7 +663,7 @@ class _FileCommentsBottomSheetState extends State<FileCommentsBottomSheet> {
             ),
             IconButtonWidget(
               iconButtonType: IconButtonType.rounded,
-              icon: Icons.close_rounded,
+              hugeIcon: HugeIcons.strokeRoundedCancel01,
               onTap: () => Navigator.of(context).pop(),
             ),
           ],

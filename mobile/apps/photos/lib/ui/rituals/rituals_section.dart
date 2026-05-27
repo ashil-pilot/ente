@@ -269,7 +269,9 @@ class _RitualCard extends StatelessWidget {
                     splashRadius: 20,
                     icon: Transform.translate(
                       offset: const Offset(4, 0),
-                      child: const Icon(Icons.more_vert_rounded),
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedMoreVertical,
+                      ),
                     ),
                     elevation: 0,
                     color: colorScheme.backgroundElevated,
@@ -337,7 +339,7 @@ class _RitualCard extends StatelessWidget {
                           child: Row(
                             children: [
                               const HugeIcon(
-                                icon: HugeIcons.strokeRoundedDelete02,
+                                icon: HugeIcons.strokeRoundedDelete01,
                                 color: Colors.red,
                                 size: 22,
                               ),

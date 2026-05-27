@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/core/configuration.dart';
 import 'package:photos/generated/l10n.dart';
 import 'package:photos/models/api/collection/user.dart';
@@ -87,7 +88,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
         title: AppLocalizations.of(
           context,
         ).shareWithPeopleSectionTitle(numberOfPeople: _sharees.length),
-        iconData: Icons.workspaces,
+        hugeIcon: HugeIcons.strokeRoundedUserGroup,
       ),
     );
 
@@ -102,7 +103,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
             title: AppLocalizations.of(context).addAdmin,
             makeTextBold: true,
           ),
-          leadingIcon: Icons.add,
+          leadingHugeIcon: HugeIcons.strokeRoundedCrown03,
           menuItemColor: getEnteColorScheme(context).fillFaint,
           isTopBorderRadiusRemoved: _sharees.isNotEmpty,
           isBottomBorderRadiusRemoved: true,
@@ -132,7 +133,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
             title: AppLocalizations.of(context).addCollaborator,
             makeTextBold: true,
           ),
-          leadingIcon: Icons.add,
+          leadingHugeIcon: HugeIcons.strokeRoundedUserGroup,
           menuItemColor: getEnteColorScheme(context).fillFaint,
           isTopBorderRadiusRemoved: true,
           isBottomBorderRadiusRemoved: true,
@@ -165,7 +166,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
             title: AppLocalizations.of(context).addViewer,
             makeTextBold: true,
           ),
-          leadingIcon: Icons.add,
+          leadingHugeIcon: HugeIcons.strokeRoundedView,
           menuItemColor: getEnteColorScheme(context).fillFaint,
           isTopBorderRadiusRemoved: true,
           isBottomBorderRadiusRemoved: false,
@@ -199,7 +200,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
           title: hasUrl
               ? AppLocalizations.of(context).publicLinkEnabled
               : AppLocalizations.of(context).shareALink,
-          iconData: Icons.public,
+          hugeIcon: HugeIcons.strokeRoundedGlobal,
         ),
       ]);
       if (hasUrl) {
@@ -220,7 +221,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
               title: AppLocalizations.of(context).manageLink,
               makeTextBold: true,
             ),
-            leadingIcon: Icons.link,
+            leadingHugeIcon: HugeIcons.strokeRoundedSetting07,
             trailingIcon: Icons.navigate_next,
             menuItemColor: getEnteColorScheme(context).fillFaint,
             trailingIconIsMuted: true,
@@ -246,7 +247,7 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
               title: AppLocalizations.of(context).createPublicLink,
               makeTextBold: true,
             ),
-            leadingIcon: Icons.link,
+            leadingHugeIcon: HugeIcons.strokeRoundedLink04,
             menuItemColor: getEnteColorScheme(context).fillFaint,
             showOnlyLoadingState: true,
             onTap: () async {
@@ -271,14 +272,14 @@ class _ShareCollectionPageState extends State<ShareCollectionPage> {
           const SizedBox(height: 24),
           MenuSectionTitle(
             title: AppLocalizations.of(context).collectPhotos,
-            iconData: Icons.public,
+            hugeIcon: HugeIcons.strokeRoundedUserGroup,
           ),
           MenuItemWidget(
             captionedTextWidget: CaptionedTextWidget(
               title: AppLocalizations.of(context).createCollaborativeLink,
               makeTextBold: true,
             ),
-            leadingIcon: Icons.people_alt_outlined,
+            leadingHugeIcon: HugeIcons.strokeRoundedUserGroup,
             menuItemColor: getEnteColorScheme(context).fillFaint,
             showOnlyLoadingState: true,
             onTap: () async {
@@ -394,7 +395,6 @@ class EmailItemWidget extends StatelessWidget {
               ),
             ),
             alignCaptionedTextToLeft: true,
-            // leadingIcon: Icons.people_outline,
             menuItemColor: getEnteColorScheme(context).fillFaint,
             trailingIconIsMuted: true,
             trailingIcon: Icons.chevron_right,

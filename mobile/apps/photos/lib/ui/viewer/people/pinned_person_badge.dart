@@ -1,6 +1,7 @@
 import "dart:math" as math;
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/ente_theme.dart";
 
 class PinnedPersonBadge extends StatelessWidget {
@@ -26,7 +27,11 @@ class PinnedPersonBadge extends StatelessWidget {
       ),
       child: Transform.rotate(
         angle: -math.pi / 4,
-        child: Icon(Icons.push_pin, size: 14, color: colorScheme.primary500),
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedPin,
+          size: 14,
+          color: colorScheme.primary500,
+        ),
       ),
     );
   }

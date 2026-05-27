@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/ente_theme_data.dart";
 import "package:video_editor/video_editor.dart";
 
@@ -43,7 +44,12 @@ class VideoEditorPlayerControl extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(!isPlaying ? Icons.play_arrow : Icons.pause, size: 20),
+                  HugeIcon(
+                    icon: !isPlaying
+                        ? HugeIcons.strokeRoundedPlay
+                        : HugeIcons.strokeRoundedPause,
+                    size: 20,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     "${formatter(pos)} / ${formatter(duration)}",

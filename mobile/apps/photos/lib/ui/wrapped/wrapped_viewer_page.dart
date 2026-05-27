@@ -7,6 +7,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:just_audio/just_audio.dart";
 import "package:logging/logging.dart";
@@ -848,8 +849,8 @@ class _WrappedViewerPageState extends State<WrappedViewerPage>
                                       color: controlBackdropColor,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
-                                      Icons.share,
+                                    child: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedShare03,
                                       size: _kStoryControlIconSize,
                                       color: controlIconColor,
                                     ),

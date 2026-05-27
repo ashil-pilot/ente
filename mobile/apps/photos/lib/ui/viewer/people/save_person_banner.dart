@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/viewer/people/face_thumbnail_squircle.dart";
 import "package:photos/ui/viewer/people/person_face_widget.dart";
@@ -202,7 +203,11 @@ class _SavePersonBannerCloseButton extends StatelessWidget {
           color: colorScheme.fillFaint,
           borderRadius: borderRadius,
         ),
-        child: const Icon(Icons.close, size: 14, color: Colors.black),
+        child: const HugeIcon(
+          icon: HugeIcons.strokeRoundedCancel01,
+          size: 14,
+          color: Colors.black,
+        ),
       ),
     );
   }

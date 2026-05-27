@@ -5,6 +5,7 @@ import "dart:async";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
 import "package:flutter_map/flutter_map.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/colors.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/buttons/icon_button_widget.dart";
@@ -176,7 +177,7 @@ class MapAttributionWidgetState extends State<MapAttributionWidget> {
                   (context, close) => IconButtonWidget(
                     size: widget.iconSize,
                     onTap: close,
-                    icon: Icons.cancel_outlined,
+                    hugeIcon: HugeIcons.strokeRoundedCancel01,
                     iconButtonType: IconButtonType.primary,
                     iconColor: getEnteColorScheme(context).strokeBase,
                   ))(context, () => setState(() => popupExpanded = false))
@@ -184,7 +185,7 @@ class MapAttributionWidgetState extends State<MapAttributionWidget> {
                   (context, open) => IconButtonWidget(
                     size: widget.iconSize,
                     onTap: open,
-                    icon: Icons.info_outlined,
+                    hugeIcon: HugeIcons.strokeRoundedInformationCircle,
                     iconButtonType: IconButtonType.primary,
                     iconColor: strokeBaseLight,
                   ))(context, () {

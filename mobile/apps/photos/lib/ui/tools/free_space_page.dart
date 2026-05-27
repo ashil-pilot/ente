@@ -2,6 +2,7 @@ import "dart:io";
 
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import "package:photos/generated/l10n.dart";
@@ -93,8 +94,8 @@ class _FreeSpacePageState extends State<FreeSpacePage> {
           padding: const EdgeInsets.only(left: 36, right: 40),
           child: Row(
             children: [
-              const Icon(
-                Icons.cloud_done_outlined,
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedCloudSavingDone01,
                 color: Color.fromRGBO(45, 194, 98, 1.0),
               ),
               const Padding(padding: EdgeInsets.all(10)),
@@ -107,8 +108,8 @@ class _FreeSpacePageState extends State<FreeSpacePage> {
           padding: const EdgeInsets.only(left: 36, right: 40),
           child: Row(
             children: [
-              const Icon(
-                Icons.delete_outline,
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedDelete01,
                 color: Color.fromRGBO(45, 194, 98, 1.0),
               ),
               const Padding(padding: EdgeInsets.all(10)),
@@ -129,8 +130,8 @@ class _FreeSpacePageState extends State<FreeSpacePage> {
           padding: const EdgeInsets.only(left: 36, right: 40),
           child: Row(
             children: [
-              const Icon(
-                Icons.devices,
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedSmartPhone01,
                 color: Color.fromRGBO(45, 194, 98, 1.0),
               ),
               const Padding(padding: EdgeInsets.all(10)),

@@ -1,5 +1,6 @@
 import "package:flutter/foundation.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/l10n/l10n.dart";
 import "package:photos/models/collection/collection.dart";
@@ -141,7 +142,7 @@ class _AlbumsWidgetSettingsState extends State<AlbumsWidgetSettings> {
                   : context.l10n.addAlbumWidgetPrompt,
               actionIcons: [
                 IconButtonWidget(
-                  icon: Icons.close_outlined,
+                  hugeIcon: HugeIcons.strokeRoundedCancel01,
                   iconButtonType: IconButtonType.secondary,
                   onTap: () {
                     Navigator.pop(context);

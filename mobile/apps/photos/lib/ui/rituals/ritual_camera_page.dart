@@ -717,7 +717,10 @@ class _RitualCameraPageState extends State<RitualCameraPage>
           const Spacer(),
           _RoundIconButton(
             onTap: () => Navigator.of(context).maybePop(),
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
+              color: Colors.white,
+            ),
             background: Colors.white.withValues(alpha: 0.12),
             size: 44,
           ),
@@ -736,7 +739,11 @@ class _RitualCameraPageState extends State<RitualCameraPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, color: colorScheme.textMuted, size: 32),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedAlertCircle,
+              color: colorScheme.textMuted,
+              size: 32,
+            ),
             const SizedBox(height: 8),
             Text(
               _error!,
@@ -1028,7 +1035,9 @@ class _RitualCameraPageState extends State<RitualCameraPage>
                     : Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.check_circle_outline),
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             context.l10n.addToAlbum,
@@ -1270,7 +1279,11 @@ class _ConfirmChip extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             const Center(
-              child: Icon(Icons.check, color: Colors.white, size: 26),
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedTick02,
+                color: Colors.white,
+                size: 26,
+              ),
             ),
             Positioned(
               right: -2,
@@ -1438,7 +1451,11 @@ class _ReviewThumb extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 1.5),
               ),
-              child: const Icon(Icons.close, size: 16, color: Colors.white),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedCancel01,
+                size: 16,
+                color: Colors.white,
+              ),
             ),
           ),
         ),

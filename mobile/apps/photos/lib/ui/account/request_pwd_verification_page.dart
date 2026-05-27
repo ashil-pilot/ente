@@ -3,6 +3,7 @@ import "dart:typed_data";
 
 import "package:ente_crypto/ente_crypto.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import 'package:photos/core/configuration.dart';
 import "package:photos/l10n/l10n.dart";
@@ -183,10 +184,10 @@ class _RequestPasswordVerificationPageState
                       ),
                       suffixIcon: _passwordInFocus
                           ? IconButton(
-                              icon: Icon(
-                                _passwordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                              icon: HugeIcon(
+                                icon: _passwordVisible
+                                    ? HugeIcons.strokeRoundedView
+                                    : HugeIcons.strokeRoundedViewOffSlash,
                                 color: Theme.of(context).iconTheme.color,
                                 size: 20,
                               ),

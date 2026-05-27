@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_icons/ente_icons.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/db/files_db.dart";
 import "package:photos/generated/l10n.dart";
@@ -318,7 +319,7 @@ class _LikesHeader extends StatelessWidget {
           ),
           IconButtonWidget(
             iconButtonType: IconButtonType.rounded,
-            icon: Icons.close_rounded,
+            hugeIcon: HugeIcons.strokeRoundedCancel01,
             onTap: onClose,
           ),
         ],

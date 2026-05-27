@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/search/generic_search_result.dart";
@@ -133,7 +134,12 @@ class SearchableItemPlaceholder extends StatelessWidget {
         ),
         child: Container(
           color: colorScheme.fillFaint,
-          child: Icon(sectionType.getCTAIcon(), color: colorScheme.strokeMuted),
+          child: sectionType.getCTAHugeIcon() != null
+              ? HugeIcon(
+                  icon: sectionType.getCTAHugeIcon()!,
+                  color: colorScheme.strokeMuted,
+                )
+              : Icon(sectionType.getCTAIcon(), color: colorScheme.strokeMuted),
         ),
       ),
       title: Text(sectionType.getCTAText(context), style: textTheme.body),

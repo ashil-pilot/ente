@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:logging/logging.dart";
 import 'package:photos/core/event_bus.dart';
@@ -419,7 +420,7 @@ class _GalleryState extends State<_Gallery> {
                   child: EndToEndBanner(
                     title: context.l10n.linkEmail,
                     caption: context.l10n.linkEmailToContactBannerCaption,
-                    leadingIcon: Icons.email_outlined,
+                    leadingHugeIcon: HugeIcons.strokeRoundedMail01,
                     onTap: () async {
                       await routeToPage(
                         context,

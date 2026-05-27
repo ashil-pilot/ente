@@ -3,6 +3,7 @@ import "package:ente_components/ente_components.dart";
 import "package:flutter/foundation.dart";
 import 'package:flutter/material.dart';
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/models/button_result.dart';
 import 'package:photos/models/typedefs.dart';
@@ -23,7 +24,8 @@ Future<ButtonResult?> showInfoDialog(
   BuildContext context, {
   String title = "",
   String? body,
-  IconData icon = Icons.info_outline_rounded,
+  IconData? icon,
+  List<List<dynamic>>? hugeIcon,
   bool isDismissable = true,
 }) async {
   return showDialogWidget(
@@ -31,6 +33,9 @@ Future<ButtonResult?> showInfoDialog(
     title: title,
     body: body,
     icon: icon,
+    hugeIcon:
+        hugeIcon ??
+        (icon == null ? HugeIcons.strokeRoundedInformationCircle : null),
     isDismissible: isDismissable,
     buttons: [
       ButtonWidget(
@@ -86,7 +91,7 @@ Future<ButtonResult?> showErrorDialogForException({
   return showDialogWidget(
     context: context,
     title: AppLocalizations.of(context).error,
-    icon: Icons.error_outline_outlined,
+    hugeIcon: HugeIcons.strokeRoundedAlertCircle,
     body: errorMessage,
     isDismissible: isDismissible,
     buttons: [
@@ -172,7 +177,7 @@ Future<ButtonResult?> showGenericErrorDialog({
   final ButtonResult? result = await showDialogWidget(
     context: context,
     title: AppLocalizations.of(context).error,
-    icon: Icons.error_outline_outlined,
+    hugeIcon: HugeIcons.strokeRoundedAlertCircle,
     body: errorBody,
     isDismissible: isDismissible,
     buttons: [
@@ -248,6 +253,7 @@ Future<ButtonResult?> showChoiceDialog(
   FutureVoidCallback? secondButtonOnTap,
   bool isCritical = false,
   IconData? icon,
+  List<List<dynamic>>? hugeIcon,
   bool isDismissible = true,
 }) async {
   final buttons = [
@@ -272,6 +278,7 @@ Future<ButtonResult?> showChoiceDialog(
     body: body,
     buttons: buttons,
     icon: icon,
+    hugeIcon: hugeIcon,
     isDismissible: isDismissible,
   );
 }

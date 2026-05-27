@@ -3,6 +3,7 @@ import "dart:developer";
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/core/constants.dart';
 import 'package:photos/core/event_bus.dart';
 import 'package:photos/events/user_details_changed_event.dart';
@@ -159,8 +160,8 @@ class _DeduplicatePageState extends State<DeduplicatePage> {
       initialValue: sortKey.index,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 6, 24, 6),
-        child: Icon(
-          Icons.sort,
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedSorting01,
           color: getEnteColorScheme(context).strokeBase,
           size: 20,
         ),

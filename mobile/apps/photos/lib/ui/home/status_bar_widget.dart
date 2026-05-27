@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hugeicons/hugeicons.dart';
 import "package:intl/intl.dart";
 import "package:logging/logging.dart";
 import 'package:photos/core/event_bus.dart';
@@ -361,8 +362,8 @@ class SyncStatusCompletedWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.cloud_done_outlined,
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedCloudSavingDone01,
                   color: Theme.of(context).colorScheme.greenAlternative,
                   size: 22,
                 ),

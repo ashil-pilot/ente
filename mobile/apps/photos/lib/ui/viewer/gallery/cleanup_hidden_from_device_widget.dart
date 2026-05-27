@@ -1,5 +1,6 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/captioned_text_widget.dart";
@@ -28,7 +29,7 @@ class CleanupHiddenFromDeviceWidget extends StatelessWidget {
             ),
             singleBorderRadius: 8.0,
             menuItemColor: colorScheme.fillFaint,
-            leadingIcon: Icons.phone_android_outlined,
+            leadingHugeIcon: HugeIcons.strokeRoundedSmartPhone01,
             trailingIcon: Icons.chevron_right,
             onTap: () async {
               await routeToPage(

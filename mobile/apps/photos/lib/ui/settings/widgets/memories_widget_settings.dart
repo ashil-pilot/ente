@@ -2,6 +2,7 @@ import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/foundation.dart";
 import 'package:flutter/material.dart';
 import "package:flutter_svg/flutter_svg.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/l10n/l10n.dart";
 import "package:photos/service_locator.dart";
@@ -121,7 +122,7 @@ class _MemoriesWidgetSettingsState extends State<MemoriesWidgetSettings> {
                 : context.l10n.addMemoriesWidgetPrompt,
             actionIcons: [
               IconButtonWidget(
-                icon: Icons.close_outlined,
+                hugeIcon: HugeIcons.strokeRoundedCancel01,
                 iconButtonType: IconButtonType.secondary,
                 onTap: () {
                   Navigator.pop(context);

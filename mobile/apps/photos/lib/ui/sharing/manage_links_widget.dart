@@ -7,6 +7,7 @@ import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:ente_qr_ui/ente_qr_ui.dart';
 import 'package:flutter/material.dart';
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/errors.dart";
 import "package:photos/gateways/collections/models/public_url.dart";
 import "package:photos/generated/l10n.dart";
@@ -333,7 +334,7 @@ class _ManageSharedLinkWidgetState extends State<ManageSharedLinkWidget> {
                         title: AppLocalizations.of(context).linkHasExpired,
                         textColor: getEnteColorScheme(context).warning500,
                       ),
-                      leadingIcon: Icons.error_outline,
+                      leadingHugeIcon: HugeIcons.strokeRoundedAlertCircle,
                       leadingIconColor: getEnteColorScheme(context).warning500,
                       menuItemColor: getEnteColorScheme(context).fillFaint,
                       singleBorderRadius: 8,
@@ -344,7 +345,7 @@ class _ManageSharedLinkWidgetState extends State<ManageSharedLinkWidget> {
                         title: AppLocalizations.of(context).copyLink,
                         makeTextBold: true,
                       ),
-                      leadingIcon: Icons.copy,
+                      leadingHugeIcon: HugeIcons.strokeRoundedCopy01,
                       menuItemColor: getEnteColorScheme(context).fillFaint,
                       showOnlyLoadingState: true,
                       onTap: () async {
@@ -394,7 +395,7 @@ class _ManageSharedLinkWidgetState extends State<ManageSharedLinkWidget> {
                         title: AppLocalizations.of(context).sendLink,
                         makeTextBold: true,
                       ),
-                      leadingIcon: Icons.adaptive.share,
+                      leadingHugeIcon: HugeIcons.strokeRoundedSent,
                       menuItemColor: getEnteColorScheme(context).fillFaint,
                       onTap: () async {
                         await shareAlbumLink(
@@ -417,7 +418,7 @@ class _ManageSharedLinkWidgetState extends State<ManageSharedLinkWidget> {
                         title: AppLocalizations.of(context).sendQrCode,
                         makeTextBold: true,
                       ),
-                      leadingIcon: Icons.qr_code_outlined,
+                      leadingHugeIcon: HugeIcons.strokeRoundedQrCode,
                       menuItemColor: getEnteColorScheme(context).fillFaint,
                       onTap: () async {
                         await showDialog<void>(
@@ -457,7 +458,7 @@ class _ManageSharedLinkWidgetState extends State<ManageSharedLinkWidget> {
                       textColor: warning500,
                       makeTextBold: true,
                     ),
-                    leadingIcon: Icons.remove_circle_outline,
+                    leadingHugeIcon: HugeIcons.strokeRoundedDelete01,
                     leadingIconColor: warning500,
                     menuItemColor: getEnteColorScheme(context).fillFaint,
                     onTap: () async {

@@ -1,5 +1,6 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import 'package:photos/core/configuration.dart';
 import "package:photos/emergency/components/recovery_date_selector.dart";
@@ -134,7 +135,9 @@ class _AddContactSheetState extends State<AddContactSheet> {
                           ),
                           leadingIconSize: 24,
                           menuItemColor: Colors.transparent,
-                          trailingIcon: isSelected ? Icons.check : null,
+                          trailingHugeIcon: isSelected
+                              ? HugeIcons.strokeRoundedTick02
+                              : null,
                           trailingIconColor: colorScheme.greenBase,
                           onTap: () async {
                             textFieldFocusNode.unfocus();

@@ -220,7 +220,7 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                             title: "Delete Local Import DB",
                             leadingIconWidget: _buildIconWidget(
                               context,
-                              HugeIcons.strokeRoundedDelete02,
+                              HugeIcons.strokeRoundedDelete01,
                             ),
                             trailingIcon: Icons.chevron_right_outlined,
                             trailingIconIsMuted: true,

@@ -3,6 +3,7 @@ import "dart:async";
 import 'package:ente_components/ente_components.dart';
 import 'package:ente_pure_utils/ente_pure_utils.dart' hide isValidEmail;
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:logging/logging.dart';
 import 'package:photos/core/configuration.dart';
 import "package:photos/core/errors.dart";
@@ -296,13 +297,13 @@ class CollectionActions {
       await showDialogWidget(
         context: context,
         title: AppLocalizations.of(context).inviteToEnte,
-        icon: Icons.info_outline,
+        hugeIcon: HugeIcons.strokeRoundedInformationCircle,
         body: AppLocalizations.of(context).emailNoEnteAccount(email: email),
         isDismissible: true,
         buttons: [
           ButtonWidget(
             buttonType: ButtonType.neutral,
-            icon: Icons.adaptive.share,
+            hugeIcon: HugeIcons.strokeRoundedShare03,
             labelText: AppLocalizations.of(context).sendInvite,
             isInAlert: true,
             onTap: () async {

@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/collection/collection.dart";
 import "package:photos/models/selected_files.dart";
@@ -108,7 +109,7 @@ class _EmptyAlbumStateNewState extends State<CollectPhotosBottomButtons> {
                         buttonType: ButtonType.secondary,
                         buttonSize: ButtonSize.large,
                         labelText: AppLocalizations.of(context).addPhotos,
-                        icon: Icons.add_photo_alternate_outlined,
+                        hugeIcon: HugeIcons.strokeRoundedImageAdd01,
                         shouldSurfaceExecutionStates: false,
                         onTap: () async {
                           try {
@@ -127,7 +128,7 @@ class _EmptyAlbumStateNewState extends State<CollectPhotosBottomButtons> {
                       buttonType: ButtonType.primary,
                       buttonSize: ButtonSize.large,
                       labelText: AppLocalizations.of(context).share,
-                      icon: Icons.adaptive.share,
+                      hugeIcon: HugeIcons.strokeRoundedShare03,
                       shouldSurfaceExecutionStates: false,
                       onTap: () async {
                         await _generateAlbumUrl();

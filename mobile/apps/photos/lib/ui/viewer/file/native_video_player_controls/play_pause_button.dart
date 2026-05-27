@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:native_video_player/native_video_player.dart";
 import "package:photos/theme/colors.dart";
 
@@ -65,14 +66,14 @@ class _PlayPauseButtonState extends State<PlayPauseButton> {
           switchInCurve: Curves.easeInOutQuart,
           switchOutCurve: Curves.easeInOutQuart,
           child: _isPlaying
-              ? const Icon(
-                  Icons.pause,
+              ? const HugeIcon(
+                  icon: HugeIcons.strokeRoundedPause,
                   size: 32,
                   key: ValueKey("pause"),
                   color: Colors.white,
                 )
-              : const Icon(
-                  Icons.play_arrow,
+              : const HugeIcon(
+                  icon: HugeIcons.strokeRoundedPlay,
                   size: 36,
                   key: ValueKey("play"),
                   color: Colors.white,

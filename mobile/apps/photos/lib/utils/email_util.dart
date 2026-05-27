@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import 'package:logging/logging.dart';
 import 'package:open_mail_app/open_mail_app.dart';
@@ -50,7 +51,7 @@ Future<void> sendLogs(
   showDialogWidget(
     context: context,
     title: AppLocalizations.of(context).reportABug,
-    icon: Icons.bug_report_outlined,
+    hugeIcon: HugeIcons.strokeRoundedBug02,
     body: AppLocalizations.of(context).logsDialogBody,
     buttons: [
       ButtonWidget(

@@ -5,6 +5,7 @@ import "dart:ui" as ui;
 
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:logging/logging.dart";
 import "package:path_provider/path_provider.dart";
@@ -89,7 +90,7 @@ class _RitualHeatmapCardState extends State<RitualHeatmapCard> {
                     key: _shareButtonKey,
                     onPressed: progress == null ? null : _shareHeatmap,
                     tooltip: MaterialLocalizations.of(context).shareButtonLabel,
-                    icon: const Icon(Icons.share_rounded),
+                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedShare03),
                   ),
               ],
             ),

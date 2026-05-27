@@ -3,10 +3,10 @@ import 'dart:io';
 import "dart:math" as math;
 
 import "package:ente_icons/ente_icons.dart";
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import "package:flutter/services.dart";
 import "package:flutter_svg/flutter_svg.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:local_auth/local_auth.dart";
 import 'package:logging/logging.dart';
 import 'package:media_extension/media_extension.dart';
@@ -286,7 +286,7 @@ class FileAppBarState extends State<FileAppBar> {
             behavior: HitTestBehavior.opaque,
             child: const Padding(
               padding: EdgeInsets.all(12.0),
-              child: Icon(Icons.info_outline),
+              child: HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle),
             ),
           ),
         ),
@@ -315,7 +315,7 @@ class FileAppBarState extends State<FileAppBar> {
     if (widget.file.isLiveOrMotionPhoto) {
       _actions.add(
         IconButton(
-          icon: const Icon(Icons.album_outlined),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedAlbum01),
           onPressed: () {
             showShortToast(
               context,
@@ -343,8 +343,10 @@ class FileAppBarState extends State<FileAppBar> {
         EntePopupMenuItem(
           AppLocalizations.of(context).info,
           value: 12,
-          icon: Platform.isAndroid ? Icons.info_outline : CupertinoIcons.info,
-          iconColor: Theme.of(context).iconTheme.color,
+          iconWidget: HugeIcon(
+            icon: HugeIcons.strokeRoundedInformationCircle,
+            color: Theme.of(context).iconTheme.color,
+          ),
         ),
       );
     } else {
@@ -353,10 +355,12 @@ class FileAppBarState extends State<FileAppBar> {
           EntePopupMenuItem(
             AppLocalizations.of(context).download,
             value: 1,
-            icon: Platform.isAndroid
-                ? Icons.download
-                : Icons.cloud_download_outlined,
-            iconColor: Theme.of(context).iconTheme.color,
+            iconWidget: HugeIcon(
+              icon: Platform.isAndroid
+                  ? HugeIcons.strokeRoundedDownload04
+                  : HugeIcons.strokeRoundedCloudDownload,
+              color: Theme.of(context).iconTheme.color,
+            ),
           ),
         );
         if (isOwnedByUser && !isFileHidden) {
@@ -411,8 +415,12 @@ class FileAppBarState extends State<FileAppBar> {
                 ? AppLocalizations.of(context).unarchive
                 : AppLocalizations.of(context).archive,
             value: 2,
-            icon: isArchived ? Icons.unarchive : Icons.archive_outlined,
-            iconColor: Theme.of(context).iconTheme.color,
+            iconWidget: HugeIcon(
+              icon: isArchived
+                  ? HugeIcons.strokeRoundedUnarchive03
+                  : HugeIcons.strokeRoundedArchive03,
+              color: Theme.of(context).iconTheme.color,
+            ),
           ),
         );
       }
@@ -424,7 +432,7 @@ class FileAppBarState extends State<FileAppBar> {
           EntePopupMenuItem(
             AppLocalizations.of(context).setAs,
             value: 3,
-            icon: Icons.wallpaper_outlined,
+            hugeIcon: HugeIcons.strokeRoundedImage01,
             iconColor: Theme.of(context).iconTheme.color,
           ),
         );
@@ -435,8 +443,10 @@ class FileAppBarState extends State<FileAppBar> {
             EntePopupMenuItem(
               AppLocalizations.of(context).hide,
               value: 4,
-              icon: Icons.visibility_off,
-              iconColor: Theme.of(context).iconTheme.color,
+              iconWidget: HugeIcon(
+                icon: HugeIcons.strokeRoundedViewOffSlash,
+                color: Theme.of(context).iconTheme.color,
+              ),
             ),
           );
         } else {
@@ -444,8 +454,10 @@ class FileAppBarState extends State<FileAppBar> {
             EntePopupMenuItem(
               AppLocalizations.of(context).unhide,
               value: 5,
-              icon: Icons.visibility,
-              iconColor: Theme.of(context).iconTheme.color,
+              iconWidget: HugeIcon(
+                icon: HugeIcons.strokeRoundedView,
+                color: Theme.of(context).iconTheme.color,
+              ),
             ),
           );
         }
@@ -470,7 +482,7 @@ class FileAppBarState extends State<FileAppBar> {
           EntePopupMenuItem(
             AppLocalizations.of(context).suggestDeletion,
             value: 13,
-            icon: Icons.flag_outlined,
+            hugeIcon: HugeIcons.strokeRoundedFlag01,
             iconColor: Theme.of(context).iconTheme.color,
           ),
         );
@@ -480,8 +492,10 @@ class FileAppBarState extends State<FileAppBar> {
         EntePopupMenuItem(
           AppLocalizations.of(context).info,
           value: 12,
-          icon: Platform.isAndroid ? Icons.info_outline : CupertinoIcons.info,
-          iconColor: Theme.of(context).iconTheme.color,
+          iconWidget: HugeIcon(
+            icon: HugeIcons.strokeRoundedInformationCircle,
+            color: Theme.of(context).iconTheme.color,
+          ),
         ),
       );
     }
@@ -493,7 +507,7 @@ class FileAppBarState extends State<FileAppBar> {
           EntePopupMenuItem(
             AppLocalizations.of(context).createStream,
             value: 8,
-            icon: Icons.video_settings_outlined,
+            hugeIcon: HugeIcons.strokeRoundedVideo01,
             iconColor: Theme.of(context).iconTheme.color,
           ),
         );
@@ -504,7 +518,7 @@ class FileAppBarState extends State<FileAppBar> {
           EntePopupMenuItem(
             AppLocalizations.of(context).recreateStream,
             value: 9,
-            icon: Icons.refresh_outlined,
+            hugeIcon: HugeIcons.strokeRoundedReload,
             iconColor: Theme.of(context).iconTheme.color,
           ),
         );

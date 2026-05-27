@@ -4,6 +4,7 @@ import "dart:typed_data";
 
 import "package:flutter/foundation.dart" show kDebugMode;
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/db/ml/db.dart";
@@ -202,7 +203,7 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
                             Expanded(
                               child: ButtonWidget(
                                 buttonType: ButtonType.tertiaryCritical,
-                                icon: Icons.close,
+                                hugeIcon: HugeIcons.strokeRoundedCancel01,
                                 labelText: context.l10n.no,
                                 buttonSize: ButtonSize.large,
                                 onTap: () async => {

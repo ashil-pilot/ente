@@ -2,6 +2,7 @@ import 'dart:async';
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:logging/logging.dart';
 import 'package:photos/core/configuration.dart';
 import 'package:photos/core/event_bus.dart';
@@ -252,7 +253,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.memoryLane,
           child: Row(
             children: [
-              const Icon(Icons.auto_awesome_outlined),
+              const HugeIcon(icon: HugeIcons.strokeRoundedSparkles),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 context.l10n.facesTimelineAppBarTitle,
@@ -270,7 +271,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.rename,
           child: Row(
             children: [
-              const Icon(Icons.edit),
+              const HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).edit,
@@ -283,7 +284,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.reviewSuggestions,
           child: Row(
             children: [
-              const Icon(Icons.search_outlined),
+              const HugeIcon(icon: HugeIcons.strokeRoundedSearch01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).review,
@@ -296,7 +297,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.setCover,
           child: Row(
             children: [
-              const Icon(Icons.image_outlined),
+              const HugeIcon(icon: HugeIcons.strokeRoundedImage01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).setCover,
@@ -322,10 +323,10 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.hideFromMemories,
           child: Row(
             children: [
-              Icon(
-                hideFromMemories
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
+              HugeIcon(
+                icon: hideFromMemories
+                    ? HugeIcons.strokeRoundedView
+                    : HugeIcons.strokeRoundedViewOffSlash,
               ),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
@@ -343,7 +344,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
             value: PeoplePopupAction.reassignMe,
             child: Row(
               children: [
-                const Icon(Icons.person_2_outlined),
+                const HugeIcon(icon: HugeIcons.strokeRoundedUser),
                 const Padding(padding: EdgeInsets.all(8)),
                 Text(context.l10n.reassignMe, style: textTheme.bodyBold),
               ],
@@ -353,7 +354,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.ignore,
           child: Row(
             children: [
-              const Icon(Icons.person_off_outlined),
+              const HugeIcon(icon: HugeIcons.strokeRoundedUserRemove01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).ignore,
@@ -366,7 +367,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.removeLabel,
           child: Row(
             children: [
-              const Icon(Icons.delete_outline),
+              const HugeIcon(icon: HugeIcons.strokeRoundedDelete01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).remove,
@@ -382,7 +383,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.rename,
           child: Row(
             children: [
-              const Icon(Icons.edit),
+              const HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).edit,
@@ -395,7 +396,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.reviewSuggestions,
           child: Row(
             children: [
-              const Icon(Icons.search_outlined),
+              const HugeIcon(icon: HugeIcons.strokeRoundedSearch01),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).review,
@@ -408,7 +409,7 @@ class _AppBarWidgetState extends State<PeopleAppBar> {
           value: PeoplePopupAction.unignore,
           child: Row(
             children: [
-              const Icon(Icons.visibility_outlined),
+              const HugeIcon(icon: HugeIcons.strokeRoundedView),
               const Padding(padding: EdgeInsets.all(8)),
               Text(
                 AppLocalizations.of(context).showPerson,

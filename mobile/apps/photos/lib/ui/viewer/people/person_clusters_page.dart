@@ -1,5 +1,5 @@
-import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
@@ -116,8 +116,9 @@ class _PersonClustersPageState extends State<PersonClustersPage> {
                                             );
                                           }
                                         },
-                                        child: const Icon(
-                                          CupertinoIcons.minus_circled,
+                                        child: const HugeIcon(
+                                          icon: HugeIcons
+                                              .strokeRoundedMinusSignCircle,
                                           color: Colors.red,
                                         ),
                                       )
@@ -338,8 +339,8 @@ class __ClusterWrapperForGirdState extends State<_ClusterWrapperForGird> {
                                       width: 2,
                                     ),
                                   ),
-                                  child: Icon(
-                                    Icons.remove,
+                                  child: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedMinusSign,
                                     size: 12,
                                     color: colorScheme.backgroundColour,
                                   ),

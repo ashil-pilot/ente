@@ -2,6 +2,7 @@ import "dart:io";
 
 import "package:ente_components/ente_components.dart";
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import "package:photos/generated/l10n.dart";
 import 'package:photos/models/button_result.dart';
@@ -89,8 +90,8 @@ class ActionSheetWidget extends StatelessWidget {
     return BottomSheetComponent(
       title: title,
       illustration: actionSheetType == ActionSheetType.iconOnly
-          ? Icon(
-              Icons.check_outlined,
+          ? HugeIcon(
+              icon: HugeIcons.strokeRoundedTick02,
               size: 48,
               color: isCheckIconGreen ? colors.primary : colors.iconColor,
             )

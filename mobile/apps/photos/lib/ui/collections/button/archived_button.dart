@@ -1,5 +1,6 @@
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/core/configuration.dart';
 import 'package:photos/db/files_db.dart';
 import "package:photos/generated/l10n.dart";
@@ -36,8 +37,8 @@ class ArchivedCollectionsButton extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.archive_outlined,
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedArchive03,
                     color: Theme.of(context).iconTheme.color,
                   ),
                   const Padding(padding: EdgeInsets.all(6)),

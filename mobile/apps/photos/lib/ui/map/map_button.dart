@@ -1,17 +1,20 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/ente_theme.dart";
 
 class MapButton extends StatelessWidget {
   final String heroTag;
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final VoidCallback onPressed;
 
   const MapButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.hugeIcon,
     required this.onPressed,
     required this.heroTag,
-  });
+  }) : assert(icon != null || hugeIcon != null);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,9 @@ class MapButton extends StatelessWidget {
       mini: true,
       onPressed: onPressed,
       splashColor: Colors.transparent,
-      child: Icon(icon, color: colorScheme.textBase),
+      child: hugeIcon != null
+          ? HugeIcon(icon: hugeIcon!, color: colorScheme.textBase)
+          : Icon(icon, color: colorScheme.textBase),
     );
   }
 }

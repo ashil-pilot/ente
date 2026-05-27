@@ -1,5 +1,6 @@
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/models/collection/collection.dart';
 import 'package:photos/services/collections_service.dart';
@@ -28,7 +29,7 @@ class LayoutPickerPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 3.0),
             child: IconButton(
-              icon: const Icon(Icons.visibility),
+              icon: const HugeIcon(icon: HugeIcons.strokeRoundedView),
               onPressed: () async {
                 await _openPublicAlbumPreview(context);
               },
@@ -139,7 +140,9 @@ class _ItemsWidgetState extends State<ItemsWidget> {
     return MenuItemWidget(
       menuItemColor: getEnteColorScheme(context).fillFaint,
       captionedTextWidget: CaptionedTextWidget(title: layoutOption.item1),
-      trailingIcon: currentLayout == layoutOption.item2 ? Icons.check : null,
+      trailingHugeIcon: currentLayout == layoutOption.item2
+          ? HugeIcons.strokeRoundedTick02
+          : null,
       trailingIconColor: currentLayout == layoutOption.item2
           ? getEnteColorScheme(context).primary500
           : null,

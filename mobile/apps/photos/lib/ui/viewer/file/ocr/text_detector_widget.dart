@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:mobile_ocr/mobile_ocr_plugin.dart';
 import 'package:mobile_ocr/models/text_block.dart';
 import 'package:photos/ui/viewer/file/ocr/display_image_helper.dart';
@@ -712,8 +713,8 @@ class _TextDetectorWidgetState extends State<TextDetectorWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.cloud_download_outlined,
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedCloudDownload,
             color: Colors.orange.shade300,
             size: 40,
           ),
@@ -738,7 +739,7 @@ class _TextDetectorWidgetState extends State<TextDetectorWidget> {
               });
               _detectText();
             },
-            icon: const Icon(Icons.refresh, size: 18),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedReload, size: 18),
             label: Text(widget.strings.retryButtonLabel),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.orange.shade300,
@@ -761,8 +762,8 @@ class _TextDetectorWidgetState extends State<TextDetectorWidget> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.search_off,
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedSearchRemove,
             color: Colors.white.withValues(alpha: 0.7),
             size: 16,
           ),

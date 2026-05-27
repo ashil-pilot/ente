@@ -1,6 +1,7 @@
 import "package:ente_icons/ente_icons.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/api/collection/user.dart";
 import "package:photos/models/social/comment.dart";
@@ -187,8 +188,8 @@ class _CommentInputWidgetState extends State<CommentInputWidget>
                       SendButtonState.error => Padding(
                         key: const ValueKey('error'),
                         padding: const EdgeInsets.all(12),
-                        child: Icon(
-                          Icons.error_outline,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedAlertCircle,
                           color: colorScheme.warning500,
                           size: 24,
                         ),

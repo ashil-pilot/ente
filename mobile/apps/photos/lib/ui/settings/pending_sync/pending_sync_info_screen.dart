@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/service_locator.dart";
@@ -110,7 +111,7 @@ class _PendingSyncInfoScreenState extends State<PendingSyncInfoScreen> {
             flexibleSpaceTitle: const TitleBarTitleWidget(title: "App Temp"),
             actionIcons: [
               IconButtonWidget(
-                icon: Icons.close_outlined,
+                hugeIcon: HugeIcons.strokeRoundedCancel01,
                 iconButtonType: IconButtonType.secondary,
                 onTap: () {
                   Navigator.pop(context);

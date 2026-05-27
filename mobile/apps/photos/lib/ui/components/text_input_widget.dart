@@ -1,6 +1,7 @@
 import 'package:ente_pure_utils/ente_pure_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import 'package:photos/models/execution_states.dart';
 import 'package:photos/models/typedefs.dart';
@@ -465,7 +466,10 @@ class SuffixIconWidget extends StatelessWidget {
               FocusScope.of(context).unfocus();
             }
           },
-          child: Icon(Icons.cancel_rounded, color: colorScheme.strokeMuted),
+          child: HugeIcon(
+            icon: HugeIcons.strokeRoundedCancel01,
+            color: colorScheme.strokeMuted,
+          ),
         );
       } else if (isPasswordInput) {
         assert(obscureTextNotifier != null);
@@ -473,10 +477,10 @@ class SuffixIconWidget extends StatelessWidget {
           onTap: () {
             obscureTextNotifier!.value = !obscureTextNotifier!.value;
           },
-          child: Icon(
-            obscureTextNotifier!.value
-                ? Icons.visibility_off_outlined
-                : Icons.visibility,
+          child: HugeIcon(
+            icon: obscureTextNotifier!.value
+                ? HugeIcons.strokeRoundedViewOffSlash
+                : HugeIcons.strokeRoundedView,
             color: obscureTextNotifier!.value ? colorScheme.strokeMuted : null,
           ),
         );
@@ -486,8 +490,8 @@ class SuffixIconWidget extends StatelessWidget {
     } else if (executionState == ExecutionState.inProgress) {
       trailingWidget = EnteLoadingWidget(color: colorScheme.strokeMuted);
     } else if (executionState == ExecutionState.successful) {
-      trailingWidget = Icon(
-        Icons.check_outlined,
+      trailingWidget = HugeIcon(
+        icon: HugeIcons.strokeRoundedTick02,
         size: 22,
         color: colorScheme.primary500,
       );

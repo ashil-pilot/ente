@@ -3,6 +3,7 @@ import 'dart:async';
 import "package:ente_components/ente_components.dart";
 import 'package:flutter/material.dart';
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/generated/l10n.dart";
 import 'package:photos/models/button_result.dart';
 import 'package:photos/models/typedefs.dart';
@@ -16,6 +17,7 @@ Future<ButtonResult?> showDialogWidget({
   String? body,
   required List<ButtonWidget> buttons,
   IconData? icon,
+  List<List<dynamic>>? hugeIcon,
   bool isDismissible = true,
   bool useRootNavigator = false,
 }) {
@@ -30,6 +32,7 @@ Future<ButtonResult?> showDialogWidget({
         body: body,
         buttons: buttons,
         icon: icon,
+        hugeIcon: hugeIcon,
       );
     },
   );
@@ -40,11 +43,13 @@ class DialogWidget extends StatelessWidget {
   final String? body;
   final List<ButtonWidget> buttons;
   final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   const DialogWidget({
     required this.title,
     this.body,
     required this.buttons,
     this.icon,
+    this.hugeIcon,
     super.key,
   });
 
@@ -53,7 +58,7 @@ class DialogWidget extends StatelessWidget {
     final colors = context.componentColors;
     final hasTitle = title.isNotEmpty;
     final hasBody = body?.isNotEmpty == true;
-    final hasContent = hasTitle || hasBody || icon != null;
+    final hasContent = hasTitle || hasBody || icon != null || hugeIcon != null;
     final cancelButtonIndex = sheetCancelButtonIndex(context, buttons);
     final cancelButton = cancelButtonIndex == -1
         ? null
@@ -65,7 +70,9 @@ class DialogWidget extends StatelessWidget {
 
     return BottomSheetComponent(
       title: hasTitle ? title : null,
-      illustration: icon == null
+      illustration: hugeIcon != null
+          ? HugeIcon(icon: hugeIcon!, size: 48, color: colors.iconColor)
+          : icon == null
           ? null
           : Icon(icon, size: 48, color: colors.iconColor),
       content: hasBody ? _DialogBody(body!) : null,

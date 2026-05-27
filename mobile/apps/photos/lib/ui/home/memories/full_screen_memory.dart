@@ -1,11 +1,9 @@
 import "dart:async";
-import "dart:io";
 import "dart:math";
 import "dart:ui";
 
 import "package:connectivity_plus/connectivity_plus.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
-import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_svg/flutter_svg.dart";
@@ -608,7 +606,11 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
                     onTap: () => Navigator.pop(context),
                     child: const Padding(
                       padding: EdgeInsets.fromLTRB(4, 8, 8, 8),
-                      child: Icon(Icons.close, color: Colors.white, size: 20),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                   builder: (context, value, child) {
@@ -912,8 +914,8 @@ class BottomIcons extends StatelessWidget {
         final currentFile = inheritedData.memories[safeIndex].file;
         final List<Widget> rowChildren = [
           IconButton(
-            icon: Icon(
-              Platform.isAndroid ? Icons.info_outline : CupertinoIcons.info,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedInformationCircle,
               color: Colors.white, //same for both themes
             ),
             onPressed: () async {
@@ -930,10 +932,8 @@ class BottomIcons extends StatelessWidget {
         if (isOwner) {
           rowChildren.addAll([
             IconButton(
-              icon: Icon(
-                Platform.isAndroid
-                    ? Icons.delete_outline
-                    : CupertinoIcons.delete,
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedDelete01,
                 color: Colors.white, //same for both themes
               ),
               onPressed: () async {
@@ -964,8 +964,8 @@ class BottomIcons extends StatelessWidget {
         }
         rowChildren.add(
           IconButton(
-            icon: Icon(
-              Icons.adaptive.share,
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedShare08,
               color: Colors.white, //same for both themes
             ),
             onPressed: () async {

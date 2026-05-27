@@ -1,5 +1,6 @@
 import "package:ente_icons/ente_icons.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/db/files_db.dart";
@@ -252,7 +253,7 @@ class _LikeCollectionSelectorSheetState
                 children: [
                   IconButtonWidget(
                     iconButtonType: IconButtonType.rounded,
-                    icon: Icons.close_rounded,
+                    hugeIcon: HugeIcons.strokeRoundedCancel01,
                     size: 20,
                     onTap: () => Navigator.of(context).pop(),
                   ),

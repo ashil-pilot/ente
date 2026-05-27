@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:ente_qr_ui/ente_qr_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import "package:hugeicons/hugeicons.dart";
 import 'package:photos/generated/l10n.dart';
 import 'package:photos/models/collection/collection.dart';
 import 'package:photos/services/collections_service.dart';
@@ -38,7 +39,7 @@ class PublicLinkEnabledActionsWidget extends StatelessWidget {
           title: AppLocalizations.of(context).linkHasExpired,
           textColor: enteColorScheme.warning500,
         ),
-        leadingIcon: Icons.error_outline,
+        leadingHugeIcon: HugeIcons.strokeRoundedAlertCircle,
         leadingIconColor: enteColorScheme.warning500,
         menuItemColor: enteColorScheme.fillFaint,
         singleBorderRadius: 8,
@@ -56,7 +57,7 @@ class PublicLinkEnabledActionsWidget extends StatelessWidget {
             title: AppLocalizations.of(context).copyLink,
             makeTextBold: true,
           ),
-          leadingIcon: Icons.copy,
+          leadingHugeIcon: HugeIcons.strokeRoundedCopy01,
           menuItemColor: enteColorScheme.fillFaint,
           showOnlyLoadingState: true,
           onTap: () async {
@@ -78,7 +79,7 @@ class PublicLinkEnabledActionsWidget extends StatelessWidget {
             title: AppLocalizations.of(context).sendLink,
             makeTextBold: true,
           ),
-          leadingIcon: Icons.adaptive.share,
+          leadingHugeIcon: HugeIcons.strokeRoundedSent,
           menuItemColor: enteColorScheme.fillFaint,
           onTap: () async {
             await shareAlbumLink(context, url, effectiveKey);
@@ -95,7 +96,7 @@ class PublicLinkEnabledActionsWidget extends StatelessWidget {
             title: AppLocalizations.of(context).sendQrCode,
             makeTextBold: true,
           ),
-          leadingIcon: Icons.qr_code_outlined,
+          leadingHugeIcon: HugeIcons.strokeRoundedQrCode,
           menuItemColor: enteColorScheme.fillFaint,
           onTap: () async {
             await showDialog<void>(

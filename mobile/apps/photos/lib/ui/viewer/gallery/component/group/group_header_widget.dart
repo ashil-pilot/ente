@@ -3,6 +3,7 @@ import "package:ente_components/theme/text_styles.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/generated/l10n.dart";
 import "package:photos/models/file/dummy_file.dart";
@@ -146,8 +147,8 @@ class _GroupHeaderWidgetState extends State<GroupHeaderWidget> {
                         child: Padding(
                           padding: const EdgeInsets.all(4),
                           child: widget.fadeInTrailingIcons
-                              ? Icon(
-                                  Icons.more_vert_outlined,
+                              ? HugeIcon(
+                                  icon: HugeIcons.strokeRoundedMoreVertical,
                                   // color: colorScheme.blurStrokeBase,
                                   color: componentColors.textLighter,
                                 ).animate().fadeIn(
@@ -164,8 +165,8 @@ class _GroupHeaderWidgetState extends State<GroupHeaderWidget> {
                                   ),
                                   curve: Curves.easeOut,
                                 )
-                              : Icon(
-                                  Icons.more_vert_outlined,
+                              : HugeIcon(
+                                  icon: HugeIcons.strokeRoundedMoreVertical,
                                   // color: colorScheme.blurStrokeBase,
                                   color: componentColors.textLighter,
                                 ),

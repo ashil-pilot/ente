@@ -1,11 +1,13 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/common/loading_widget.dart";
 import 'package:photos/ui/components/buttons/icon_button_widget.dart';
 
 ///https://www.figma.com/file/SYtMyLBs5SAOkTbfMMzhqt/ente-Visual-Design?node-id=8113-59605&t=OMX5f5KdDJYWSQQN-4
 class InfoItemWidget extends StatelessWidget {
-  final IconData leadingIcon;
+  final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingHugeIcon;
   final VoidCallback? editOnTap;
   final String? title;
   final Widget? endSection;
@@ -14,7 +16,8 @@ class InfoItemWidget extends StatelessWidget {
   final bool biggerSpinner;
   final VoidCallback? onTap;
   const InfoItemWidget({
-    required this.leadingIcon,
+    this.leadingIcon,
+    this.leadingHugeIcon,
     this.editOnTap,
     this.title,
     this.endSection,
@@ -23,7 +26,7 @@ class InfoItemWidget extends StatelessWidget {
     this.biggerSpinner = false,
     this.onTap,
     super.key,
-  });
+  }) : assert(leadingIcon != null || leadingHugeIcon != null);
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +88,7 @@ class InfoItemWidget extends StatelessWidget {
             children: [
               IconButtonWidget(
                 icon: leadingIcon,
+                hugeIcon: leadingHugeIcon,
                 iconButtonType: IconButtonType.secondary,
               ),
               Flexible(
@@ -109,7 +113,7 @@ class InfoItemWidget extends StatelessWidget {
         ),
         editOnTap != null
             ? IconButtonWidget(
-                icon: Icons.edit,
+                hugeIcon: HugeIcons.strokeRoundedPencilEdit01,
                 iconButtonType: IconButtonType.secondary,
                 onTap: editOnTap,
               )

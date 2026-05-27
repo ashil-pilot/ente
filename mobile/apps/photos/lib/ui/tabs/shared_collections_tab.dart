@@ -3,6 +3,7 @@ import "dart:math";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/constants.dart";
@@ -305,7 +306,7 @@ class _SharedCollectionsTabState extends State<SharedCollectionsTab>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButtonWidget(
-                              icon: Icons.search,
+                              hugeIcon: HugeIcons.strokeRoundedSearch01,
                               iconButtonType: IconButtonType.secondary,
                               iconColor: colorTheme.blurStrokePressed,
                               onTap: () {
@@ -389,7 +390,7 @@ class _SharedCollectionsTabState extends State<SharedCollectionsTab>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButtonWidget(
-                              icon: Icons.search,
+                              hugeIcon: HugeIcons.strokeRoundedSearch01,
                               iconButtonType: IconButtonType.secondary,
                               iconColor: colorTheme.blurStrokePressed,
                               onTap: () {

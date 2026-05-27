@@ -2,6 +2,7 @@ import "dart:typed_data";
 
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/db/files_db.dart";
 import "package:photos/db/ml/db.dart";
@@ -99,8 +100,8 @@ class _FaceThumbnail extends StatelessWidget {
             child: image != null
                 ? Image(image: image!, fit: BoxFit.cover)
                 : Center(
-                    child: Icon(
-                      Icons.person_outline,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedUser,
                       color: colorScheme.textMuted,
                       size: 26,
                     ),

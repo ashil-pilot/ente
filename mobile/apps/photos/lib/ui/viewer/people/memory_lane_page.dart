@@ -5,6 +5,7 @@ import "dart:ui" as ui;
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:intl/intl.dart";
 import "package:logging/logging.dart";
 import "package:photos/db/files_db.dart";
@@ -646,7 +647,7 @@ class _MemoryLanePageState extends State<MemoryLanePage>
                         if (_showShareAction)
                           _buildAppBarActionButton(
                             context: context,
-                            icon: Icons.share,
+                            hugeIcon: HugeIcons.strokeRoundedShare03,
                             tooltip: l10n.shareLink,
                             onTap: () async {
                               _pausePlayback();
@@ -664,7 +665,7 @@ class _MemoryLanePageState extends State<MemoryLanePage>
                         if (_showShareAction) const SizedBox(width: 12),
                         _buildAppBarActionButton(
                           context: context,
-                          icon: Icons.close,
+                          hugeIcon: HugeIcons.strokeRoundedCancel01,
                           tooltip: MaterialLocalizations.of(
                             context,
                           ).closeButtonTooltip,
@@ -786,8 +787,8 @@ class _MemoryLanePageState extends State<MemoryLanePage>
               child: ColoredBox(
                 color: colorScheme.backgroundElevated2,
                 child: Center(
-                  child: Icon(
-                    Icons.person_outline,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedUser,
                     size: 72,
                     color: colorScheme.strokeMuted,
                   ),
@@ -971,8 +972,10 @@ class _MemoryLanePageState extends State<MemoryLanePage>
                 : l10n.facesTimelinePlaybackPlay,
             child: IconButton(
               onPressed: _frames.isEmpty ? null : _togglePlayback,
-              icon: Icon(
-                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              icon: HugeIcon(
+                icon: isPlaying
+                    ? HugeIcons.strokeRoundedPause
+                    : HugeIcons.strokeRoundedPlay,
               ),
               style: IconButton.styleFrom(
                 backgroundColor: colorScheme.fillFaint,
@@ -1082,10 +1085,12 @@ class _MemoryLanePageState extends State<MemoryLanePage>
 
   Widget _buildAppBarActionButton({
     required BuildContext context,
-    required IconData icon,
+    IconData? icon,
+    List<List<dynamic>>? hugeIcon,
     required String tooltip,
     required Future<void> Function() onTap,
   }) {
+    assert(icon != null || hugeIcon != null);
     final colorScheme = getEnteColorScheme(context);
     return Tooltip(
       message: tooltip,
@@ -1099,7 +1104,9 @@ class _MemoryLanePageState extends State<MemoryLanePage>
             color: colorScheme.fillFaint,
           ),
           padding: const EdgeInsets.all(8),
-          child: Icon(icon, size: 20, color: colorScheme.textBase),
+          child: hugeIcon != null
+              ? HugeIcon(icon: hugeIcon, size: 20, color: colorScheme.textBase)
+              : Icon(icon, size: 20, color: colorScheme.textBase),
         ),
       ),
     );
@@ -1324,8 +1331,8 @@ class _MemoryLaneCard extends StatelessWidget {
             ),
           if (frame.image == null)
             Center(
-              child: Icon(
-                Icons.person_outline,
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedUser,
                 size: 72,
                 color: colorScheme.strokeMuted,
               ),

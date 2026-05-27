@@ -1,5 +1,6 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/db/files_db.dart";
 import "package:photos/models/file/file.dart";
@@ -111,8 +112,8 @@ class _SharedPhotosGridState extends State<SharedPhotosGrid> {
           color: colorScheme.fillFaint,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          Icons.photo_library_outlined,
+        child: HugeIcon(
+          icon: HugeIcons.strokeRoundedImage01,
           color: colorScheme.strokeMuted,
           size: 48,
         ),

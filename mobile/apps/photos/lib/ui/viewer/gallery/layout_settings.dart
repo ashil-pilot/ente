@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/force_reload_home_gallery_event.dart";
 import "package:photos/generated/l10n.dart";
@@ -69,7 +70,7 @@ class _GalleryLayoutSettingsState extends State<GalleryLayoutSettings> {
                 Column(
                   children: [
                     MenuItemWidget(
-                      leadingIcon: Icons.grid_view_outlined,
+                      leadingHugeIcon: HugeIcons.strokeRoundedGridView,
                       captionedTextWidget: CaptionedTextWidget(
                         title: context.l10n.day,
                       ),
@@ -77,7 +78,9 @@ class _GalleryLayoutSettingsState extends State<GalleryLayoutSettings> {
                       alignCaptionedTextToLeft: true,
                       isBottomBorderRadiusRemoved: true,
                       showOnlyLoadingState: true,
-                      trailingIcon: isDayLayout ? Icons.check : null,
+                      trailingHugeIcon: isDayLayout
+                          ? HugeIcons.strokeRoundedTick02
+                          : null,
                       onTap: () async {
                         final futures = <Future>[
                           localSettings.setGalleryGroupType(GroupType.day),
@@ -97,7 +100,7 @@ class _GalleryLayoutSettingsState extends State<GalleryLayoutSettings> {
                       bgColor: getEnteColorScheme(context).fillFaint,
                     ),
                     MenuItemWidget(
-                      leadingIcon: Icons.grid_on_rounded,
+                      leadingHugeIcon: HugeIcons.strokeRoundedGridView,
                       captionedTextWidget: CaptionedTextWidget(
                         title: context.l10n.month,
                       ),
@@ -106,7 +109,9 @@ class _GalleryLayoutSettingsState extends State<GalleryLayoutSettings> {
                       isTopBorderRadiusRemoved: true,
                       isBottomBorderRadiusRemoved: true,
                       showOnlyLoadingState: true,
-                      trailingIcon: isMonthLayout ? Icons.check : null,
+                      trailingHugeIcon: isMonthLayout
+                          ? HugeIcons.strokeRoundedTick02
+                          : null,
                       onTap: () async {
                         final futures = <Future>[
                           localSettings.setGalleryGroupType(GroupType.month),
@@ -133,9 +138,9 @@ class _GalleryLayoutSettingsState extends State<GalleryLayoutSettings> {
                       alignCaptionedTextToLeft: true,
                       showOnlyLoadingState: true,
                       isTopBorderRadiusRemoved: true,
-                      leadingIcon: isDayLayout || isMonthLayout
+                      leadingHugeIcon: isDayLayout || isMonthLayout
                           ? null
-                          : Icons.check,
+                          : HugeIcons.strokeRoundedTick02,
                       trailingWidget: Icon(
                         Icons.chevron_right_outlined,
                         color: colorScheme.strokeBase,
