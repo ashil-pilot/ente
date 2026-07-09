@@ -249,27 +249,41 @@ Future<List<EnteFile>> deleteFilesOnDeviceOnly(
     ..addAll(await _tryDeleteSharedMediaFiles(localSharedMediaIDs));
   final removedIDs = deletedIDs.union(result.trashedIDs);
   final List<EnteFile> deletedFiles = [];
-  for (final file in files) {
-    // Handle only files deleted, moved to trash, or already missing.
-    if (removedIDs.contains(file.localID) ||
-        alreadyDeletedIDs.contains(file.localID)) {
-      deletedFiles.add(file);
-      if (localOnlyIDs.contains(file.localID)) {
-        await FilesDB.instance.deleteLocalFile(file);
-      } else {
-        file.localID = null;
-        await FilesDB.instance.update(file);
+  final List<int> uploadedFileIDsToClear = [];
+  try {
+    for (final file in files) {
+      // Handle only files deleted, moved to trash, or already missing.
+      if (removedIDs.contains(file.localID) ||
+          alreadyDeletedIDs.contains(file.localID)) {
+        deletedFiles.add(file);
+        if (localOnlyIDs.contains(file.localID)) {
+          await FilesDB.instance.deleteLocalFile(file);
+        } else {
+          final uploadedFileID = file.uploadedFileID;
+          file.localID = null;
+          if (uploadedFileID != null) {
+            uploadedFileIDsToClear.add(uploadedFileID);
+          } else {
+            await FilesDB.instance.update(file);
+          }
+        }
       }
     }
-  }
-  if (deletedFiles.isNotEmpty || alreadyDeletedIDs.isNotEmpty) {
-    Bus.instance.fire(
-      LocalPhotosUpdatedEvent(
-        deletedFiles,
-        type: EventType.deletedFromDevice,
-        source: "deleteFilesOnDeviceOnly",
-      ),
-    );
+  } finally {
+    if (uploadedFileIDsToClear.isNotEmpty) {
+      await FilesDB.instance.clearLocalIDsForUploadedFileIDs(
+        uploadedFileIDsToClear,
+      );
+    }
+    if (deletedFiles.isNotEmpty || alreadyDeletedIDs.isNotEmpty) {
+      Bus.instance.fire(
+        LocalPhotosUpdatedEvent(
+          deletedFiles,
+          type: EventType.deletedFromDevice,
+          source: "deleteFilesOnDeviceOnly",
+        ),
+      );
+    }
   }
   if (removedIDs.isNotEmpty && context.mounted) {
     final message = deletedIDs.isNotEmpty
