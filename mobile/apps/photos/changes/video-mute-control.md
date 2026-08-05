@@ -1,1 +1,1 @@
-- Added a mute button to the video player that remembers your preference.
+- Added a mute button to the video player that remembers your preference. (@r4khul)

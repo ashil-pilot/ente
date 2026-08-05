@@ -1,1 +1,1 @@
-- Tapping an unconfigured home screen widget now opens its customization screen.
+- Tapping an unconfigured home screen widget now opens its customization screen. (@r4khul)
