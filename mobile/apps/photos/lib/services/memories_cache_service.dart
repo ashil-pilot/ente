@@ -1403,7 +1403,11 @@ class MemoriesCacheService {
           color: backgroundColorDark,
           width: double.infinity,
           height: double.infinity,
-          child: FullScreenMemory(personMemory.title, 0),
+          child: FullScreenMemory(
+            personMemory.title,
+            0,
+            memoryID: personMemory.id,
+          ),
         ),
       ),
       context: context,

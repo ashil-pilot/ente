@@ -40,6 +40,9 @@ class ZoomableImage extends StatefulWidget {
   final bool shouldCover;
   final bool isGuestView;
   final bool isFromMemories;
+  final bool showCaption;
+  final int? cacheWidth;
+  final int? cacheHeight;
   final Function({required int memoryDuration})? onFinalFileLoad;
   final ValueChanged<File>? onFinalImageLoaded;
 
@@ -52,6 +55,9 @@ class ZoomableImage extends StatefulWidget {
     this.shouldCover = false,
     this.isGuestView = false,
     this.isFromMemories = false,
+    this.showCaption = true,
+    this.cacheWidth,
+    this.cacheHeight,
     this.onFinalFileLoad,
     this.onFinalImageLoaded,
   });
@@ -301,7 +307,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
           };
     return GestureDetector(
       onVerticalDragUpdate: verticalDragCallback,
-      child: widget.photo.caption?.isNotEmpty ?? false
+      child: widget.showCaption && (widget.photo.caption?.isNotEmpty ?? false)
           ? Stack(
               clipBehavior: Clip.none,
               children: [
@@ -575,7 +581,14 @@ class _ZoomableImageState extends State<ZoomableImage> {
 
   void _loadWithPlatformDecoder(File file) {
     ImageProvider imageProvider;
-    if (isTooLargeImage) {
+    if (widget.cacheWidth != null || widget.cacheHeight != null) {
+      imageProvider = Image.file(
+        file,
+        gaplessPlayback: true,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+      ).image;
+    } else if (isTooLargeImage) {
       _logger.info(
         "Handling very large image (${_photo.width}x${_photo.height}) by decreasing resolution to ${_maxImagePixels ~/ 1000000}MP to prevent crash",
       );
@@ -755,9 +768,10 @@ class _ZoomableImageState extends State<ZoomableImage> {
         return false;
       }
 
-      await precacheImage(imageProvider, context);
+      final displayProvider = _resizeForTarget(imageProvider);
+      await precacheImage(displayProvider, context);
       if (mounted && !_loadedFinalImage) {
-        await _updateViewWithFinalImage(imageProvider, file);
+        await _updateViewWithFinalImage(displayProvider, file);
       }
       return true;
     } catch (e) {
@@ -856,7 +870,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
     }
 
     if (compressedFile != null) {
-      final imageProvider = MemoryImage(compressedFile);
+      final imageProvider = _resizeForTarget(MemoryImage(compressedFile));
 
       unawaited(
         precacheImage(imageProvider, context).then((value) {
@@ -881,6 +895,14 @@ class _ZoomableImageState extends State<ZoomableImage> {
         _notifyReadyOnce();
       }
     }
+  }
+
+  ImageProvider<Object> _resizeForTarget(ImageProvider<Object> provider) {
+    return ResizeImage.resizeIfNeeded(
+      widget.cacheWidth,
+      widget.cacheHeight,
+      provider,
+    );
   }
 }
 

@@ -25,10 +25,12 @@ import "package:photos/models/selected_files.dart";
 import "package:photos/module/download/file.dart";
 import "package:photos/module/download/thumbnail.dart";
 import "package:photos/service_locator.dart";
+import "package:photos/services/memories/memory_collage_selector.dart";
 import "package:photos/services/memory_share_service.dart";
 import "package:photos/services/smart_memories_service.dart";
 import "package:photos/ui/actions/file/file_actions.dart";
 import "package:photos/ui/collections/collection_action_sheet.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_end_card.dart";
 import "package:photos/ui/home/memories/custom_listener.dart";
 import "package:photos/ui/home/memories/memory_progress_indicator.dart";
 import "package:photos/ui/home/memories/memory_share_sheet.dart";
@@ -323,12 +325,14 @@ class FullScreenMemoryData extends InheritedWidget {
 class FullScreenMemory extends StatefulWidget {
   final String title;
   final int initialIndex;
+  final String memoryID;
   final VoidCallback? onNextMemory;
   final VoidCallback? onPreviousMemory;
 
   const FullScreenMemory(
     this.title,
     this.initialIndex, {
+    required this.memoryID,
     this.onNextMemory,
     this.onPreviousMemory,
     super.key,
@@ -363,6 +367,7 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
   bool _isPlaybackPaused = false;
   bool get _isAnimationPaused => _isViewerPaused || _isPlaybackPaused;
   bool _isMediaZoomed = false;
+  bool _showCollageEndCard = false;
   final _socialControlsVisible = ValueNotifier<bool>(false);
 
   /// Used to check if any pointer is on the screen.
@@ -535,6 +540,17 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     if (inheritedData.memories.isEmpty) return;
     _isMediaZoomed = false;
     hasFinalFileLoaded = false;
+
+    if (_showCollageEndCard) {
+      if (widget.onNextMemory != null) {
+        _leaveCollageEndCard();
+        widget.onNextMemory!();
+      } else {
+        unawaited(Navigator.maybePop(context));
+      }
+      return;
+    }
+
     final currentIndex = _clampedMemoryIndex(
       inheritedData.indexNotifier.value,
       inheritedData.memories.length,
@@ -542,6 +558,8 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     inheritedData.indexNotifier.value = currentIndex;
     if (currentIndex < inheritedData.memories.length - 1) {
       _onPageChange(inheritedData, currentIndex + 1);
+    } else if (_isCollageEligible(inheritedData)) {
+      _enterCollageEndCard();
     } else if (widget.onNextMemory != null) {
       _resetAnimation();
       _setSocialControlsVisible(false);
@@ -556,6 +574,14 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     if (inheritedData.memories.isEmpty) return;
     _isMediaZoomed = false;
     hasFinalFileLoaded = false;
+
+    if (_showCollageEndCard) {
+      _autoAdvanceTransition = false;
+      isAtFirstOrLastFile = false;
+      _leaveCollageEndCard();
+      return;
+    }
+
     final currentIndex = _clampedMemoryIndex(
       inheritedData.indexNotifier.value,
       inheritedData.memories.length,
@@ -572,6 +598,27 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
       _resetAnimation();
       _toggleAnimation(pause: false);
     }
+  }
+
+  bool _isCollageEligible(FullScreenMemoryData inheritedData) {
+    final selectedFiles = MemoryCollageSelector.select(
+      memoryID: widget.memoryID,
+      shuffleRevision: 0,
+      files: inheritedData.memories.map((memory) => memory.file),
+    );
+    return selectedFiles.length == MemoryCollageSelector.photoCount;
+  }
+
+  void _enterCollageEndCard() {
+    _resetAnimation();
+    _setSocialControlsVisible(false);
+    _toggleAnimation(pause: true);
+    setState(() => _showCollageEndCard = true);
+  }
+
+  void _leaveCollageEndCard() {
+    setState(() => _showCollageEndCard = false);
+    _toggleAnimation(pause: false);
   }
 
   void _onPageChange(FullScreenMemoryData inheritedData, int index) {
@@ -621,6 +668,21 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     final inheritedData = FullScreenMemoryData.of(context);
     if (inheritedData == null || inheritedData.memories.isEmpty) {
       return const SizedBox.shrink();
+    }
+    if (_showCollageEndCard) {
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: MemoryCollageEndCard(
+            title: widget.title,
+            memoryID: widget.memoryID,
+            memories: List<Memory>.unmodifiable(inheritedData.memories),
+            onPrevious: () => _goToPrevious(inheritedData),
+            onContinue: () => _goToNext(inheritedData),
+          ),
+        ),
+      );
     }
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,

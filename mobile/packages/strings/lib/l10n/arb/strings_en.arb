@@ -3767,6 +3767,7 @@
   "showPerson": "Show person",
   "showQRAuthMessage": "Authenticate to show QR code",
   "showTextOnWidget": "Show text on widget",
+  "shuffle": "Shuffle",
   "sigInBackupReminder": "Ente will automatically backup codes after sign-in.\n\nWe still recommend exporting codes as an extra backup.",
   "signInToBackup": "Sign in to backup your codes",
   "signOutFromOtherDevices": "Sign out from other devices",

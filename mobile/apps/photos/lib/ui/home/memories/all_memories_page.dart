@@ -58,11 +58,13 @@ class _AllMemoriesPageState extends State<AllMemoriesPage>
               : getNextMemoryIndex(smartMemory.memories);
           isFirstLoad = false;
           return FullScreenMemoryDataUpdater(
+            key: ValueKey(smartMemory.id),
             initialIndex: initialMemoryIndex,
             memories: smartMemory.memories,
             child: FullScreenMemory(
               smartMemory.title,
               initialMemoryIndex,
+              memoryID: smartMemory.id,
               onNextMemory: index < widget.allMemories.length - 1
                   ? () => pageController.nextPage(
                       duration: const Duration(milliseconds: 675),

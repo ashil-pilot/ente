@@ -1,0 +1,543 @@
+{
+  "version": 1,
+  "scale": "3x (1 CSS px in the approved 360×640 comp = 3 asset px)",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "assets": [
+    {
+      "id": "paper-washi",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "paper-cream-fiber",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "paper-blush-stripe",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "paper-sage-stripe",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "paper-terracotta-mottle",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "paper-torn",
+      "width": 1098,
+      "height": 1734,
+      "safetyMarginPx": 24,
+      "note": "torn cream sheet; transparent margin baked in for the displaced edge"
+    },
+    {
+      "id": "polaroid-frame",
+      "width": 462,
+      "height": 534,
+      "photoWindows": [
+        {
+          "x": 27,
+          "y": 27,
+          "width": 414,
+          "height": 420
+        }
+      ],
+      "note": "window pixels transparent except a thin baked alpha seam shadow at the window edge"
+    },
+    {
+      "id": "film-strip",
+      "width": 390,
+      "height": 1800,
+      "photoWindows": [
+        {
+          "x": 57,
+          "y": 78,
+          "width": 276,
+          "height": 318
+        },
+        {
+          "x": 57,
+          "y": 462,
+          "width": 276,
+          "height": 318
+        },
+        {
+          "x": 57,
+          "y": 846,
+          "width": 276,
+          "height": 318
+        }
+      ]
+    },
+    {
+      "id": "banner",
+      "width": 546,
+      "height": 150,
+      "safetyMarginPx": 18,
+      "note": "no text baked; title is typeset by the app"
+    },
+    {
+      "id": "tape-mustard",
+      "width": 336,
+      "height": 72,
+      "note": "semi-transparent by design"
+    },
+    {
+      "id": "tape-blush",
+      "width": 228,
+      "height": 66,
+      "note": "semi-transparent by design"
+    },
+    {
+      "id": "tape-sage",
+      "width": 210,
+      "height": 63,
+      "note": "semi-transparent by design"
+    },
+    {
+      "id": "stamp-postmark",
+      "width": 240,
+      "height": 270,
+      "note": "stamp + tilted postmark ring as one composition"
+    },
+    {
+      "id": "star",
+      "width": 282,
+      "height": 282,
+      "safetyMarginPx": 18
+    },
+    {
+      "id": "fern",
+      "width": 228,
+      "height": 408
+    },
+    {
+      "id": "coffee-ring",
+      "width": 192,
+      "height": 192,
+      "safetyMarginPx": 6,
+      "note": "border-only ring with baked blur; interior remains transparent"
+    },
+    {
+      "id": "sun-streak",
+      "width": 1080,
+      "height": 1920,
+      "note": "flat-alpha overlay; apply the template layer blend mode at runtime"
+    },
+    {
+      "id": "vignette",
+      "width": 1080,
+      "height": 1920,
+      "note": "flat-alpha overlay; apply the template layer blend mode at runtime"
+    },
+    {
+      "id": "grain-overlay",
+      "width": 1080,
+      "height": 1920,
+      "bakedOpacity": 0.3,
+      "recommendedBlendMode": "overlay",
+      "recommendedOpacity": 0.55,
+      "note": "flat-alpha approximation; composite with overlay blend to match the approved look"
+    }
+  ],
+  "template2a": {
+    "canvas": {
+      "width": 1080,
+      "height": 1920
+    },
+    "rotationOrigin": "layer center",
+    "overflow": "crop to canvas",
+    "shadowSchema": {
+      "kind": "dropShadow",
+      "units": "1080x1920 canvas pixels",
+      "fields": [
+        "dx",
+        "dy",
+        "blur",
+        "color"
+      ],
+      "application": "cast from the rotated layer silhouette and rendered under the art"
+    },
+    "layers": [
+      {
+        "layerId": "bg",
+        "asset": "paper-washi",
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "z": 0,
+        "rotation": 0,
+        "backgroundSwappable": true
+      },
+      {
+        "layerId": "torn",
+        "asset": "paper-torn",
+        "x": -12,
+        "y": 162,
+        "width": 1098,
+        "height": 1734,
+        "z": 2,
+        "rotation": 0.8,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 42,
+            "blur": 66,
+            "color": "rgba(80,50,22,0.3)"
+          }
+        ]
+      },
+      {
+        "layerId": "ring",
+        "asset": "coffee-ring",
+        "x": 444,
+        "y": 1530,
+        "width": 192,
+        "height": 192,
+        "z": 3,
+        "rotation": 8
+      },
+      {
+        "layerId": "fern",
+        "asset": "fern",
+        "x": 897,
+        "y": 114,
+        "width": 228,
+        "height": 408,
+        "z": 4,
+        "rotation": 196,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 3,
+            "dy": 6,
+            "blur": 9,
+            "color": "rgba(80,60,30,0.3)"
+          }
+        ]
+      },
+      {
+        "layerId": "star",
+        "asset": "star",
+        "x": 336,
+        "y": 240,
+        "width": 282,
+        "height": 282,
+        "z": 9,
+        "rotation": 12,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 3,
+            "dy": 9,
+            "blur": 15,
+            "color": "rgba(90,55,15,0.35)"
+          }
+        ]
+      },
+      {
+        "layerId": "strip",
+        "asset": "film-strip",
+        "x": 618,
+        "y": 312,
+        "width": 390,
+        "height": 1800,
+        "z": 10,
+        "rotation": 2,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 30,
+            "blur": 54,
+            "color": "rgba(70,32,12,0.38)"
+          }
+        ]
+      },
+      {
+        "layerId": "p1",
+        "asset": "polaroid-frame",
+        "x": 18,
+        "y": 354,
+        "width": 462,
+        "height": 534,
+        "z": 12,
+        "rotation": -4.5,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 9,
+            "blur": 18,
+            "color": "rgba(90,60,30,0.22)"
+          },
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 36,
+            "blur": 72,
+            "color": "rgba(90,60,30,0.26)"
+          }
+        ]
+      },
+      {
+        "layerId": "p2",
+        "asset": "polaroid-frame",
+        "x": 72,
+        "y": 900,
+        "width": 462,
+        "height": 534,
+        "z": 13,
+        "rotation": 3,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 9,
+            "blur": 18,
+            "color": "rgba(90,60,30,0.22)"
+          },
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 36,
+            "blur": 72,
+            "color": "rgba(90,60,30,0.26)"
+          }
+        ]
+      },
+      {
+        "layerId": "p3",
+        "asset": "polaroid-frame",
+        "x": 24,
+        "y": 1404,
+        "width": 462,
+        "height": 534,
+        "z": 14,
+        "rotation": -2,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 9,
+            "blur": 18,
+            "color": "rgba(90,60,30,0.22)"
+          },
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 36,
+            "blur": 72,
+            "color": "rgba(90,60,30,0.26)"
+          }
+        ]
+      },
+      {
+        "layerId": "banner",
+        "asset": "banner",
+        "x": 264,
+        "y": 198,
+        "width": 546,
+        "height": 150,
+        "z": 16,
+        "rotation": -2.5,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 9,
+            "blur": 18,
+            "color": "rgba(80,40,15,0.35)"
+          }
+        ]
+      },
+      {
+        "layerId": "tapeA",
+        "asset": "tape-mustard",
+        "x": 54,
+        "y": 162,
+        "width": 336,
+        "height": 72,
+        "z": 17,
+        "rotation": -4,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 6,
+            "blur": 12,
+            "color": "rgba(90,60,25,0.22)"
+          }
+        ]
+      },
+      {
+        "layerId": "tapeB",
+        "asset": "tape-blush",
+        "x": 132,
+        "y": 318,
+        "width": 228,
+        "height": 66,
+        "z": 15,
+        "rotation": 2,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 6,
+            "blur": 12,
+            "color": "rgba(110,60,45,0.22)"
+          }
+        ]
+      },
+      {
+        "layerId": "tapeC",
+        "asset": "tape-sage",
+        "x": 444,
+        "y": 864,
+        "width": 210,
+        "height": 63,
+        "z": 15,
+        "rotation": -36,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 6,
+            "blur": 12,
+            "color": "rgba(70,80,45,0.22)"
+          }
+        ]
+      },
+      {
+        "layerId": "stamp",
+        "asset": "stamp-postmark",
+        "x": 678,
+        "y": 150,
+        "width": 240,
+        "height": 270,
+        "z": 17,
+        "rotation": 5,
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 6,
+            "blur": 12,
+            "color": "rgba(90,60,30,0.3)"
+          }
+        ]
+      },
+      {
+        "layerId": "sunStreak",
+        "asset": "sun-streak",
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "z": 34,
+        "rotation": 0,
+        "blendMode": "soft-light",
+        "opacity": 1
+      },
+      {
+        "layerId": "vignette",
+        "asset": "vignette",
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "z": 36,
+        "rotation": 0,
+        "blendMode": "multiply",
+        "opacity": 1
+      },
+      {
+        "layerId": "grain",
+        "asset": "grain-overlay",
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "z": 38,
+        "rotation": 0,
+        "blendMode": "overlay",
+        "opacity": 0.55
+      }
+    ],
+    "photoSlots": [
+      {
+        "slot": 0,
+        "layerId": "strip",
+        "windowIndex": 0
+      },
+      {
+        "slot": 1,
+        "layerId": "strip",
+        "windowIndex": 1
+      },
+      {
+        "slot": 2,
+        "layerId": "strip",
+        "windowIndex": 2
+      },
+      {
+        "slot": 3,
+        "layerId": "p1",
+        "windowIndex": 0
+      },
+      {
+        "slot": 4,
+        "layerId": "p2",
+        "windowIndex": 0
+      },
+      {
+        "slot": 5,
+        "layerId": "p3",
+        "windowIndex": 0
+      }
+    ],
+    "appRendered": "banner title text is typeset by the app over the banner",
+    "titleStyle": {
+      "layerId": "banner",
+      "units": "1080x1920 canvas pixels",
+      "fontFamily": "Lora",
+      "fontAsset": "fonts/Lora-SemiBold.ttf",
+      "fontWeight": 600,
+      "fontStyle": "normal",
+      "fontSize": 45,
+      "letterSpacing": 12,
+      "color": "#f4e7cf",
+      "textAlign": "center",
+      "verticalAlign": "center",
+      "memoryTitleCasing": "preserve",
+      "generatedMonthLabelCasing": "uppercase",
+      "glyphFallback": "platform",
+      "shadow": {
+        "dx": 0,
+        "dy": 3,
+        "blur": 3,
+        "color": "rgba(90,40,15,0.5)"
+      }
+    }
+  }
+}
