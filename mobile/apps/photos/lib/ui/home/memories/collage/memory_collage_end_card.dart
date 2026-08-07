@@ -8,7 +8,6 @@ import "package:photos/models/memories/memory.dart";
 import "package:photos/models/memories/memory_collage_manifest.dart";
 import "package:photos/services/memories/memory_collage_selector.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
-import "package:photos/ui/home/memories/collage/memory_collage_controller.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_editor_page.dart";
 import "package:photos/ui/home/memories/custom_listener.dart";
 import "package:photos/ui/home/memories/memory_progress_indicator.dart";
@@ -55,13 +54,14 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     if (!MemoryCollageSelector.isSupportedPhotoCount(files.length)) {
       return manifest;
     }
+    final defaultTemplate = manifest.defaultTemplate;
     await MemoryCollageCanvasView.precacheAssets(
       context,
       manifest,
       assetIDs: memoryCollageRequiredAssetIDs(
         manifest,
-        MemoryCollageController.defaultBackgroundIDs.first,
-        photoCount: files.length,
+        defaultTemplate.background.defaultAssetID,
+        templateID: defaultTemplate.id,
       ),
     );
     return manifest;
@@ -207,13 +207,14 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
                                   ),
                                 );
                               }
+                              final defaultTemplate = manifest.defaultTemplate;
                               return MemoryCollageCanvasView(
                                 manifest: manifest,
                                 files: files,
                                 title: widget.title,
-                                backgroundAssetID: MemoryCollageController
-                                    .defaultBackgroundIDs
-                                    .first,
+                                backgroundAssetID:
+                                    defaultTemplate.background.defaultAssetID,
+                                templateID: defaultTemplate.id,
                                 photoBuilder: (context, file, slot) {
                                   return ThumbnailWidget(
                                     file,

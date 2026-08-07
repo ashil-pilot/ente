@@ -41,13 +41,22 @@ Future<void> precacheMemoryCollageAsset(
 Set<String> memoryCollageRequiredAssetIDs(
   MemoryCollageManifest manifest,
   String backgroundAssetID, {
-  required int photoCount,
+  String? templateID,
 }) {
-  final layout = manifest.template.layoutForPhotoCount(photoCount);
+  final template = templateID == null
+      ? manifest.defaultTemplate
+      : manifest.templateFor(templateID);
+  if (!template.background.assetIDs.contains(backgroundAssetID)) {
+    throw ArgumentError.value(
+      backgroundAssetID,
+      "backgroundAssetID",
+      "is not supported by memory collage template ${template.id}",
+    );
+  }
   return {
     backgroundAssetID,
-    for (final layer in manifest.template.layers)
-      if (!layer.backgroundSwappable) layout.assetIDFor(layer),
+    for (final layer in template.layers)
+      if (layer.layerID != template.background.layerID) layer.assetID,
   };
 }
 
@@ -61,6 +70,7 @@ class MemoryCollageCanvasView extends StatelessWidget {
   final String title;
   final String backgroundAssetID;
   final MemoryCollagePhotoBuilder photoBuilder;
+  final String? templateID;
 
   const MemoryCollageCanvasView({
     required this.manifest,
@@ -68,6 +78,7 @@ class MemoryCollageCanvasView extends StatelessWidget {
     required this.title,
     required this.backgroundAssetID,
     required this.photoBuilder,
+    this.templateID,
     super.key,
   });
 
@@ -84,25 +95,100 @@ class MemoryCollageCanvasView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final template = manifest.template;
-    final layout = template.layoutForPhotoCount(files.length);
+    final template = templateID == null
+        ? manifest.defaultTemplate
+        : manifest.templateFor(templateID!);
+    if (!template.background.assetIDs.contains(backgroundAssetID)) {
+      throw StateError(
+        "Background $backgroundAssetID is not supported by memory collage "
+        "template ${template.id}",
+      );
+    }
+    if (files.length != template.photoSlots.length) {
+      throw StateError(
+        "Memory collage requires ${template.photoSlots.length} photos, "
+        "got ${files.length}",
+      );
+    }
+    final isDarkBackground = manifest.assetFor(backgroundAssetID).dark;
     final slotByLayerAndWindow = <(String, int), int>{
-      for (final slot in layout.photoSlots)
-        (slot.layerID, slot.windowIndex): slot.slot,
+      for (final slot in template.photoSlots)
+        if (slot is MemoryCollageAssetWindowPhotoSlot)
+          (slot.layerID, slot.windowIndex): slot.slot,
     };
+    final entries = <_MemoryCollageStackEntry>[];
+    var sourceOrder = 0;
+    for (final layer in template.layers) {
+      entries.add(
+        _MemoryCollageStackEntry(
+          z: layer.z,
+          sourceOrder: sourceOrder++,
+          children: [
+            for (final shadow in layer.shadows.reversed)
+              _buildLayerShadow(template, layer, shadow),
+            _buildLayer(
+              context,
+              template,
+              layer,
+              slotByLayerAndWindow,
+              isDarkBackground,
+            ),
+          ],
+        ),
+      );
+    }
+    for (final slot in template.photoSlots) {
+      if (slot is! MemoryCollageRectPhotoSlot) continue;
+      entries.add(
+        _MemoryCollageStackEntry(
+          z: slot.z,
+          sourceOrder: sourceOrder++,
+          children: [
+            for (final shadow in slot.shadows.reversed)
+              _buildRectPhotoShadow(slot, shadow),
+            _buildRectPhoto(context, slot),
+          ],
+        ),
+      );
+    }
+    for (final rule in template.rules) {
+      entries.add(
+        _MemoryCollageStackEntry(
+          z: rule.z,
+          sourceOrder: sourceOrder++,
+          children: [_buildRule(rule, isDarkBackground)],
+        ),
+      );
+    }
+    final titlePlacement = template.titleStyle.placement;
+    if (titlePlacement is MemoryCollageTitleRect) {
+      entries.add(
+        _MemoryCollageStackEntry(
+          z: titlePlacement.z,
+          sourceOrder: sourceOrder++,
+          children: [
+            _buildRectTitle(
+              template.titleStyle,
+              titlePlacement,
+              isDarkBackground,
+            ),
+          ],
+        ),
+      );
+    }
+    entries.sort((left, right) {
+      final zOrder = left.z.compareTo(right.z);
+      return zOrder != 0
+          ? zOrder
+          : left.sourceOrder.compareTo(right.sourceOrder);
+    });
 
     return SizedBox.fromSize(
       size: memoryCollageLogicalSize,
       child: ClipRect(
         child: Stack(
           clipBehavior: Clip.none,
-          children: [
-            for (final layer in template.layers) ...[
-              for (final shadow in layer.shadows.reversed)
-                _buildShadow(layer, shadow, layout),
-              _buildLayer(context, layer, layout, slotByLayerAndWindow),
-            ],
-          ],
+          children: [for (final entry in entries) ...entry.children],
         ),
       ),
     );
@@ -110,13 +196,14 @@ class MemoryCollageCanvasView extends StatelessWidget {
 
   Widget _buildLayer(
     BuildContext context,
+    MemoryCollageTemplate template,
     MemoryCollageLayer layer,
-    MemoryCollagePhotoLayout layout,
     Map<(String, int), int> slotByLayerAndWindow,
+    bool isDarkBackground,
   ) {
-    final assetID = layer.backgroundSwappable
+    final assetID = layer.layerID == template.background.layerID
         ? backgroundAssetID
-        : layout.assetIDFor(layer);
+        : layer.assetID;
     final asset = manifest.assetFor(assetID);
     final width = layer.width / memoryCollageExportPixelRatio;
     final height = layer.height / memoryCollageExportPixelRatio;
@@ -166,12 +253,15 @@ class MemoryCollageCanvasView extends StatelessWidget {
     }
     layerChildren.add(Positioned.fill(child: assetWidget));
 
-    if (manifest.template.titleStyle.layerID == layer.layerID) {
+    final titlePlacement = template.titleStyle.placement;
+    if (titlePlacement is MemoryCollageTitleAnchor &&
+        titlePlacement.layerID == layer.layerID) {
       layerChildren.add(
         Positioned.fill(
           child: _MemoryCollageTitle(
             title: title,
-            style: manifest.template.titleStyle,
+            style: template.titleStyle,
+            useDarkColors: isDarkBackground,
           ),
         ),
       );
@@ -190,14 +280,14 @@ class MemoryCollageCanvasView extends StatelessWidget {
     );
   }
 
-  Widget _buildShadow(
+  Widget _buildLayerShadow(
+    MemoryCollageTemplate template,
     MemoryCollageLayer layer,
     MemoryCollageShadow shadow,
-    MemoryCollagePhotoLayout layout,
   ) {
-    final assetID = layer.backgroundSwappable
+    final assetID = layer.layerID == template.background.layerID
         ? backgroundAssetID
-        : layout.assetIDFor(layer);
+        : layer.assetID;
     final width = layer.width / memoryCollageExportPixelRatio;
     final height = layer.height / memoryCollageExportPixelRatio;
     final color = parseMemoryCollageColor(shadow.color);
@@ -233,46 +323,244 @@ class MemoryCollageCanvasView extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildRectPhoto(
+    BuildContext context,
+    MemoryCollageRectPhotoSlot slot,
+  ) {
+    final radius = BorderRadius.circular(
+      (slot.radius ?? 0) / memoryCollageExportPixelRatio,
+    );
+    Widget photo = ClipRRect(
+      borderRadius: radius,
+      child: photoBuilder(context, files[slot.slot], slot.slot),
+    );
+    final border = slot.border;
+    if (border != null) {
+      photo = Stack(
+        fit: StackFit.expand,
+        children: [
+          photo,
+          IgnorePointer(
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: parseMemoryCollageColor(border.color),
+                  width: border.width / memoryCollageExportPixelRatio,
+                ),
+                borderRadius: radius,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return _positionedRect(
+      rect: slot.rect,
+      rotation: slot.rotation,
+      child: photo,
+    );
+  }
+
+  Widget _buildRectPhotoShadow(
+    MemoryCollageRectPhotoSlot slot,
+    MemoryCollageShadow shadow,
+  ) {
+    final color = parseMemoryCollageColor(shadow.color);
+    final blurSigma = BoxShadow(
+      color: color,
+      blurRadius: shadow.blur / memoryCollageExportPixelRatio,
+    ).blurSigma;
+    final rect = slot.rect;
+    final radius = BorderRadius.circular(
+      (slot.radius ?? 0) / memoryCollageExportPixelRatio,
+    );
+
+    return Positioned(
+      left: (rect.x + shadow.dx) / memoryCollageExportPixelRatio,
+      top: (rect.y + shadow.dy) / memoryCollageExportPixelRatio,
+      width: rect.width / memoryCollageExportPixelRatio,
+      height: rect.height / memoryCollageExportPixelRatio,
+      child: Transform.rotate(
+        angle: slot.rotation * math.pi / 180,
+        alignment: Alignment.center,
+        child: ImageFiltered(
+          imageFilter: ui.ImageFilter.blur(
+            sigmaX: blurSigma,
+            sigmaY: blurSigma,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: color, borderRadius: radius),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRectTitle(
+    MemoryCollageTitleStyle style,
+    MemoryCollageTitleRect placement,
+    bool isDarkBackground,
+  ) {
+    return _positionedRect(
+      rect: placement.rect,
+      rotation: placement.rotation,
+      child: _MemoryCollageTitle(
+        title: title,
+        style: style,
+        useDarkColors: isDarkBackground,
+      ),
+    );
+  }
+
+  Widget _buildRule(MemoryCollageRule rule, bool isDarkBackground) {
+    final colorValue = isDarkBackground
+        ? rule.colorOnDark ?? rule.color
+        : rule.color;
+    return _positionedRect(
+      rect: rule.rect,
+      rotation: 0,
+      child: ColoredBox(color: parseMemoryCollageColor(colorValue)),
+    );
+  }
+
+  Widget _positionedRect({
+    required MemoryCollageRect rect,
+    required double rotation,
+    required Widget child,
+  }) {
+    return Positioned(
+      left: rect.x / memoryCollageExportPixelRatio,
+      top: rect.y / memoryCollageExportPixelRatio,
+      width: rect.width / memoryCollageExportPixelRatio,
+      height: rect.height / memoryCollageExportPixelRatio,
+      child: Transform.rotate(
+        angle: rotation * math.pi / 180,
+        alignment: Alignment.center,
+        child: child,
+      ),
+    );
+  }
+}
+
+class _MemoryCollageStackEntry {
+  final int z;
+  final int sourceOrder;
+  final List<Widget> children;
+
+  const _MemoryCollageStackEntry({
+    required this.z,
+    required this.sourceOrder,
+    required this.children,
+  });
 }
 
 class _MemoryCollageTitle extends StatelessWidget {
   final String title;
   final MemoryCollageTitleStyle style;
+  final bool useDarkColors;
 
-  const _MemoryCollageTitle({required this.title, required this.style});
+  const _MemoryCollageTitle({
+    required this.title,
+    required this.style,
+    required this.useDarkColors,
+  });
 
   @override
   Widget build(BuildContext context) {
     final shadow = style.shadow;
+    final padding = style.placement is MemoryCollageTitleAnchor
+        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 4)
+        : EdgeInsets.zero;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          title,
-          maxLines: 1,
-          textAlign: TextAlign.center,
-          textScaler: TextScaler.noScaling,
-          style: TextStyle(
-            color: parseMemoryCollageColor(style.color),
-            fontFamily: style.fontFamily,
-            fontSize: style.fontSize / memoryCollageExportPixelRatio,
-            fontWeight: _fontWeightFor(style.fontWeight),
-            letterSpacing: style.letterSpacing / memoryCollageExportPixelRatio,
-            height: 1,
-            shadows: [
-              Shadow(
-                offset: Offset(
-                  shadow.dx / memoryCollageExportPixelRatio,
-                  shadow.dy / memoryCollageExportPixelRatio,
-                ),
-                blurRadius: shadow.blur / memoryCollageExportPixelRatio,
-                color: parseMemoryCollageColor(shadow.color),
+      padding: padding,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final titleLayout = _titleLayout(context, constraints);
+          return Align(
+            alignment: _titleAlignment(style.textAlign, style.verticalAlign),
+            child: SizedBox(
+              width: constraints.maxWidth,
+              child: Text(
+                title,
+                maxLines: titleLayout.maxLines,
+                overflow: TextOverflow.ellipsis,
+                textAlign: _textAlignFor(style.textAlign),
+                textScaler: TextScaler.noScaling,
+                style: _textStyle(titleLayout.fontSize, shadow),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  ({double fontSize, int maxLines}) _titleLayout(
+    BuildContext context,
+    BoxConstraints constraints,
+  ) {
+    final maximum = style.fontSize / memoryCollageExportPixelRatio;
+    final minimum = style.minFontSize / memoryCollageExportPixelRatio;
+    if (_fits(context, constraints, maximum, maxLines: 1)) {
+      return (fontSize: maximum, maxLines: 1);
+    }
+    if (!_fits(context, constraints, minimum, maxLines: 1)) {
+      return (fontSize: minimum, maxLines: style.maxLines);
+    }
+
+    var lower = minimum;
+    var upper = maximum;
+    for (var iteration = 0; iteration < 12; iteration++) {
+      final candidate = (lower + upper) / 2;
+      if (_fits(context, constraints, candidate, maxLines: 1)) {
+        lower = candidate;
+      } else {
+        upper = candidate;
+      }
+    }
+    return (fontSize: lower, maxLines: 1);
+  }
+
+  bool _fits(
+    BuildContext context,
+    BoxConstraints constraints,
+    double fontSize, {
+    required int maxLines,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(text: title, style: _textStyle(fontSize, style.shadow)),
+      maxLines: maxLines,
+      textAlign: _textAlignFor(style.textAlign),
+      textDirection: Directionality.of(context),
+      textScaler: TextScaler.noScaling,
+    )..layout(maxWidth: constraints.maxWidth);
+    return !painter.didExceedMaxLines &&
+        painter.height <= constraints.maxHeight + 0.001;
+  }
+
+  TextStyle _textStyle(double fontSize, MemoryCollageShadow shadow) {
+    return TextStyle(
+      color: parseMemoryCollageColor(
+        useDarkColors ? style.colorOnDark ?? style.color : style.color,
+      ),
+      fontFamily: style.fontFamily,
+      fontSize: fontSize,
+      fontWeight: _fontWeightFor(style.fontWeight),
+      fontStyle: _fontStyleFor(style.fontStyle),
+      letterSpacing: style.letterSpacing / memoryCollageExportPixelRatio,
+      height: style.lineHeight,
+      shadows: [
+        Shadow(
+          offset: Offset(
+            shadow.dx / memoryCollageExportPixelRatio,
+            shadow.dy / memoryCollageExportPixelRatio,
+          ),
+          blurRadius: shadow.blur / memoryCollageExportPixelRatio,
+          color: parseMemoryCollageColor(shadow.color),
+        ),
+      ],
     );
   }
 }
@@ -407,6 +695,49 @@ FontWeight _fontWeightFor(int weight) {
     800 => FontWeight.w800,
     900 => FontWeight.w900,
     _ => FontWeight.normal,
+  };
+}
+
+FontStyle _fontStyleFor(String value) {
+  return switch (value) {
+    "normal" => FontStyle.normal,
+    "italic" => FontStyle.italic,
+    _ => throw FormatException("Unsupported memory collage font style: $value"),
+  };
+}
+
+TextAlign _textAlignFor(String value) {
+  return switch (value) {
+    "left" => TextAlign.left,
+    "center" => TextAlign.center,
+    "right" => TextAlign.right,
+    "start" => TextAlign.start,
+    "end" => TextAlign.end,
+    "justify" => TextAlign.justify,
+    _ => throw FormatException(
+      "Unsupported memory collage text alignment: $value",
+    ),
+  };
+}
+
+AlignmentGeometry _titleAlignment(String textAlign, String verticalAlign) {
+  final y = switch (verticalAlign) {
+    "top" => -1.0,
+    "center" => 0.0,
+    "bottom" => 1.0,
+    _ => throw FormatException(
+      "Unsupported memory collage vertical alignment: $verticalAlign",
+    ),
+  };
+  return switch (textAlign) {
+    "left" => Alignment(-1, y),
+    "center" || "justify" => Alignment(0, y),
+    "right" => Alignment(1, y),
+    "start" => AlignmentDirectional(-1, y),
+    "end" => AlignmentDirectional(1, y),
+    _ => throw FormatException(
+      "Unsupported memory collage text alignment: $textAlign",
+    ),
   };
 }
 

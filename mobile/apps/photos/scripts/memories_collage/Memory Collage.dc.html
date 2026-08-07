@@ -14,17 +14,26 @@
 <meta name="design_doc_mode" content="canvas" data-om-id="dd620bf5:7">
 <style>
 @font-face{font-family:Lora;src:url('../../fonts/Lora-SemiBold.ttf') format('truetype');font-style:normal;font-weight:600;font-display:block}
+@font-face{font-family:Lora;src:url('../../fonts/Lora-Italic.ttf') format('truetype');font-style:italic;font-weight:100 900;font-display:block}
 body{margin:0;background:#cbc3b1;background-image:radial-gradient(1300px 800px at 38% -5%,#dbd3c2,rgba(219,211,194,0)),linear-gradient(180deg,#d2cab8,#c4bba8);color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#8a4a2a}a:hover{color:#68371d}
 </style>
 <script id="asset-manifest" type="application/json">
 {
- "version": 1,
+ "version": 2,
  "scale": "3x (1 CSS px in the approved 360×640 comp = 3 asset px)",
  "canvas": {
   "width": 1080,
   "height": 1920
  },
+ "photoCount": 7,
+ "photoPolicy": "seven-photo-only: one seven-photo set fills every template (slot i shows photo i everywhere); memories with fewer than seven eligible photos do not get a collage",
+ "defaultTemplateId": "scrapbook-maximal",
+ "rotationOrigin": "layer center",
+ "overflow": "crop to canvas",
+ "shadowSchema": "shadows: [{kind:dropShadow, dx, dy, blur, color}] in 1080x1920 px, cast from the layer silhouette after rotation; render under the layer art",
+ "photoRendering": "draw each photo cover-fit into its window rect (asset px -> canvas via the layer transform), beneath the frame asset; apply the template photoFilter",
+ "appRendered": "titles are app-typeset, never baked; all template backgrounds composite ordinary full-canvas PNG assets; minimal-editorial additionally app-draws its hairline rules and direct photo tiles",
  "assets": [
   {
    "id": "paper-washi",
@@ -81,31 +90,6 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     }
    ],
    "note": "window pixels transparent except a thin baked alpha seam shadow at the window edge"
-  },
-  {
-   "id": "film-strip",
-   "width": 390,
-   "height": 1800,
-   "photoWindows": [
-    {
-     "x": 57,
-     "y": 261,
-     "width": 276,
-     "height": 318
-    },
-    {
-     "x": 57,
-     "y": 645,
-     "width": 276,
-     "height": 318
-    },
-    {
-     "x": 57,
-     "y": 1029,
-     "width": 276,
-     "height": 318
-    }
-   ]
   },
   {
    "id": "film-strip-four",
@@ -207,343 +191,978 @@ a{color:#8a4a2a}a:hover{color:#68371d}
    "recommendedBlendMode": "overlay",
    "recommendedOpacity": 0.55,
    "note": "flat-alpha approximation; composite with overlay blend to match the approved look"
+  },
+  {
+   "id": "film-strip-four-horizontal",
+   "width": 972,
+   "height": 252,
+   "photoWindows": [
+    {
+     "x": 30,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    },
+    {
+     "x": 264,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    },
+    {
+     "x": 498,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    },
+    {
+     "x": 732,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    }
+   ],
+   "note": "calm umber film stock; 4-window horizontal strip; window pixels transparent"
+  },
+  {
+   "id": "print-frame-hero",
+   "width": 876,
+   "height": 594,
+   "photoWindows": [
+    {
+     "x": 24,
+     "y": 24,
+     "width": 834,
+     "height": 546
+    }
+   ],
+   "note": "even-border cream print frame for the calm hero; thin baked alpha seam shadow at the window edge"
+  },
+  {
+   "id": "paper-notebook-blush",
+   "width": 1080,
+   "height": 1920,
+   "opaque": true,
+   "role": "background",
+   "note": "cream fiber sheet with baked blush notebook spine at the left edge"
+  },
+  {
+   "id": "paper-notebook-sage",
+   "width": 1080,
+   "height": 1920,
+   "opaque": true,
+   "role": "background",
+   "note": "cream fiber sheet with baked sage notebook spine at the left edge"
+  },
+  {
+   "id": "editorial-bone",
+   "width": 1080,
+   "height": 1920,
+   "opaque": true,
+   "role": "background",
+   "source": "generatedColor",
+   "color": "#f4f0e8"
+  },
+  {
+   "id": "editorial-sand",
+   "width": 1080,
+   "height": 1920,
+   "opaque": true,
+   "role": "background",
+   "source": "generatedColor",
+   "color": "#e8dfcc"
+  },
+  {
+   "id": "editorial-sage",
+   "width": 1080,
+   "height": 1920,
+   "opaque": true,
+   "role": "background",
+   "source": "generatedColor",
+   "color": "#dde0d6"
+  },
+  {
+   "id": "editorial-charcoal",
+   "width": 1080,
+   "height": 1920,
+   "opaque": true,
+   "role": "background",
+   "source": "generatedColor",
+   "color": "#2b2723"
   }
  ],
- "template2a": {
-  "canvas": {
-   "width": 1080,
-   "height": 1920
-  },
-  "rotationOrigin": "layer center",
-  "overflow": "crop to canvas",
-  "shadowSchema": {
-   "kind": "dropShadow",
-   "units": "1080x1920 canvas pixels",
-   "fields": ["dx", "dy", "blur", "color"],
-   "application": "cast from the rotated layer silhouette and rendered under the art"
-  },
-  "layers": [
-   {
-    "layerId": "bg",
-    "asset": "paper-washi",
-    "x": 0,
-    "y": 0,
-    "width": 1080,
-    "height": 1920,
-    "z": 0,
-    "rotation": 0,
-    "backgroundSwappable": true
-   },
-   {
-    "layerId": "torn",
-    "asset": "paper-torn",
-    "x": -12,
-    "y": 162,
-    "width": 1098,
-    "height": 1734,
-    "z": 2,
-    "rotation": 0.8,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 42, "blur": 66, "color": "rgba(80,50,22,0.3)"}
-    ]
-   },
-   {
-    "layerId": "ring",
-    "asset": "coffee-ring",
-    "x": 444,
-    "y": 1530,
-    "width": 192,
-    "height": 192,
-    "z": 3,
-    "rotation": 8
-   },
-   {
-    "layerId": "fern",
-    "asset": "fern",
-    "x": 897,
-    "y": 114,
-    "width": 228,
-    "height": 408,
-    "z": 4,
-    "rotation": 196,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 3, "dy": 6, "blur": 9, "color": "rgba(80,60,30,0.3)"}
-    ]
-   },
-   {
-    "layerId": "star",
-    "asset": "star",
-    "x": 336,
-    "y": 240,
-    "width": 282,
-    "height": 282,
-    "z": 9,
-    "rotation": 12,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 3, "dy": 9, "blur": 15, "color": "rgba(90,55,15,0.35)"}
-    ]
-   },
-   {
-    "layerId": "strip",
-    "asset": "film-strip",
-    "x": 618,
-    "y": 312,
-    "width": 390,
-    "height": 1800,
-    "z": 10,
-    "rotation": 2,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 30, "blur": 54, "color": "rgba(70,32,12,0.38)"}
-    ]
-   },
-   {
-    "layerId": "p1",
-    "asset": "polaroid-frame",
-    "x": 18,
-    "y": 354,
-    "width": 462,
-    "height": 534,
-    "z": 12,
-    "rotation": -4.5,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 9, "blur": 18, "color": "rgba(90,60,30,0.22)"},
-     {"kind": "dropShadow", "dx": 0, "dy": 36, "blur": 72, "color": "rgba(90,60,30,0.26)"}
-    ]
-   },
-   {
-    "layerId": "p2",
-    "asset": "polaroid-frame",
-    "x": 72,
-    "y": 900,
-    "width": 462,
-    "height": 534,
-    "z": 13,
-    "rotation": 3,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 9, "blur": 18, "color": "rgba(90,60,30,0.22)"},
-     {"kind": "dropShadow", "dx": 0, "dy": 36, "blur": 72, "color": "rgba(90,60,30,0.26)"}
-    ]
-   },
-   {
-    "layerId": "p3",
-    "asset": "polaroid-frame",
-    "x": 24,
-    "y": 1404,
-    "width": 462,
-    "height": 534,
-    "z": 14,
-    "rotation": -2,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 9, "blur": 18, "color": "rgba(90,60,30,0.22)"},
-     {"kind": "dropShadow", "dx": 0, "dy": 36, "blur": 72, "color": "rgba(90,60,30,0.26)"}
-    ]
-   },
-   {
+ "templates": {
+  "scrapbook-maximal": {
+   "backgrounds": [
+    {
+     "id": "paper-washi",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-cream-fiber",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-blush-stripe",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-sage-stripe",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-terracotta-mottle",
+     "kind": "asset"
+    }
+   ],
+   "defaultBackgroundId": "paper-washi",
+   "photoFilter": "saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)",
+   "layers": [
+    {
+     "layerId": "bg",
+     "asset": "paper-washi",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 0,
+     "rotation": 0,
+     "backgroundSwappable": true
+    },
+    {
+     "layerId": "torn",
+     "asset": "paper-torn",
+     "x": -12,
+     "y": 162,
+     "width": 1098,
+     "height": 1734,
+     "z": 2,
+     "rotation": 0.8,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 42,
+       "blur": 66,
+       "color": "rgba(80,50,22,0.3)"
+      }
+     ]
+    },
+    {
+     "layerId": "ring",
+     "asset": "coffee-ring",
+     "x": 444,
+     "y": 1530,
+     "width": 192,
+     "height": 192,
+     "z": 3,
+     "rotation": 8
+    },
+    {
+     "layerId": "fern",
+     "asset": "fern",
+     "x": 897,
+     "y": 114,
+     "width": 228,
+     "height": 408,
+     "z": 4,
+     "rotation": 196,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 3,
+       "dy": 6,
+       "blur": 9,
+       "color": "rgba(80,60,30,0.3)"
+      }
+     ]
+    },
+    {
+     "layerId": "star",
+     "asset": "star",
+     "x": 336,
+     "y": 240,
+     "width": 282,
+     "height": 282,
+     "z": 9,
+     "rotation": 12,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 3,
+       "dy": 9,
+       "blur": 15,
+       "color": "rgba(90,55,15,0.35)"
+      }
+     ]
+    },
+    {
+     "layerId": "strip",
+     "asset": "film-strip-four",
+     "x": 618,
+     "y": 312,
+     "width": 390,
+     "height": 1800,
+     "z": 10,
+     "rotation": 2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 54,
+       "color": "rgba(70,32,12,0.38)"
+      }
+     ]
+    },
+    {
+     "layerId": "p1",
+     "asset": "polaroid-frame",
+     "x": 18,
+     "y": 354,
+     "width": 462,
+     "height": 534,
+     "z": 12,
+     "rotation": -4.5,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.22)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 36,
+       "blur": 72,
+       "color": "rgba(90,60,30,0.26)"
+      }
+     ]
+    },
+    {
+     "layerId": "p2",
+     "asset": "polaroid-frame",
+     "x": 72,
+     "y": 900,
+     "width": 462,
+     "height": 534,
+     "z": 13,
+     "rotation": 3,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.22)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 36,
+       "blur": 72,
+       "color": "rgba(90,60,30,0.26)"
+      }
+     ]
+    },
+    {
+     "layerId": "p3",
+     "asset": "polaroid-frame",
+     "x": 24,
+     "y": 1404,
+     "width": 462,
+     "height": 534,
+     "z": 14,
+     "rotation": -2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.22)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 36,
+       "blur": 72,
+       "color": "rgba(90,60,30,0.26)"
+      }
+     ]
+    },
+    {
+     "layerId": "banner",
+     "asset": "banner",
+     "x": 264,
+     "y": 198,
+     "width": 546,
+     "height": 150,
+     "z": 16,
+     "rotation": -2.5,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(80,40,15,0.35)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeA",
+     "asset": "tape-mustard",
+     "x": 54,
+     "y": 162,
+     "width": 336,
+     "height": 72,
+     "z": 17,
+     "rotation": -4,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(90,60,25,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeB",
+     "asset": "tape-blush",
+     "x": 132,
+     "y": 318,
+     "width": 228,
+     "height": 66,
+     "z": 15,
+     "rotation": 2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(110,60,45,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeC",
+     "asset": "tape-sage",
+     "x": 444,
+     "y": 864,
+     "width": 210,
+     "height": 63,
+     "z": 15,
+     "rotation": -36,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(70,80,45,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "stamp",
+     "asset": "stamp-postmark",
+     "x": 678,
+     "y": 150,
+     "width": 240,
+     "height": 270,
+     "z": 17,
+     "rotation": 5,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(90,60,30,0.3)"
+      }
+     ]
+    },
+    {
+     "layerId": "sunStreak",
+     "asset": "sun-streak",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 34,
+     "rotation": 0,
+     "blendMode": "soft-light",
+     "opacity": 1
+    },
+    {
+     "layerId": "vignette",
+     "asset": "vignette",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 36,
+     "rotation": 0,
+     "blendMode": "multiply",
+     "opacity": 1
+    },
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.55
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "layerId": "strip",
+     "windowIndex": 0
+    },
+    {
+     "slot": 1,
+     "layerId": "strip",
+     "windowIndex": 1
+    },
+    {
+     "slot": 2,
+     "layerId": "strip",
+     "windowIndex": 2
+    },
+    {
+     "slot": 3,
+     "layerId": "p1",
+     "windowIndex": 0
+    },
+    {
+     "slot": 4,
+     "layerId": "p2",
+     "windowIndex": 0
+    },
+    {
+     "slot": 5,
+     "layerId": "p3",
+     "windowIndex": 0
+    },
+    {
+     "slot": 6,
+     "layerId": "strip",
+     "windowIndex": 3
+    }
+   ],
+   "appRendered": "banner title text is typeset by the app over the banner",
+   "titleStyle": {
     "layerId": "banner",
-    "asset": "banner",
-    "x": 264,
-    "y": 198,
-    "width": 546,
-    "height": 150,
-    "z": 16,
-    "rotation": -2.5,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 9, "blur": 18, "color": "rgba(80,40,15,0.35)"}
-    ]
-   },
-   {
-    "layerId": "tapeA",
-    "asset": "tape-mustard",
-    "x": 54,
-    "y": 162,
-    "width": 336,
-    "height": 72,
-    "z": 17,
-    "rotation": -4,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 6, "blur": 12, "color": "rgba(90,60,25,0.22)"}
-    ]
-   },
-   {
-    "layerId": "tapeB",
-    "asset": "tape-blush",
-    "x": 132,
-    "y": 318,
-    "width": 228,
-    "height": 66,
-    "z": 15,
-    "rotation": 2,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 6, "blur": 12, "color": "rgba(110,60,45,0.22)"}
-    ]
-   },
-   {
-    "layerId": "tapeC",
-    "asset": "tape-sage",
-    "x": 444,
-    "y": 864,
-    "width": 210,
-    "height": 63,
-    "z": 15,
-    "rotation": -36,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 6, "blur": 12, "color": "rgba(70,80,45,0.22)"}
-    ]
-   },
-   {
-    "layerId": "stamp",
-    "asset": "stamp-postmark",
-    "x": 678,
-    "y": 150,
-    "width": 240,
-    "height": 270,
-    "z": 17,
-    "rotation": 5,
-    "shadows": [
-     {"kind": "dropShadow", "dx": 0, "dy": 6, "blur": 12, "color": "rgba(90,60,30,0.3)"}
-    ]
-   },
-   {
-    "layerId": "sunStreak",
-    "asset": "sun-streak",
-    "x": 0,
-    "y": 0,
-    "width": 1080,
-    "height": 1920,
-    "z": 34,
-    "rotation": 0,
-    "blendMode": "soft-light",
-    "opacity": 1
-   },
-   {
-    "layerId": "vignette",
-    "asset": "vignette",
-    "x": 0,
-    "y": 0,
-    "width": 1080,
-    "height": 1920,
-    "z": 36,
-    "rotation": 0,
-    "blendMode": "multiply",
-    "opacity": 1
-   },
-   {
-    "layerId": "grain",
-    "asset": "grain-overlay",
-    "x": 0,
-    "y": 0,
-    "width": 1080,
-    "height": 1920,
-    "z": 38,
-    "rotation": 0,
-    "blendMode": "overlay",
-    "opacity": 0.55
+    "units": "1080x1920 canvas pixels",
+    "fontFamily": "Lora",
+    "fontAsset": "fonts/Lora-SemiBold.ttf",
+    "fontWeight": 600,
+    "fontStyle": "normal",
+    "fontSize": 45,
+    "letterSpacing": 12,
+    "color": "#f4e7cf",
+    "textAlign": "center",
+    "verticalAlign": "center",
+    "memoryTitleCasing": "preserve",
+    "generatedMonthLabelCasing": "uppercase",
+    "glyphFallback": "platform",
+    "shadow": {
+     "dx": 0,
+     "dy": 3,
+     "blur": 3,
+     "color": "rgba(90,40,15,0.5)"
+    }
    }
-  ],
-  "photoLayouts": [
-   {
-    "photoCount": 6,
-    "assetOverrides": {
-     "strip": "film-strip"
+  },
+  "scrapbook-calm": {
+   "backgrounds": [
+    {
+     "id": "paper-notebook-blush",
+     "kind": "asset"
     },
-    "photoSlots": [
-     {
-      "slot": 0,
-      "layerId": "strip",
-      "windowIndex": 0
-     },
-     {
-      "slot": 1,
-      "layerId": "strip",
-      "windowIndex": 1
-     },
-     {
-      "slot": 2,
-      "layerId": "strip",
-      "windowIndex": 2
-     },
-     {
-      "slot": 3,
-      "layerId": "p1",
-      "windowIndex": 0
-     },
-     {
-      "slot": 4,
-      "layerId": "p2",
-      "windowIndex": 0
-     },
-     {
-      "slot": 5,
-      "layerId": "p3",
-      "windowIndex": 0
-     }
-    ]
-   },
-   {
-    "photoCount": 7,
-    "assetOverrides": {
-     "strip": "film-strip-four"
+    {
+     "id": "paper-notebook-sage",
+     "kind": "asset"
     },
-    "photoSlots": [
-     {
-      "slot": 0,
-      "layerId": "strip",
-      "windowIndex": 0
-     },
-     {
-      "slot": 1,
-      "layerId": "strip",
-      "windowIndex": 1
-     },
-     {
-      "slot": 2,
-      "layerId": "strip",
-      "windowIndex": 2
-     },
-     {
-      "slot": 3,
-      "layerId": "p1",
-      "windowIndex": 0
-     },
-     {
-      "slot": 4,
-      "layerId": "p2",
-      "windowIndex": 0
-     },
-     {
-      "slot": 5,
-      "layerId": "p3",
-      "windowIndex": 0
-     },
-     {
-      "slot": 6,
-      "layerId": "strip",
-      "windowIndex": 3
-     }
-    ]
+    {
+     "id": "paper-cream-fiber",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-blush-stripe",
+     "kind": "asset"
+    }
+   ],
+   "defaultBackgroundId": "paper-notebook-blush",
+   "photoFilter": "saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)",
+   "layers": [
+    {
+     "layerId": "bg",
+     "asset": "paper-notebook-blush",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 0,
+     "rotation": 0,
+     "backgroundSwappable": true
+    },
+    {
+     "layerId": "fern",
+     "asset": "fern",
+     "x": 882,
+     "y": -42,
+     "width": 228,
+     "height": 408,
+     "z": 3,
+     "rotation": 188,
+     "opacity": 0.85,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 3,
+       "dy": 6,
+       "blur": 9,
+       "color": "rgba(80,60,30,0.28)"
+      }
+     ]
+    },
+    {
+     "layerId": "strip",
+     "asset": "film-strip-four-horizontal",
+     "x": 54,
+     "y": 1566,
+     "width": 972,
+     "height": 252,
+     "z": 5,
+     "rotation": -1.2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 24,
+       "blur": 48,
+       "color": "rgba(70,40,18,0.3)"
+      }
+     ]
+    },
+    {
+     "layerId": "hero",
+     "asset": "print-frame-hero",
+     "x": 102,
+     "y": 264,
+     "width": 876,
+     "height": 594,
+     "z": 6,
+     "rotation": -0.8,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 21,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 66,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "p1",
+     "asset": "polaroid-frame",
+     "x": 78,
+     "y": 900,
+     "width": 462,
+     "height": 534,
+     "z": 7,
+     "rotation": 1.2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 60,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "p2",
+     "asset": "polaroid-frame",
+     "x": 546,
+     "y": 918,
+     "width": 462,
+     "height": 534,
+     "z": 8,
+     "rotation": -1,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 60,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeL",
+     "asset": "tape-blush",
+     "x": 48,
+     "y": 228,
+     "width": 228,
+     "height": 66,
+     "z": 10,
+     "rotation": -43,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(110,60,45,0.2)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeR",
+     "asset": "tape-sage",
+     "x": 816,
+     "y": 222,
+     "width": 210,
+     "height": 63,
+     "z": 11,
+     "rotation": 44,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(70,80,45,0.2)"
+      }
+     ]
+    },
+    {
+     "layerId": "stamp",
+     "asset": "stamp-postmark",
+     "x": 840,
+     "y": 1398,
+     "width": 192,
+     "height": 216,
+     "z": 12,
+     "rotation": -6,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(90,60,30,0.28)"
+      }
+     ]
+    },
+    {
+     "layerId": "sunStreak",
+     "asset": "sun-streak",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 34,
+     "rotation": 0,
+     "blendMode": "soft-light",
+     "opacity": 1
+    },
+    {
+     "layerId": "vignette",
+     "asset": "vignette",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 36,
+     "rotation": 0,
+     "blendMode": "multiply",
+     "opacity": 0.7
+    },
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.41
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "layerId": "hero",
+     "windowIndex": 0
+    },
+    {
+     "slot": 1,
+     "layerId": "p1",
+     "windowIndex": 0
+    },
+    {
+     "slot": 2,
+     "layerId": "p2",
+     "windowIndex": 0
+    },
+    {
+     "slot": 3,
+     "layerId": "strip",
+     "windowIndex": 0
+    },
+    {
+     "slot": 4,
+     "layerId": "strip",
+     "windowIndex": 1
+    },
+    {
+     "slot": 5,
+     "layerId": "strip",
+     "windowIndex": 2
+    },
+    {
+     "slot": 6,
+     "layerId": "strip",
+     "windowIndex": 3
+    }
+   ],
+   "titleStyle": {
+    "box": {
+     "x": 114,
+     "y": 66,
+     "width": 672,
+     "height": 180
+    },
+    "align": "left",
+    "vAlign": "top",
+    "rotation": -2,
+    "fontFamily": "Lora, Georgia, serif",
+    "nonLatinFallback": "system serif (ship a Noto Serif family for Indic scripts)",
+    "fontWeight": 600,
+    "fontStyle": "italic",
+    "textTransform": "none",
+    "fontSize": 102,
+    "minFontSize": 66,
+    "letterSpacing": 0,
+    "lineHeight": 1.08,
+    "maxLines": 2,
+    "color": "#6f5642",
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; then ellipsis"
    }
-  ],
-  "appRendered": "banner title text is typeset by the app over the banner",
-  "titleStyle": {
-   "layerId": "banner",
-   "units": "1080x1920 canvas pixels",
-   "fontFamily": "Lora",
-   "fontAsset": "fonts/Lora-SemiBold.ttf",
-   "fontWeight": 600,
-   "fontStyle": "normal",
-   "fontSize": 45,
-   "letterSpacing": 12,
-   "color": "#f4e7cf",
-   "textAlign": "center",
-   "verticalAlign": "center",
-   "memoryTitleCasing": "preserve",
-   "generatedMonthLabelCasing": "uppercase",
-   "glyphFallback": "platform",
-   "shadow": {
-    "dx": 0,
-    "dy": 3,
-    "blur": 3,
-    "color": "rgba(90,40,15,0.5)"
+  },
+  "minimal-editorial": {
+   "backgrounds": [
+    {
+     "id": "editorial-bone",
+     "kind": "asset",
+     "color": "#f4f0e8",
+     "dark": false
+    },
+    {
+     "id": "editorial-sand",
+     "kind": "asset",
+     "color": "#e8dfcc",
+     "dark": false
+    },
+    {
+     "id": "editorial-sage",
+     "kind": "asset",
+     "color": "#dde0d6",
+     "dark": false
+    },
+    {
+     "id": "editorial-charcoal",
+     "kind": "asset",
+     "color": "#2b2723",
+     "dark": true
+    }
+   ],
+   "defaultBackgroundId": "editorial-bone",
+   "photoFilter": "none",
+   "layers": [],
+   "rules": [
+    {
+     "x": 78,
+     "y": 288,
+     "width": 924,
+     "height": 3,
+     "color": "#d9d2c2",
+     "colorOnDark": "rgba(244,240,232,0.3)"
+    },
+    {
+     "x": 78,
+     "y": 1842,
+     "width": 924,
+     "height": 3,
+     "color": "#d9d2c2",
+     "colorOnDark": "rgba(244,240,232,0.3)"
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 78,
+      "y": 390,
+      "width": 924,
+      "height": 798
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    },
+    {
+     "slot": 1,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 78,
+      "y": 1212,
+      "width": 450,
+      "height": 318
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    },
+    {
+     "slot": 2,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 552,
+      "y": 1212,
+      "width": 450,
+      "height": 318
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    },
+    {
+     "slot": 3,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 78,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    },
+    {
+     "slot": 4,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 315,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    },
+    {
+     "slot": 5,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 552,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    },
+    {
+     "slot": 6,
+     "kind": "canvasRect",
+     "rect": {
+      "x": 789,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "border": "none",
+     "rotation": 0
+    }
+   ],
+   "overlay": "none",
+   "titleStyle": {
+    "box": {
+     "x": 78,
+     "y": 84,
+     "width": 924,
+     "height": 186
+    },
+    "align": "left",
+    "vAlign": "top",
+    "rotation": 0,
+    "fontFamily": "Lora, Georgia, serif",
+    "nonLatinFallback": "system serif (ship a Noto Serif family for Indic scripts)",
+    "fontWeight": 500,
+    "fontStyle": "italic",
+    "textTransform": "none",
+    "fontSize": 132,
+    "minFontSize": 84,
+    "letterSpacing": 1.5,
+    "lineHeight": 1.05,
+    "maxLines": 2,
+    "color": "#24201a",
+    "colorOnDark": "#f2ede2",
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; then ellipsis"
    }
   }
  }
@@ -638,19 +1257,19 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     </div>
   </div>
 </sc-if>
-<sc-if value="{{ axFilmStrip }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:77">
+<sc-if value="{{ axFilmStripFour }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:77">
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start" data-om-id="dd620bf5:78">
-    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:79"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px" data-om-id="dd620bf5:80">film-strip · 390×1800</div></sc-if>
-    <div data-export-asset="film-strip" style="position:relative;width:390px;height:1800px;overflow:hidden;isolation:isolate" data-om-id="dd620bf5:81">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:79"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px" data-om-id="dd620bf5:80">film-strip-four · 390×1800</div></sc-if>
+    <div data-export-asset="film-strip-four" style="position:relative;width:390px;height:1800px;overflow:hidden;isolation:isolate" data-om-id="dd620bf5:81">
       <div style="position:absolute;left:0;top:0;width:130px;height:600px;transform:scale(3);transform-origin:0 0" data-om-id="dd620bf5:82">
-        <div style="position:absolute;left:0px;top:0px;width:130px;height:600px;background-image:linear-gradient(90deg,rgba(50,20,8,0.32) 0px,rgba(50,20,8,0) 4px),linear-gradient(270deg,rgba(50,20,8,0.32) 0px,rgba(50,20,8,0) 4px),repeating-linear-gradient(178deg,rgba(240,205,170,0.09) 0px,rgba(240,205,170,0.09) 1px,rgba(240,205,170,0) 1px,rgba(240,205,170,0) 14px),radial-gradient(120px 90px at 20% 10%,rgba(235,190,150,0.3),rgba(235,190,150,0) 70%),radial-gradient(100px 130px at 88% 52%,rgba(70,25,10,0.32),rgba(70,25,10,0) 72%),radial-gradient(80px 80px at 38% 86%,rgba(240,200,160,0.22),rgba(240,200,160,0) 70%),linear-gradient(184deg,#b25330 0%,#9d4423 30%,#b05635 55%,#8f3c1f 80%,#a84e2c 100%);mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);mask-size:100% 26px,100% 22px,100% 22px,100% 212px,19px 100%,19px 100%;mask-position:0 0,0 132px,0 260px,0 388px,0 0,100% 0;mask-repeat:no-repeat;-webkit-mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);-webkit-mask-size:100% 26px,100% 22px,100% 22px,100% 212px,19px 100%,19px 100%;-webkit-mask-position:0 0,0 132px,0 260px,0 388px,0 0,100% 0;-webkit-mask-repeat:no-repeat" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:260px;mix-blend-mode:multiply;opacity:0.38" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:130px;mix-blend-mode:overlay;opacity:0.32" data-om-id="dd620bf5:83">
+        <div style="position:absolute;left:0px;top:0px;width:130px;height:600px;background-image:linear-gradient(90deg,rgba(50,20,8,0.32) 0px,rgba(50,20,8,0) 4px),linear-gradient(270deg,rgba(50,20,8,0.32) 0px,rgba(50,20,8,0) 4px),repeating-linear-gradient(178deg,rgba(240,205,170,0.09) 0px,rgba(240,205,170,0.09) 1px,rgba(240,205,170,0) 1px,rgba(240,205,170,0) 14px),radial-gradient(120px 90px at 20% 10%,rgba(235,190,150,0.3),rgba(235,190,150,0) 70%),radial-gradient(100px 130px at 88% 52%,rgba(70,25,10,0.32),rgba(70,25,10,0) 72%),radial-gradient(80px 80px at 38% 86%,rgba(240,200,160,0.22),rgba(240,200,160,0) 70%),linear-gradient(184deg,#b25330 0%,#9d4423 30%,#b05635 55%,#8f3c1f 80%,#a84e2c 100%);mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);mask-size:100% 23px,100% 22px,100% 22px,100% 22px,100% 87px,19px 100%,19px 100%;mask-position:0 0,0 129px,0 257px,0 385px,0 513px,0 0,100% 0;mask-repeat:no-repeat;-webkit-mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);-webkit-mask-size:100% 23px,100% 22px,100% 22px,100% 22px,100% 87px,19px 100%,19px 100%;-webkit-mask-position:0 0,0 129px,0 257px,0 385px,0 513px,0 0,100% 0;-webkit-mask-repeat:no-repeat" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:260px;mix-blend-mode:multiply;opacity:0.38" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:130px;mix-blend-mode:overlay;opacity:0.32" data-om-id="dd620bf5:83">
           <div style="position:absolute;inset:0;display:flex" data-om-id="dd620bf5:84">
             <div style="width:18px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:12px 0" data-om-id="dd620bf5:85">
               <sc-for list="{{ sprockets }}" as="s" hint-placeholder-count="21" data-om-id="dd620bf5:86">
                 <div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(80,45,20,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94" data-om-id="dd620bf5:87"></div>
               </sc-for>
             </div>
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top:10px" data-om-id="dd620bf5:88">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top:7px" data-om-id="dd620bf5:88">
               <div style="height:16px;display:flex;align-items:center;font-size:6.5px;letter-spacing:2px;color:rgba(244,224,192,0.55)" data-om-id="dd620bf5:89"></div>
               <div style="position:relative;width:92px;height:106px;box-shadow:0 0 0 2px rgba(46,26,14,0.5)" data-om-id="dd620bf5:90">
 
@@ -665,6 +1284,9 @@ a{color:#8a4a2a}a:hover{color:#68371d}
 
               </div>
               <div style="height:22px;display:flex;align-items:center;font-size:7px;letter-spacing:1.5px;color:rgba(244,224,192,0.6);font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif" data-om-id="dd620bf5:96"></div>
+              <div style="position:relative;width:92px;height:106px;box-shadow:0 0 0 2px rgba(46,26,14,0.5)" data-om-id="dd620bf5:95">
+
+              </div>
             </div>
             <div style="width:18px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:12px 0" data-om-id="dd620bf5:97">
               <sc-for list="{{ sprockets }}" as="s" hint-placeholder-count="21" data-om-id="dd620bf5:98">
@@ -823,12 +1445,66 @@ a{color:#8a4a2a}a:hover{color:#68371d}
   </div>
 </sc-if>
 
+<sc-if value="{{ axFilmStripH }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">film-strip-four-horizontal · 972×252</div></sc-if>
+    <div data-export-asset="film-strip-four-horizontal" style="position:relative;width:972px;height:252px;overflow:hidden;isolation:isolate">
+      <div style="position:absolute;left:0;top:0;width:324px;height:84px;transform:scale(3);transform-origin:0 0">
+        <div style="position:absolute;left:0px;top:0px;width:324px;height:84px;background-image:linear-gradient(180deg,rgba(45,25,12,0.35) 0px,rgba(45,25,12,0) 4px),linear-gradient(0deg,rgba(45,25,12,0.35) 0px,rgba(45,25,12,0) 4px),repeating-linear-gradient(88deg,rgba(235,210,180,0.08) 0px,rgba(235,210,180,0.08) 1px,rgba(235,210,180,0) 1px,rgba(235,210,180,0) 14px),radial-gradient(90px 60px at 12% 20%,rgba(230,195,160,0.25),rgba(230,195,160,0) 70%),radial-gradient(120px 70px at 70% 80%,rgba(50,28,12,0.3),rgba(50,28,12,0) 72%),linear-gradient(92deg,#7d5b3c 0%,#6b4a2e 30%,#7a583a 55%,#5f4128 80%,#755539 100%);mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);mask-size:100% 13px,100% 13px,10px 100%,10px 100%,8px 100%,8px 100%,8px 100%;mask-position:0 0,0 100%,0 0,100% 0,80px 0,158px 0,236px 0;mask-repeat:no-repeat;-webkit-mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);-webkit-mask-size:100% 13px,100% 13px,10px 100%,10px 100%,8px 100%,8px 100%,8px 100%;-webkit-mask-position:0 0,0 100%,0 0,100% 0,80px 0,158px 0,236px 0;-webkit-mask-repeat:no-repeat" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:240px;mix-blend-mode:multiply;opacity:0.36" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:130px;mix-blend-mode:overlay;opacity:0.32">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+            <div style="height:13px;display:flex;justify-content:space-between;align-items:center;padding:0 12px"><sc-for list="{{ sprocketsH }}" as="s" hint-placeholder-count="11"><div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(70,40,18,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94"></div></sc-for></div>
+            <div style="flex:1;display:flex;gap:8px;padding:0 10px"><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div></div>
+            <div style="height:13px;display:flex;justify-content:space-between;align-items:center;padding:0 12px"><sc-for list="{{ sprocketsH }}" as="s" hint-placeholder-count="11"><div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(70,40,18,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94"></div></sc-for></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ axPrintHero }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">print-frame-hero · 876×594</div></sc-if>
+    <div data-export-asset="print-frame-hero" style="position:relative;width:876px;height:594px;overflow:hidden;isolation:isolate">
+      <div style="position:absolute;left:0;top:0;width:292px;height:198px;transform:scale(3);transform-origin:0 0">
+        <div style="position:absolute;left:0px;top:0px;width:292px">
+          <div style="position:relative;background-image:radial-gradient(180px 90px at 80% 100%,rgba(150,110,60,0.12),rgba(150,110,60,0) 70%),linear-gradient(170deg,#f6efdf,#efe5cf);padding:7px;border:1px solid rgba(150,115,70,0.12);mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);mask-size:100% 8px,100% 8px,8px 100%,8px 100%;mask-position:0 0,0 100%,0 0,100% 0;mask-repeat:no-repeat;-webkit-mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);-webkit-mask-size:100% 8px,100% 8px,8px 100%,8px 100%;-webkit-mask-position:0 0,0 100%,0 0,100% 0;-webkit-mask-repeat:no-repeat" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none">
+            <div style="width:278px;height:182px"></div>
+          </div>
+          <div style="position:absolute;left:8px;top:8px;width:278px;height:182px;box-shadow:inset 0 2px 5px rgba(60,40,20,0.4),inset 0 0 14px rgba(90,60,30,0.18)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ axNotebookBlush }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">paper-notebook-blush · 1080×1920</div></sc-if>
+    <div data-export-asset="paper-notebook-blush" style="position:relative;width:1080px;height:1920px;overflow:hidden;isolation:isolate">
+      <div style="position:absolute;left:0;top:0;width:360px;height:640px;transform:scale(3);transform-origin:0 0">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
+        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(255,240,232,0.25) 0px,rgba(255,240,232,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(150,76,60,0.3),rgba(255,244,238,0.1) 35%,rgba(255,244,238,0.1) 65%,rgba(150,76,60,0.3)),linear-gradient(180deg,rgba(198,124,108,0.42),rgba(207,143,126,0.36) 50%,rgba(188,116,100,0.42))"></div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ axNotebookSage }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">paper-notebook-sage · 1080×1920</div></sc-if>
+    <div data-export-asset="paper-notebook-sage" style="position:relative;width:1080px;height:1920px;overflow:hidden;isolation:isolate">
+      <div style="position:absolute;left:0;top:0;width:360px;height:640px;transform:scale(3);transform-origin:0 0">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
+        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(248,250,235,0.25) 0px,rgba(248,250,235,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(96,104,70,0.3),rgba(248,250,235,0.1) 35%,rgba(248,250,235,0.1) 65%,rgba(96,104,70,0.3)),linear-gradient(180deg,rgba(146,158,118,0.42),rgba(160,170,130,0.36) 50%,rgba(138,150,110,0.42))"></div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
 <sc-if value="{{ normalMode }}" hint-placeholder-val="{{ true }}" data-om-id="dd620bf5:183">
 <section style="padding:34px 40px 64px;display:flex;flex-direction:column;gap:24px" data-om-id="dd620bf5:184">
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;max-width:1180px" data-om-id="dd620bf5:185">
     <div style="display:flex;flex-direction:column;gap:5px" data-om-id="dd620bf5:186">
       <div style="font-size:15px;font-weight:650;letter-spacing:0.2px" data-om-id="dd620bf5:187">Memory share card — three directions</div>
-      <div style="font-size:12px;color:#6f6353" data-om-id="dd620bf5:188">Ente Photos · crisp die-cut edges, wear lives in the print texture · one photo set fills all three · stays on-device</div>
+      <div style="font-size:12px;color:#6f6353" data-om-id="dd620bf5:188">Ente Photos · crisp die-cut edges, wear lives in the print texture · one seven-photo set fills all three · stays on-device</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px" data-om-id="dd620bf5:189">
       <div style="font-size:11px;color:#6f6353" data-om-id="dd620bf5:190">{{ photoCount }} / 7 added</div>
@@ -892,7 +1568,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
                 <div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(80,45,20,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94" data-om-id="dd620bf5:238"></div>
               </sc-for>
             </div>
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top: {{ filmPaddingTop }}" data-om-id="dd620bf5:239">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top:7px" data-om-id="dd620bf5:239">
               <div style="height:16px;display:flex;align-items:center;font-size:6.5px;letter-spacing:2px;color:rgba(244,224,192,0.55)" data-om-id="dd620bf5:240"></div>
               <div style="position:relative;width:92px;height:106px;background:#3a2a1c;box-shadow:0 0 0 2px rgba(46,26,14,0.5),0 1px 3px rgba(40,20,8,0.3);overflow:hidden" data-om-id="dd620bf5:241">
                 <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:242"></div>
@@ -907,11 +1583,9 @@ a{color:#8a4a2a}a:hover{color:#68371d}
                 <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:249"></div>
               </div>
               <div style="height:22px;display:flex;align-items:center;font-size:7px;letter-spacing:1.5px;color:rgba(244,224,192,0.6);font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif" data-om-id="dd620bf5:250"></div>
-              <sc-if value="{{ sevenPhotoLayout }}" hint-placeholder-val="{{ false }}">
-                <div style="position:relative;width:92px;height:106px;background:#3a2a1c;box-shadow:0 0 0 2px rgba(46,26,14,0.5),0 1px 3px rgba(40,20,8,0.3);overflow:hidden">
-                  <div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div>
-                </div>
-              </sc-if>
+              <div style="position:relative;width:92px;height:106px;background:#3a2a1c;box-shadow:0 0 0 2px rgba(46,26,14,0.5),0 1px 3px rgba(40,20,8,0.3);overflow:hidden">
+                <div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div>
+              </div>
             </div>
             <div style="width:18px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:12px 0" data-om-id="dd620bf5:251">
               <sc-for list="{{ sprockets }}" as="s" hint-placeholder-count="21" data-om-id="dd620bf5:252">
@@ -958,83 +1632,68 @@ a{color:#8a4a2a}a:hover{color:#68371d}
       </div>
     </div>
 
-    <div id="2b" data-screen-label="2b Scrapbook calm" style="display:flex;flex-direction:column;gap:10px" data-om-id="dd620bf5:276">
-      <div style="display:flex;align-items:baseline;gap:9px" data-om-id="dd620bf5:277">
-        <span style="background:#463828;color:#ece2cc;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:ui-monospace,'SF Mono',Menlo,monospace" data-om-id="dd620bf5:278">2b</span>
-        <span style="font-size:13px;font-weight:650" data-om-id="dd620bf5:279">Scrapbook · calm</span>
-        <span style="font-size:11px;color:#6f6353" data-om-id="dd620bf5:280">same materials, more air</span>
+    <div id="2b" data-screen-label="2b Scrapbook calm" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;gap:9px">
+        <span style="background:#463828;color:#ece2cc;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:ui-monospace,'SF Mono',Menlo,monospace">2b</span>
+        <span style="font-size:13px;font-weight:650">Scrapbook · calm</span>
+        <span style="font-size:11px;color:#6f6353">same materials, more air</span>
       </div>
-      <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25);isolation:isolate" data-om-id="dd620bf5:281">
-        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4" data-om-id="dd620bf5:282"></div>
-        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;z-index:2;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(255,240,232,0.25) 0px,rgba(255,240,232,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(150,76,60,0.3),rgba(255,244,238,0.1) 35%,rgba(255,244,238,0.1) 65%,rgba(150,76,60,0.3)),linear-gradient(180deg,rgba(198,124,108,0.42),rgba(207,143,126,0.36) 50%,rgba(188,116,100,0.42))" data-om-id="dd620bf5:283"></div>
-        <div style="position:absolute;left:38px;top:18px;z-index:5;transform:rotate(-2deg);font-family:'Snell Roundhand','Apple Chancery','Segoe Script','Lucida Handwriting',cursive;font-size:37px;color:#6f5642" data-om-id="dd620bf5:284">december</div>
+      <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25);isolation:isolate">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
+        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;z-index:2;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(255,240,232,0.25) 0px,rgba(255,240,232,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(150,76,60,0.3),rgba(255,244,238,0.1) 35%,rgba(255,244,238,0.1) 65%,rgba(150,76,60,0.3)),linear-gradient(180deg,rgba(198,124,108,0.42),rgba(207,143,126,0.36) 50%,rgba(188,116,100,0.42))"></div>
+        <div style="position:absolute;left:38px;top:22px;z-index:5;transform:rotate(-2deg);font-family:'Lora',Georgia,serif;font-style:italic;font-weight:600;font-size:34px;color:#6f5642">december</div>
 
-        <div style="position:absolute;left:34px;top:88px;width:292px;z-index:6;transform:rotate(-0.8deg)" data-om-id="dd620bf5:285">
-          <div style="position:relative;background-image:radial-gradient(180px 90px at 80% 100%,rgba(150,110,60,0.12),rgba(150,110,60,0) 70%),linear-gradient(170deg,#f6efdf,#efe5cf);padding:7px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 7px rgba(90,60,30,0.2),0 10px 22px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none" data-om-id="dd620bf5:286">
-            <div style="position:relative;width:278px;height:182px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 2px 5px rgba(60,40,20,0.4),inset 0 0 14px rgba(90,60,30,0.18)" data-om-id="dd620bf5:287">
-              <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:288"></div>
+        <div style="position:absolute;left:34px;top:88px;width:292px;z-index:6;transform:rotate(-0.8deg)">
+          <div style="position:relative;background-image:radial-gradient(180px 90px at 80% 100%,rgba(150,110,60,0.12),rgba(150,110,60,0) 70%),linear-gradient(170deg,#f6efdf,#efe5cf);padding:7px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 7px rgba(90,60,30,0.2),0 10px 22px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none">
+            <div style="position:relative;width:278px;height:182px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 2px 5px rgba(60,40,20,0.4),inset 0 0 14px rgba(90,60,30,0.18)">
+              <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div>
             </div>
           </div>
         </div>
-        <div style="position:absolute;left:22px;top:78px;width:64px;height:20px;z-index:8;transform:rotate(-43deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(255,246,220,0.25) 0px,rgba(255,246,220,0.25) 1px,rgba(120,80,30,0) 1px,rgba(120,80,30,0) 6px),linear-gradient(180deg,rgba(140,95,40,0.28),rgba(255,250,230,0.12) 30%,rgba(255,250,230,0.12) 70%,rgba(140,95,40,0.28)),linear-gradient(90deg,rgba(146,96,42,0.55) 0%,rgba(201,154,71,0.4) 9%,rgba(214,170,88,0.38) 50%,rgba(201,154,71,0.4) 91%,rgba(146,96,42,0.55) 100%);box-shadow:0 2px 4px rgba(90,60,25,0.2)" data-om-id="dd620bf5:289"></div>
-        <div style="position:absolute;left:274px;top:76px;width:64px;height:20px;z-index:8;transform:rotate(44deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(250,252,238,0.26) 0px,rgba(250,252,238,0.26) 1px,rgba(80,90,55,0) 1px,rgba(80,90,55,0) 6px),linear-gradient(180deg,rgba(96,104,70,0.28),rgba(248,250,235,0.12) 30%,rgba(248,250,235,0.12) 70%,rgba(96,104,70,0.28)),linear-gradient(90deg,rgba(104,112,76,0.5) 0%,rgba(152,160,122,0.38) 9%,rgba(163,171,132,0.36) 50%,rgba(152,160,122,0.38) 91%,rgba(104,112,76,0.5) 100%);box-shadow:0 2px 4px rgba(70,80,45,0.2)" data-om-id="dd620bf5:290"></div>
-        <div style="position:absolute;left:34px;top:308px;width:142px;z-index:6;transform:rotate(1.2deg)" data-om-id="dd620bf5:291">
-          <div style="position:relative;background-image:radial-gradient(110px 70px at 80% 100%,rgba(150,110,60,0.13),rgba(150,110,60,0) 70%),linear-gradient(168deg,#f7f0df,#efe5cf 60%,#e9dcc2);padding:7px 7px 26px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 6px rgba(90,60,30,0.2),0 10px 20px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.22;pointer-events:none" data-om-id="dd620bf5:292">
-            <div style="position:relative;width:128px;height:132px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.28),inset 0 0 9px rgba(90,60,30,0.13)" data-om-id="dd620bf5:293">
-              <div style="width:100%;height:100%;background-image: {{ photoBg1 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:294"></div>
+        <div style="position:absolute;left:16px;top:76px;width:76px;height:22px;z-index:10;transform:rotate(-43deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(255,240,232,0.28) 0px,rgba(255,240,232,0.28) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 6px),linear-gradient(180deg,rgba(150,76,60,0.32),rgba(255,244,238,0.12) 30%,rgba(255,244,238,0.12) 70%,rgba(150,76,60,0.32)),linear-gradient(90deg,rgba(160,86,70,0.58) 0%,rgba(207,138,120,0.4) 9%,rgba(216,152,134,0.38) 50%,rgba(207,138,120,0.4) 91%,rgba(160,86,70,0.58) 100%);box-shadow:0 2px 4px rgba(110,60,45,0.2)"></div>
+        <div style="position:absolute;left:272px;top:74px;width:70px;height:21px;z-index:11;transform:rotate(44deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(250,252,238,0.26) 0px,rgba(250,252,238,0.26) 1px,rgba(80,90,55,0) 1px,rgba(80,90,55,0) 6px),linear-gradient(180deg,rgba(96,104,70,0.32),rgba(248,250,235,0.12) 30%,rgba(248,250,235,0.12) 70%,rgba(96,104,70,0.32)),linear-gradient(90deg,rgba(104,112,76,0.55) 0%,rgba(152,160,122,0.4) 9%,rgba(163,171,132,0.38) 50%,rgba(152,160,122,0.4) 91%,rgba(104,112,76,0.55) 100%);box-shadow:0 2px 4px rgba(70,80,45,0.2)"></div>
+        <div style="position:absolute;left:26px;top:300px;width:154px;z-index:7;transform:rotate(1.2deg)">
+          <div style="position:relative;background-image:radial-gradient(110px 70px at 80% 100%,rgba(150,110,60,0.13),rgba(150,110,60,0) 70%),linear-gradient(168deg,#f7f0df,#efe5cf 60%,#e9dcc2);padding:8px 8px 28px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 6px rgba(90,60,30,0.2),0 10px 20px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.22;pointer-events:none">
+            <div style="position:relative;width:138px;height:140px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.28),inset 0 0 9px rgba(90,60,30,0.13)">
+              <div style="width:100%;height:100%;background-image: {{ photoBg1 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div>
             </div>
           </div>
         </div>
-        <div style="position:absolute;left:186px;top:314px;width:142px;z-index:6;transform:rotate(-1deg)" data-om-id="dd620bf5:295">
-          <div style="position:relative;background-image:radial-gradient(110px 70px at 20% 100%,rgba(150,110,60,0.13),rgba(150,110,60,0) 70%),linear-gradient(190deg,#f6efdd,#efe5cf 60%,#e8dbc0);padding:7px 7px 26px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 6px rgba(90,60,30,0.2),0 10px 20px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.22;pointer-events:none" data-om-id="dd620bf5:296">
-            <div style="position:relative;width:128px;height:132px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.28),inset 0 0 9px rgba(90,60,30,0.13)" data-om-id="dd620bf5:297">
-              <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:298"></div>
-            </div>
-
-          </div>
-        </div>
-        <div style="position:absolute;left:34px;top:522px;width:92px;height:92px;z-index:5;transform:rotate(0.6deg)" data-om-id="dd620bf5:299">
-          <div style="position:relative;width:100%;height:100%;background:linear-gradient(170deg,#f5eedc,#eee3cb);padding:5px;box-shadow:0 2px 5px rgba(90,60,30,0.2),0 7px 14px rgba(90,60,30,0.18)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none" data-om-id="dd620bf5:300">
-            <div style="position:relative;width:82px;height:82px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.26)" data-om-id="dd620bf5:301">
-              <div style="width:100%;height:100%;background-image: {{ photoBg3 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:302"></div>
+        <div style="position:absolute;left:182px;top:306px;width:154px;z-index:8;transform:rotate(-1deg)">
+          <div style="position:relative;background-image:radial-gradient(110px 70px at 20% 100%,rgba(150,110,60,0.13),rgba(150,110,60,0) 70%),linear-gradient(190deg,#f6efdd,#efe5cf 60%,#e8dbc0);padding:8px 8px 28px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 6px rgba(90,60,30,0.2),0 10px 20px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.22;pointer-events:none">
+            <div style="position:relative;width:138px;height:140px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.28),inset 0 0 9px rgba(90,60,30,0.13)">
+              <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div>
             </div>
           </div>
         </div>
-        <div style="position:absolute;left:134px;top:522px;width:92px;height:92px;z-index:5;transform:rotate(-0.5deg)" data-om-id="dd620bf5:303">
-          <div style="position:relative;width:100%;height:100%;background:linear-gradient(175deg,#f5eedc,#eee3cb);padding:5px;box-shadow:0 2px 5px rgba(90,60,30,0.2),0 7px 14px rgba(90,60,30,0.18)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none" data-om-id="dd620bf5:304">
-            <div style="position:relative;width:82px;height:82px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.26)" data-om-id="dd620bf5:305">
-              <div style="width:100%;height:100%;background-image: {{ photoBg4 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:306"></div>
-            </div>
+        <div style="position:absolute;left:18px;top:522px;width:324px;height:84px;z-index:5;transform:rotate(-1.2deg);background-image:linear-gradient(180deg,rgba(45,25,12,0.35) 0px,rgba(45,25,12,0) 4px),linear-gradient(0deg,rgba(45,25,12,0.35) 0px,rgba(45,25,12,0) 4px),repeating-linear-gradient(88deg,rgba(235,210,180,0.08) 0px,rgba(235,210,180,0.08) 1px,rgba(235,210,180,0) 1px,rgba(235,210,180,0) 14px),radial-gradient(90px 60px at 12% 20%,rgba(230,195,160,0.25),rgba(230,195,160,0) 70%),radial-gradient(120px 70px at 70% 80%,rgba(50,28,12,0.3),rgba(50,28,12,0) 72%),linear-gradient(92deg,#7d5b3c 0%,#6b4a2e 30%,#7a583a 55%,#5f4128 80%,#755539 100%);box-shadow:0 8px 16px rgba(70,40,18,0.3)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:240px;mix-blend-mode:multiply;opacity:0.36" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:130px;mix-blend-mode:overlay;opacity:0.32">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+            <div style="height:13px;display:flex;justify-content:space-between;align-items:center;padding:0 12px"><sc-for list="{{ sprocketsH }}" as="s" hint-placeholder-count="11"><div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(70,40,18,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94"></div></sc-for></div>
+            <div style="flex:1;display:flex;gap:8px;padding:0 10px"><div style="position:relative;width:70px;background:#33241a;box-shadow:0 0 0 2px rgba(40,22,10,0.5),0 1px 3px rgba(35,18,8,0.3);overflow:hidden"><div style="width:100%;height:100%;background-image: {{ photoBg3 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div></div><div style="position:relative;width:70px;background:#33241a;box-shadow:0 0 0 2px rgba(40,22,10,0.5),0 1px 3px rgba(35,18,8,0.3);overflow:hidden"><div style="width:100%;height:100%;background-image: {{ photoBg4 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div></div><div style="position:relative;width:70px;background:#33241a;box-shadow:0 0 0 2px rgba(40,22,10,0.5),0 1px 3px rgba(35,18,8,0.3);overflow:hidden"><div style="width:100%;height:100%;background-image: {{ photoBg5 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div></div><div style="position:relative;width:70px;background:#33241a;box-shadow:0 0 0 2px rgba(40,22,10,0.5),0 1px 3px rgba(35,18,8,0.3);overflow:hidden"><div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div></div></div>
+            <div style="height:13px;display:flex;justify-content:space-between;align-items:center;padding:0 12px"><sc-for list="{{ sprocketsH }}" as="s" hint-placeholder-count="11"><div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(70,40,18,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94"></div></sc-for></div>
           </div>
         </div>
-        <div style="position:absolute;left:234px;top:522px;width:92px;height:92px;z-index:5;transform:rotate(0.4deg)" data-om-id="dd620bf5:307">
-          <div style="position:relative;width:100%;height:100%;background:linear-gradient(168deg,#f5eedc,#eee3cb);padding:5px;box-shadow:0 2px 5px rgba(90,60,30,0.2),0 7px 14px rgba(90,60,30,0.18)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none" data-om-id="dd620bf5:308">
-            <div style="position:relative;width:82px;height:82px;overflow:hidden;background:#2e2318" style-after="content:'';position:absolute;inset:0;box-shadow:inset 0 1px 3px rgba(60,40,20,0.26)" data-om-id="dd620bf5:309">
-              <div style="width:100%;height:100%;background-image: {{ photoBg5 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:310"></div>
-            </div>
-          </div>
-        </div>
-        <sc-if value="{{ showEphemera }}" hint-placeholder-val="{{ true }}" data-om-id="dd620bf5:311">
-          <svg width="76" height="136" viewBox="0 0 76 136" style="position:absolute;left:294px;top:-14px;z-index:3;transform:rotate(188deg);filter:drop-shadow(1px 2px 3px rgba(80,60,30,0.28));opacity:0.85" data-om-id="dd620bf5:312">
-            <g filter="url(#frough)" data-om-id="dd620bf5:313">
-              <path d="M40 132 C36 104 36 72 40 44 C41 33 42 22 43 12" stroke="#6a7050" stroke-width="2.2" fill="none" data-om-id="dd620bf5:314"/>
-              <path d="M38 122 Q20 116 10 102 Q26 106 38 114 Z" fill="url(#fgrad)" opacity="0.85" data-om-id="dd620bf5:315"/>
-              <path d="M40 116 Q58 110 68 96 Q52 100 40 108 Z" fill="url(#fgrad)" opacity="0.92" data-om-id="dd620bf5:316"/>
-              <path d="M37 104 Q19 97 11 84 Q26 89 37 97 Z" fill="url(#fgrad)" opacity="0.78" data-om-id="dd620bf5:317"/>
-              <path d="M39 98 Q57 91 65 78 Q50 83 39 90 Z" fill="url(#fgrad)" opacity="0.9" data-om-id="dd620bf5:318"/>
-              <path d="M37 86 Q21 79 14 67 Q28 72 37 80 Z" fill="url(#fgrad)" opacity="0.84" data-om-id="dd620bf5:319"/>
-              <path d="M39 80 Q55 73 62 61 Q48 66 39 73 Z" fill="url(#fgrad)" opacity="0.76" data-om-id="dd620bf5:320"/>
-              <path d="M38 68 Q23 61 17 51 Q30 56 38 63 Z" fill="url(#fgrad)" opacity="0.9" data-om-id="dd620bf5:321"/>
-              <path d="M40 62 Q54 55 60 45 Q47 50 40 56 Z" fill="url(#fgrad)" opacity="0.82" data-om-id="dd620bf5:322"/>
-              <path d="M39 52 Q26 45 22 37 Q33 41 39 47 Z" fill="url(#fgrad)" opacity="0.88" data-om-id="dd620bf5:323"/>
-              <path d="M41 46 Q53 39 57 31 Q45 36 41 41 Z" fill="url(#fgrad)" opacity="0.8" data-om-id="dd620bf5:324"/>
-              <path d="M40 36 Q30 30 27 23 Q36 27 40 32 Z" fill="url(#fgrad)" opacity="0.86" data-om-id="dd620bf5:325"/>
-              <path d="M42 31 Q51 25 53 19 Q44 23 42 27 Z" fill="url(#fgrad)" opacity="0.78" data-om-id="dd620bf5:326"/>
+        <sc-if value="{{ showEphemera }}" hint-placeholder-val="{{ true }}">
+          <svg width="76" height="136" viewBox="0 0 76 136" style="position:absolute;left:294px;top:-14px;z-index:3;transform:rotate(188deg);filter:drop-shadow(1px 2px 3px rgba(80,60,30,0.28));opacity:0.85">
+            <g filter="url(#frough)">
+              <path d="M40 132 C36 104 36 72 40 44 C41 33 42 22 43 12" stroke="#6a7050" stroke-width="2.2" fill="none"/>
+              <path d="M38 122 Q20 116 10 102 Q26 106 38 114 Z" fill="url(#fgrad)" opacity="0.85"/>
+              <path d="M40 116 Q58 110 68 96 Q52 100 40 108 Z" fill="url(#fgrad)" opacity="0.92"/>
+              <path d="M37 104 Q19 97 11 84 Q26 89 37 97 Z" fill="url(#fgrad)" opacity="0.78"/>
+              <path d="M39 98 Q57 91 65 78 Q50 83 39 90 Z" fill="url(#fgrad)" opacity="0.9"/>
+              <path d="M37 86 Q21 79 14 67 Q28 72 37 80 Z" fill="url(#fgrad)" opacity="0.84"/>
+              <path d="M39 80 Q55 73 62 61 Q48 66 39 73 Z" fill="url(#fgrad)" opacity="0.76"/>
+              <path d="M38 68 Q23 61 17 51 Q30 56 38 63 Z" fill="url(#fgrad)" opacity="0.9"/>
+              <path d="M40 62 Q54 55 60 45 Q47 50 40 56 Z" fill="url(#fgrad)" opacity="0.82"/>
+              <path d="M39 52 Q26 45 22 37 Q33 41 39 47 Z" fill="url(#fgrad)" opacity="0.88"/>
+              <path d="M41 46 Q53 39 57 31 Q45 36 41 41 Z" fill="url(#fgrad)" opacity="0.8"/>
+              <path d="M40 36 Q30 30 27 23 Q36 27 40 32 Z" fill="url(#fgrad)" opacity="0.86"/>
+              <path d="M42 31 Q51 25 53 19 Q44 23 42 27 Z" fill="url(#fgrad)" opacity="0.78"/>
             </g>
           </svg>
-          <div style="position:absolute;left:276px;top:584px;z-index:8;transform:rotate(-6deg) scale(0.85)" data-om-id="dd620bf5:327">
-            <div style="position:relative;width:52px;height:62px;filter:drop-shadow(0 2px 4px rgba(90,60,30,0.28));background-image:radial-gradient(circle at 50% 0px,rgba(236,223,196,0) 2.4px,#ecdfc4 2.8px),radial-gradient(circle at 50% 100%,rgba(236,223,196,0) 2.4px,#e8dabc 2.8px),radial-gradient(circle at 0px 50%,rgba(236,223,196,0) 2.4px,#ecdfc4 2.8px),radial-gradient(circle at 100% 50%,rgba(236,223,196,0) 2.4px,#e8dabc 2.8px),linear-gradient(170deg,#eee2c8,#e6d6b4);background-size:8px 4px,8px 4px,4px 8px,4px 8px,calc(100% - 8px) calc(100% - 8px);background-position:0 0,0 100%,0 0,100% 0,4px 4px;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y,no-repeat" data-om-id="dd620bf5:328">
-              <div style="position:absolute;inset:5px;border:1px solid rgba(120,80,40,0.35);display:flex;flex-direction:column;justify-content:space-between;background-image:radial-gradient(9px 9px at 70% 24%,#d3a055 0px,#d3a055 4px,rgba(211,160,85,0) 5px),radial-gradient(56px 30px at 15% 102%,#8a8a62 0%,#8a8a62 58%,rgba(138,138,98,0) 62%),radial-gradient(64px 36px at 90% 106%,#767a56 0%,#767a56 56%,rgba(118,122,86,0) 60%),linear-gradient(180deg,#d9c9a0,#cbb586 66%,#bfa876)" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:100px;mix-blend-mode:overlay;opacity:0.4" data-om-id="dd620bf5:329">
+          <div style="position:absolute;left:272px;top:457px;width:80px;height:90px;z-index:12;transform:rotate(-6deg) scale(0.8)">
+            <div style="position:relative;width:52px;height:62px;filter:drop-shadow(0 2px 4px rgba(90,60,30,0.28));background-image:radial-gradient(circle at 50% 0px,rgba(236,223,196,0) 2.4px,#ecdfc4 2.8px),radial-gradient(circle at 50% 100%,rgba(236,223,196,0) 2.4px,#e8dabc 2.8px),radial-gradient(circle at 0px 50%,rgba(236,223,196,0) 2.4px,#ecdfc4 2.8px),radial-gradient(circle at 100% 50%,rgba(236,223,196,0) 2.4px,#e8dabc 2.8px),linear-gradient(170deg,#eee2c8,#e6d6b4);background-size:8px 4px,8px 4px,4px 8px,4px 8px,calc(100% - 8px) calc(100% - 8px);background-position:0 0,0 100%,0 0,100% 0,4px 4px;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y,no-repeat">
+              <div style="position:absolute;inset:5px;border:1px solid rgba(120,80,40,0.35);display:flex;flex-direction:column;justify-content:space-between;background-image:radial-gradient(9px 9px at 70% 24%,#d3a055 0px,#d3a055 4px,rgba(211,160,85,0) 5px),radial-gradient(56px 30px at 15% 102%,#8a8a62 0%,#8a8a62 58%,rgba(138,138,98,0) 62%),radial-gradient(64px 36px at 90% 106%,#767a56 0%,#767a56 56%,rgba(118,122,86,0) 60%),linear-gradient(180deg,#d9c9a0,#cbb586 66%,#bfa876)" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:100px;mix-blend-mode:overlay;opacity:0.4">
 
 
               </div>
@@ -1042,42 +1701,45 @@ a{color:#8a4a2a}a:hover{color:#68371d}
           </div>
         </sc-if>
 
-        <div style="position:absolute;inset:0;z-index:34;pointer-events:none;background:linear-gradient(105deg,rgba(255,238,205,0) 35%,rgba(255,238,205,0.32) 50%,rgba(255,238,205,0) 66%);mix-blend-mode:soft-light" data-om-id="dd620bf5:330"></div>
-        <div style="position:absolute;inset:0;z-index:36;pointer-events:none;background:radial-gradient(140% 120% at 50% 40%,rgba(96,64,34,0) 60%,rgba(96,64,34,0.12) 100%);mix-blend-mode:multiply" data-om-id="dd620bf5:331"></div>
-        <div style="position:absolute;inset:0;z-index:38;pointer-events:none;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity: {{ grainOpacitySoft }}" data-om-id="dd620bf5:332"></div>
+        <div style="position:absolute;inset:0;z-index:34;pointer-events:none;background:linear-gradient(115deg,rgba(255,236,200,0) 30%,rgba(255,236,200,0.3) 45%,rgba(255,236,200,0) 60%);mix-blend-mode:soft-light"></div>
+        <div style="position:absolute;inset:0;z-index:36;pointer-events:none;background:radial-gradient(140% 120% at 50% 40%,rgba(96,64,34,0) 55%,rgba(96,64,34,0.17) 100%);opacity:0.7;mix-blend-mode:multiply"></div>
+        <div style="position:absolute;inset:0;z-index:38;pointer-events:none;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity: {{ grainOpacitySoft }}"></div>
       </div>
     </div>
 
-    <div id="2c" data-screen-label="2c Minimal editorial" style="display:flex;flex-direction:column;gap:10px" data-om-id="dd620bf5:333">
-      <div style="display:flex;align-items:baseline;gap:9px" data-om-id="dd620bf5:334">
-        <span style="background:#463828;color:#ece2cc;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:ui-monospace,'SF Mono',Menlo,monospace" data-om-id="dd620bf5:335">2c</span>
-        <span style="font-size:13px;font-weight:650" data-om-id="dd620bf5:336">Minimal editorial</span>
-        <span style="font-size:11px;color:#6f6353" data-om-id="dd620bf5:337">flat control</span>
+    <div id="2c" data-screen-label="2c Minimal editorial" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;gap:9px">
+        <span style="background:#463828;color:#ece2cc;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:ui-monospace,'SF Mono',Menlo,monospace">2c</span>
+        <span style="font-size:13px;font-weight:650">Minimal editorial</span>
+        <span style="font-size:11px;color:#6f6353">flat control</span>
       </div>
-      <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;background:#f4f0e8;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25)" data-om-id="dd620bf5:338">
-        <div style="position:absolute;left:26px;top:28px;font-family:Didot,'Bodoni MT','Didot LT STD',Georgia,serif;font-style:italic;font-weight:400;font-size:46px;letter-spacing:0.5px;color:#24201a" data-om-id="dd620bf5:339">December</div>
+      <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;background:#f4f0e8;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25)">
+        <div style="position:absolute;left:26px;top:30px;font-family:'Lora',Georgia,serif;font-style:italic;font-weight:500;font-size:44px;letter-spacing:0.2px;color:#24201a">December</div>
 
-        <div style="position:absolute;left:26px;right:26px;top:96px;height:1px;background:#d9d2c2" data-om-id="dd620bf5:340"></div>
+        <div style="position:absolute;left:26px;right:26px;top:96px;height:1px;background:#d9d2c2"></div>
 
-        <div style="position:absolute;left:26px;top:130px;width:308px;height:266px;overflow:hidden;background:#e7e1d4" data-om-id="dd620bf5:341">
-          <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center" data-om-id="dd620bf5:342"></div>
+        <div style="position:absolute;left:26px;top:130px;width:308px;height:266px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center"></div>
         </div>
-        <div style="position:absolute;left:26px;top:404px;width:150px;height:106px;overflow:hidden;background:#e7e1d4" data-om-id="dd620bf5:343">
-          <div style="width:100%;height:100%;background-image: {{ photoBg1 }};background-size:cover;background-position:center" data-om-id="dd620bf5:344"></div>
+        <div style="position:absolute;left:26px;top:404px;width:150px;height:106px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg1 }};background-size:cover;background-position:center"></div>
         </div>
-        <div style="position:absolute;left:184px;top:404px;width:150px;height:106px;overflow:hidden;background:#e7e1d4" data-om-id="dd620bf5:345">
-          <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center" data-om-id="dd620bf5:346"></div>
+        <div style="position:absolute;left:184px;top:404px;width:150px;height:106px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center"></div>
         </div>
-        <div style="position:absolute;left:26px;top:518px;width:96px;height:84px;overflow:hidden;background:#e7e1d4" data-om-id="dd620bf5:347">
-          <div style="width:100%;height:100%;background-image: {{ photoBg3 }};background-size:cover;background-position:center" data-om-id="dd620bf5:348"></div>
+        <div style="position:absolute;left:26px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg3 }};background-size:cover;background-position:center"></div>
         </div>
-        <div style="position:absolute;left:132px;top:518px;width:96px;height:84px;overflow:hidden;background:#e7e1d4" data-om-id="dd620bf5:349">
-          <div style="width:100%;height:100%;background-image: {{ photoBg4 }};background-size:cover;background-position:center" data-om-id="dd620bf5:350"></div>
+        <div style="position:absolute;left:105px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg4 }};background-size:cover;background-position:center"></div>
         </div>
-        <div style="position:absolute;left:238px;top:518px;width:96px;height:84px;overflow:hidden;background:#e7e1d4" data-om-id="dd620bf5:351">
-          <div style="width:100%;height:100%;background-image: {{ photoBg5 }};background-size:cover;background-position:center" data-om-id="dd620bf5:352"></div>
+        <div style="position:absolute;left:184px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg5 }};background-size:cover;background-position:center"></div>
         </div>
-        <div style="position:absolute;left:26px;right:26px;top:614px;height:1px;background:#d9d2c2" data-om-id="dd620bf5:353"></div>
+        <div style="position:absolute;left:263px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
+          <div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center"></div>
+        </div>
+        <div style="position:absolute;left:26px;right:26px;top:614px;height:1px;background:#d9d2c2"></div>
 
 
       </div>
@@ -1096,10 +1758,14 @@ class Component extends DCLogic {
     r: +(Math.sin(i * 7.31) * 2.4).toFixed(1),
     o: +(0.86 + Math.sin(i * 2.17 + 1) * 0.12).toFixed(2)
   }));
+  sprocketsH = Array.from({ length: 11 }, (_, i) => ({
+    r: +(Math.sin(i * 5.13) * 2.2).toFixed(1),
+    o: +(0.86 + Math.sin(i * 1.97 + 1) * 0.12).toFixed(2)
+  }));
   placeholders = [
     ['#c98d6b', '#ead2b6', 520, 700], ['#a9b295', '#e6dfc6', 700, 520], ['#9fb2bd', '#e8dac4', 600, 600],
     ['#c2a0a6', '#eedbcd', 520, 700], ['#c3a45e', '#ecdcb6', 700, 520], ['#b0836d', '#e2ccb0', 600, 600],
-    ['#8fa6a8', '#e5d7bd', 520, 700]
+    ['#96a08a', '#e0e3d0', 560, 680]
   ].map((p, i) => {
     const a = p[0], b = p[1], w = p[2], h = p[3];
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
@@ -1146,14 +1812,12 @@ class Component extends DCLogic {
       photoBg0: bg(0), photoBg1: bg(1), photoBg2: bg(2),
       photoBg3: bg(3), photoBg4: bg(4), photoBg5: bg(5), photoBg6: bg(6),
       photoCount: photoCount,
-      sevenPhotoLayout: photoCount >= 7,
-      filmPaddingTop: photoCount >= 7 ? '7px' : '71px',
-      pick: this.pick, reset: this.reset, sprockets: this.sprockets,
+      pick: this.pick, reset: this.reset, sprockets: this.sprockets, sprocketsH: this.sprocketsH,
       grainOpacity: +g.toFixed(2), grainOpacitySoft: +(g * 0.75).toFixed(2),
       photoFilter: (this.props.filmTint ?? true) ? 'saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)' : 'none',
       showEphemera: this.props.showEphemera ?? true,
       normalMode: !isIndex && !singleAsset, isIndex: isIndex,
-      axPaperWashi: ax('paper-washi'), axPaperCream: ax('paper-cream-fiber'), axPaperBlush: ax('paper-blush-stripe'), axPaperSage: ax('paper-sage-stripe'), axPaperTerracotta: ax('paper-terracotta-mottle'), axPaperTorn: ax('paper-torn'), axPolaroid: ax('polaroid-frame'), axFilmStrip: ax('film-strip'), axBanner: ax('banner'), axTapeMustard: ax('tape-mustard'), axTapeBlush: ax('tape-blush'), axTapeSage: ax('tape-sage'), axStamp: ax('stamp-postmark'), axStar: ax('star'), axFern: ax('fern'), axCoffeeRing: ax('coffee-ring'), axSunStreak: ax('sun-streak'), axVignette: ax('vignette'), axGrain: ax('grain-overlay')
+      axPaperWashi: ax('paper-washi'), axPaperCream: ax('paper-cream-fiber'), axPaperBlush: ax('paper-blush-stripe'), axPaperSage: ax('paper-sage-stripe'), axPaperTerracotta: ax('paper-terracotta-mottle'), axPaperTorn: ax('paper-torn'), axPolaroid: ax('polaroid-frame'), axFilmStripFour: ax('film-strip-four'), axFilmStripH: ax('film-strip-four-horizontal'), axPrintHero: ax('print-frame-hero'), axNotebookBlush: ax('paper-notebook-blush'), axNotebookSage: ax('paper-notebook-sage'), axBanner: ax('banner'), axTapeMustard: ax('tape-mustard'), axTapeBlush: ax('tape-blush'), axTapeSage: ax('tape-sage'), axStamp: ax('stamp-postmark'), axStar: ax('star'), axFern: ax('fern'), axCoffeeRing: ax('coffee-ring'), axSunStreak: ax('sun-streak'), axVignette: ax('vignette'), axGrain: ax('grain-overlay')
     };
   }
 }

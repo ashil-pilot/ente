@@ -6,22 +6,19 @@ import "package:photos/models/file/file_type.dart";
 import "package:photos/utils/image_util.dart";
 
 class MemoryCollageSelector {
-  static const minimumPhotoCount = 6;
-  static const maximumPhotoCount = 7;
+  static const photoCount = 7;
 
   const MemoryCollageSelector._();
 
-  static bool isSupportedPhotoCount(int photoCount) {
-    return photoCount >= minimumPhotoCount && photoCount <= maximumPhotoCount;
-  }
+  static bool isSupportedPhotoCount(int candidateCount) =>
+      candidateCount == photoCount;
 
   /// Returns the photo-capable files selected for a memory.
   ///
   /// Selection is deterministic for the same memory and shuffle revision. It
-  /// is independent of the source iterable's order and never mutates it. Six
-  /// files are returned when exactly six are eligible, and seven are returned
-  /// whenever at least seven are eligible. An empty list means there are fewer
-  /// than six uniquely identifiable photos.
+  /// is independent of the source iterable's order and never mutates it. Seven
+  /// files are returned whenever at least seven are eligible. An empty list
+  /// means there are fewer than seven uniquely identifiable photos.
   static List<EnteFile> select({
     required String memoryID,
     required int shuffleRevision,
@@ -33,11 +30,7 @@ class MemoryCollageSelector {
       final key = stableFileKey(file);
       if (key != null) eligibleByKey.putIfAbsent(key, () => file);
     }
-    if (eligibleByKey.length < minimumPhotoCount) return const [];
-
-    final selectionCount = eligibleByKey.length >= maximumPhotoCount
-        ? maximumPhotoCount
-        : minimumPhotoCount;
+    if (eligibleByKey.length < photoCount) return const [];
 
     final ranked = <_RankedFile>[
       for (final entry in eligibleByKey.entries)
@@ -51,7 +44,7 @@ class MemoryCollageSelector {
     ]..sort(_compareRankedFiles);
 
     return List.unmodifiable(
-      ranked.take(selectionCount).map((entry) => entry.file),
+      ranked.take(photoCount).map((entry) => entry.file),
     );
   }
 

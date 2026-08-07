@@ -2,7 +2,7 @@
 
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -10,53 +10,40 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+const appDirectory = resolve(scriptDirectory, "..", "..");
+const realOutputDirectory = join(appDirectory, "assets", "memories_collage");
 const sourcePath = resolve(
   process.env.COLLAGE_SOURCE ?? join(scriptDirectory, "Memory Collage.dc.html"),
 );
 const supportPath = join(dirname(sourcePath), "support.js");
 const vendorDirectory = join(scriptDirectory, "vendor");
 const outputDirectory = resolve(
-  process.env.COLLAGE_OUTPUT ??
-    join(scriptDirectory, "..", "..", "assets", "memories_collage"),
+  process.env.COLLAGE_OUTPUT ?? realOutputDirectory,
 );
-const titleFontPath = join(scriptDirectory, "..", "..", "fonts", "Lora-SemiBold.ttf");
-const titleFontLicensePath = join(scriptDirectory, "..", "..", "fonts", "Lora-OFL.txt");
+const isRealOutput = outputDirectory === realOutputDirectory;
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "115a6fe96caa01e0183d104aac8e2b98ffbdbc34833ef9601e9d6c172e0e6eb3",
+    "80934d55081fc9983f2187d0721fb21b9d1bb8478614aaec4f4abc42305a2d4c",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
-const expectedTitleFontHashes = {
-  "Lora-SemiBold.ttf":
-    "a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81",
-  "Lora-OFL.txt":
-    "6d6bc7bbb828514925dabcaf89e4771398d12c60dd1cb2bbb90eea129535d0f4",
-};
-const expectedTitleStyle = {
-  layerId: "banner",
-  units: "1080x1920 canvas pixels",
-  fontFamily: "Lora",
-  fontAsset: "fonts/Lora-SemiBold.ttf",
-  fontWeight: 600,
-  fontStyle: "normal",
-  fontSize: 45,
-  letterSpacing: 12,
-  color: "#f4e7cf",
-  textAlign: "center",
-  verticalAlign: "center",
-  memoryTitleCasing: "preserve",
-  generatedMonthLabelCasing: "uppercase",
-  glyphFallback: "platform",
-  shadow: {
-    dx: 0,
-    dy: 3,
-    blur: 3,
-    color: "rgba(90,40,15,0.5)",
+const fontSpecs = [
+  {
+    file: "Lora-SemiBold.ttf",
+    hash: "a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81",
   },
-};
-const requiredAssetIds = [
+  {
+    file: "Lora-Italic.ttf",
+    hash: "22d8d8854b53807aa664ca34f2031a9ed57a1d0dea296b8b96cdd3aad937a2b3",
+  },
+  {
+    file: "Lora-OFL.txt",
+    hash: "6d6bc7bbb828514925dabcaf89e4771398d12c60dd1cb2bbb90eea129535d0f4",
+  },
+];
+
+const retainedAssetIds = [
   "paper-washi",
   "paper-cream-fiber",
   "paper-blush-stripe",
@@ -64,7 +51,6 @@ const requiredAssetIds = [
   "paper-terracotta-mottle",
   "paper-torn",
   "polaroid-frame",
-  "film-strip",
   "film-strip-four",
   "banner",
   "tape-mustard",
@@ -78,6 +64,86 @@ const requiredAssetIds = [
   "vignette",
   "grain-overlay",
 ];
+const designRasterAssetIds = [
+  "film-strip-four-horizontal",
+  "print-frame-hero",
+  "paper-notebook-blush",
+  "paper-notebook-sage",
+];
+const generatedColors = new Map([
+  ["editorial-bone", "#f4f0e8"],
+  ["editorial-sand", "#e8dfcc"],
+  ["editorial-sage", "#dde0d6"],
+  ["editorial-charcoal", "#2b2723"],
+]);
+const generatedColorAssetIds = [...generatedColors.keys()];
+const newAssetIds = [...designRasterAssetIds, ...generatedColorAssetIds];
+const requiredAssetIds = [...retainedAssetIds, ...newAssetIds];
+const retainedAssetIdSet = new Set(retainedAssetIds);
+const generatedColorAssetIdSet = new Set(generatedColorAssetIds);
+const expectedRetainedInventoryDigest =
+  "422d287821ede0238ccc03c9692115e7d8c592797f86237970d03edca037cc08";
+
+const dimensions = new Map([
+  ["paper-washi", [1080, 1920]],
+  ["paper-cream-fiber", [1080, 1920]],
+  ["paper-blush-stripe", [1080, 1920]],
+  ["paper-sage-stripe", [1080, 1920]],
+  ["paper-terracotta-mottle", [1080, 1920]],
+  ["paper-torn", [1098, 1734]],
+  ["polaroid-frame", [462, 534]],
+  ["film-strip-four", [390, 1800]],
+  ["banner", [546, 150]],
+  ["tape-mustard", [336, 72]],
+  ["tape-blush", [228, 66]],
+  ["tape-sage", [210, 63]],
+  ["stamp-postmark", [240, 270]],
+  ["star", [282, 282]],
+  ["fern", [228, 408]],
+  ["coffee-ring", [192, 192]],
+  ["sun-streak", [1080, 1920]],
+  ["vignette", [1080, 1920]],
+  ["grain-overlay", [1080, 1920]],
+  ["film-strip-four-horizontal", [972, 252]],
+  ["print-frame-hero", [876, 594]],
+  ["paper-notebook-blush", [1080, 1920]],
+  ["paper-notebook-sage", [1080, 1920]],
+  ["editorial-bone", [1080, 1920]],
+  ["editorial-sand", [1080, 1920]],
+  ["editorial-sage", [1080, 1920]],
+  ["editorial-charcoal", [1080, 1920]],
+]);
+const expectedPhotoWindows = new Map([
+  ["polaroid-frame", [{ x: 27, y: 27, width: 414, height: 420 }]],
+  ["film-strip-four", [
+    { x: 57, y: 69, width: 276, height: 318 },
+    { x: 57, y: 453, width: 276, height: 318 },
+    { x: 57, y: 837, width: 276, height: 318 },
+    { x: 57, y: 1221, width: 276, height: 318 },
+  ]],
+  ["film-strip-four-horizontal", [
+    { x: 30, y: 39, width: 210, height: 174 },
+    { x: 264, y: 39, width: 210, height: 174 },
+    { x: 498, y: 39, width: 210, height: 174 },
+    { x: 732, y: 39, width: 210, height: 174 },
+  ]],
+  ["print-frame-hero", [
+    { x: 24, y: 24, width: 834, height: 546 },
+  ]],
+]);
+const expectedTemplateIds = [
+  "scrapbook-maximal",
+  "scrapbook-calm",
+  "minimal-editorial",
+];
+// JSON.stringify(template) pins every approved 2a coordinate and shadow.
+const expectedMaximalTemplateDigest =
+  "6817de9b4f5cf2c017264aa575d9c2e35f763eab7177bb59af7c7da4fab590d9";
+// Projection: JSON.stringify({ assets: the final eight source asset records,
+// templates: { scrapbook-calm, minimal-editorial } }).
+const expectedNewDesignContractDigest =
+  "bc3af973973d9eab10d605e5c5c8776ea514dd67ae37b12610e6b2449995076f";
+
 const paletteTextureIds = new Set([
   "paper-washi",
   "paper-cream-fiber",
@@ -85,6 +151,8 @@ const paletteTextureIds = new Set([
   "paper-sage-stripe",
   "paper-terracotta-mottle",
   "paper-torn",
+  "paper-notebook-blush",
+  "paper-notebook-sage",
   "grain-overlay",
 ]);
 const losslessOverlayPaletteIds = new Set(["sun-streak", "vignette"]);
@@ -93,253 +161,6 @@ const translucentOverlayIds = new Set([
   "sun-streak",
   "vignette",
   "grain-overlay",
-]);
-const expectedLayers = [
-  {
-    layerId: "bg",
-    asset: "paper-washi",
-    x: 0,
-    y: 0,
-    width: 1080,
-    height: 1920,
-    z: 0,
-    rotation: 0,
-    backgroundSwappable: true,
-  },
-  {
-    layerId: "torn",
-    asset: "paper-torn",
-    x: -12,
-    y: 162,
-    width: 1098,
-    height: 1734,
-    z: 2,
-    rotation: 0.8,
-  },
-  {
-    layerId: "ring",
-    asset: "coffee-ring",
-    x: 444,
-    y: 1530,
-    width: 192,
-    height: 192,
-    z: 3,
-    rotation: 8,
-  },
-  {
-    layerId: "fern",
-    asset: "fern",
-    x: 897,
-    y: 114,
-    width: 228,
-    height: 408,
-    z: 4,
-    rotation: 196,
-  },
-  {
-    layerId: "star",
-    asset: "star",
-    x: 336,
-    y: 240,
-    width: 282,
-    height: 282,
-    z: 9,
-    rotation: 12,
-  },
-  {
-    layerId: "strip",
-    asset: "film-strip",
-    x: 618,
-    y: 312,
-    width: 390,
-    height: 1800,
-    z: 10,
-    rotation: 2,
-  },
-  {
-    layerId: "p1",
-    asset: "polaroid-frame",
-    x: 18,
-    y: 354,
-    width: 462,
-    height: 534,
-    z: 12,
-    rotation: -4.5,
-  },
-  {
-    layerId: "p2",
-    asset: "polaroid-frame",
-    x: 72,
-    y: 900,
-    width: 462,
-    height: 534,
-    z: 13,
-    rotation: 3,
-  },
-  {
-    layerId: "p3",
-    asset: "polaroid-frame",
-    x: 24,
-    y: 1404,
-    width: 462,
-    height: 534,
-    z: 14,
-    rotation: -2,
-  },
-  {
-    layerId: "banner",
-    asset: "banner",
-    x: 264,
-    y: 198,
-    width: 546,
-    height: 150,
-    z: 16,
-    rotation: -2.5,
-  },
-  {
-    layerId: "tapeA",
-    asset: "tape-mustard",
-    x: 54,
-    y: 162,
-    width: 336,
-    height: 72,
-    z: 17,
-    rotation: -4,
-  },
-  {
-    layerId: "tapeB",
-    asset: "tape-blush",
-    x: 132,
-    y: 318,
-    width: 228,
-    height: 66,
-    z: 15,
-    rotation: 2,
-  },
-  {
-    layerId: "tapeC",
-    asset: "tape-sage",
-    x: 444,
-    y: 864,
-    width: 210,
-    height: 63,
-    z: 15,
-    rotation: -36,
-  },
-  {
-    layerId: "stamp",
-    asset: "stamp-postmark",
-    x: 678,
-    y: 150,
-    width: 240,
-    height: 270,
-    z: 17,
-    rotation: 5,
-  },
-  {
-    layerId: "sunStreak",
-    asset: "sun-streak",
-    x: 0,
-    y: 0,
-    width: 1080,
-    height: 1920,
-    z: 34,
-    rotation: 0,
-    blendMode: "soft-light",
-    opacity: 1,
-  },
-  {
-    layerId: "vignette",
-    asset: "vignette",
-    x: 0,
-    y: 0,
-    width: 1080,
-    height: 1920,
-    z: 36,
-    rotation: 0,
-    blendMode: "multiply",
-    opacity: 1,
-  },
-  {
-    layerId: "grain",
-    asset: "grain-overlay",
-    x: 0,
-    y: 0,
-    width: 1080,
-    height: 1920,
-    z: 38,
-    rotation: 0,
-    blendMode: "overlay",
-    opacity: 0.55,
-  },
-];
-const expectedPhotoLayouts = [
-  {
-    photoCount: 6,
-    assetOverrides: { strip: "film-strip" },
-    photoSlots: [
-      { slot: 0, layerId: "strip", windowIndex: 0 },
-      { slot: 1, layerId: "strip", windowIndex: 1 },
-      { slot: 2, layerId: "strip", windowIndex: 2 },
-      { slot: 3, layerId: "p1", windowIndex: 0 },
-      { slot: 4, layerId: "p2", windowIndex: 0 },
-      { slot: 5, layerId: "p3", windowIndex: 0 },
-    ],
-  },
-  {
-    photoCount: 7,
-    assetOverrides: { strip: "film-strip-four" },
-    photoSlots: [
-      { slot: 0, layerId: "strip", windowIndex: 0 },
-      { slot: 1, layerId: "strip", windowIndex: 1 },
-      { slot: 2, layerId: "strip", windowIndex: 2 },
-      { slot: 3, layerId: "p1", windowIndex: 0 },
-      { slot: 4, layerId: "p2", windowIndex: 0 },
-      { slot: 5, layerId: "p3", windowIndex: 0 },
-      { slot: 6, layerId: "strip", windowIndex: 3 },
-    ],
-  },
-];
-const expectedShadows = new Map([
-  ["torn", [
-    { kind: "dropShadow", dx: 0, dy: 42, blur: 66, color: "rgba(80,50,22,0.3)" },
-  ]],
-  ["fern", [
-    { kind: "dropShadow", dx: 3, dy: 6, blur: 9, color: "rgba(80,60,30,0.3)" },
-  ]],
-  ["star", [
-    { kind: "dropShadow", dx: 3, dy: 9, blur: 15, color: "rgba(90,55,15,0.35)" },
-  ]],
-  ["strip", [
-    { kind: "dropShadow", dx: 0, dy: 30, blur: 54, color: "rgba(70,32,12,0.38)" },
-  ]],
-  ["p1", [
-    { kind: "dropShadow", dx: 0, dy: 9, blur: 18, color: "rgba(90,60,30,0.22)" },
-    { kind: "dropShadow", dx: 0, dy: 36, blur: 72, color: "rgba(90,60,30,0.26)" },
-  ]],
-  ["p2", [
-    { kind: "dropShadow", dx: 0, dy: 9, blur: 18, color: "rgba(90,60,30,0.22)" },
-    { kind: "dropShadow", dx: 0, dy: 36, blur: 72, color: "rgba(90,60,30,0.26)" },
-  ]],
-  ["p3", [
-    { kind: "dropShadow", dx: 0, dy: 9, blur: 18, color: "rgba(90,60,30,0.22)" },
-    { kind: "dropShadow", dx: 0, dy: 36, blur: 72, color: "rgba(90,60,30,0.26)" },
-  ]],
-  ["banner", [
-    { kind: "dropShadow", dx: 0, dy: 9, blur: 18, color: "rgba(80,40,15,0.35)" },
-  ]],
-  ["tapeA", [
-    { kind: "dropShadow", dx: 0, dy: 6, blur: 12, color: "rgba(90,60,25,0.22)" },
-  ]],
-  ["tapeB", [
-    { kind: "dropShadow", dx: 0, dy: 6, blur: 12, color: "rgba(110,60,45,0.22)" },
-  ]],
-  ["tapeC", [
-    { kind: "dropShadow", dx: 0, dy: 6, blur: 12, color: "rgba(70,80,45,0.22)" },
-  ]],
-  ["stamp", [
-    { kind: "dropShadow", dx: 0, dy: 6, blur: 12, color: "rgba(90,60,30,0.3)" },
-  ]],
 ]);
 const offlineRuntimeScripts = [
   {
@@ -367,8 +188,10 @@ function sha256(bytes) {
 async function verifySource(path, expectedHash, { allowDrift = false } = {}) {
   const bytes = await readFile(path);
   const actualHash = sha256(bytes);
-  if (actualHash !== expectedHash &&
-      (!allowDrift || process.env.ALLOW_COLLAGE_SOURCE_DRIFT !== "1")) {
+  if (
+    actualHash !== expectedHash &&
+    (!allowDrift || process.env.ALLOW_COLLAGE_SOURCE_DRIFT !== "1")
+  ) {
     fail(
       `Unexpected source hash for ${path}: ${actualHash}. ` +
         "Review the source and update the pinned hash." +
@@ -412,20 +235,19 @@ function loadDependency(packageName, overridePath) {
   );
   const candidates = [overridePath, packageName, nodeRuntimeModules, codexRuntimeModules]
     .filter(Boolean);
-
+  let lastError;
   for (const candidate of candidates) {
     try {
       return require(candidate);
     } catch (error) {
-      if (candidate === candidates.at(-1)) {
-        fail(
-          `Could not load ${packageName}. Install it locally or set ` +
-            `${packageName.toUpperCase()}_MODULE to its package directory. ` +
-            `Last error: ${error.message}`,
-        );
-      }
+      lastError = error;
     }
   }
+  fail(
+    `Could not load ${packageName}. Install it locally or set ` +
+      `${packageName.toUpperCase()}_MODULE to its package directory. ` +
+      `Last error: ${lastError?.message}`,
+  );
 }
 
 function findChrome() {
@@ -436,72 +258,9 @@ function findChrome() {
   ].filter(Boolean);
   const chrome = candidates.find(existsSync);
   if (!chrome) {
-    fail(
-      "Chrome or Chromium was not found. Set CHROME_BINARY to its executable.",
-    );
+    fail("Chrome or Chromium was not found. Set CHROME_BINARY to its executable.");
   }
   return chrome;
-}
-
-function validateLayerContract(layers) {
-  if (layers.length !== expectedLayers.length) {
-    fail(`template2a must contain exactly ${expectedLayers.length} layers.`);
-  }
-
-  for (let index = 0; index < expectedLayers.length; index += 1) {
-    const layer = layers[index];
-    const expected = expectedLayers[index];
-    for (const [field, value] of Object.entries(expected)) {
-      if (layer[field] !== value) {
-        fail(
-          `template2a layer ${index} must have ${field}=${JSON.stringify(value)}; ` +
-            `received ${JSON.stringify(layer[field])}.`,
-        );
-      }
-    }
-
-    const expectedLayerShadows = expectedShadows.get(layer.layerId);
-    if (!expectedLayerShadows) {
-      if (layer.shadows !== undefined &&
-          (!Array.isArray(layer.shadows) || layer.shadows.length > 0)) {
-        fail(`${layer.layerId} must not declare shadows.`);
-      }
-      continue;
-    }
-    if (!Array.isArray(layer.shadows)) {
-      fail(`${layer.layerId} must declare its runtime shadow array.`);
-    }
-
-    const normalizedShadows = layer.shadows.map((shadow, shadowIndex) => {
-      if (!shadow || typeof shadow !== "object" || Array.isArray(shadow)) {
-        fail(`${layer.layerId} shadow ${shadowIndex} must be an object.`);
-      }
-      const fields = Object.keys(shadow).sort();
-      const expectedFields = ["blur", "color", "dx", "dy", "kind"];
-      if (JSON.stringify(fields) !== JSON.stringify(expectedFields)) {
-        fail(
-          `${layer.layerId} shadow ${shadowIndex} must contain exactly ` +
-            `${expectedFields.join(", ")}.`,
-        );
-      }
-      if (shadow.kind !== "dropShadow" ||
-          !Number.isFinite(shadow.dx) ||
-          !Number.isFinite(shadow.dy) ||
-          !Number.isFinite(shadow.blur) ||
-          shadow.blur < 0 ||
-          typeof shadow.color !== "string") {
-        fail(`${layer.layerId} shadow ${shadowIndex} has invalid values.`);
-      }
-      const color = shadow.color.replace(/\s+/g, "");
-      if (!/^rgba\(\d{1,3},\d{1,3},\d{1,3},(?:0(?:\.\d+)?|1(?:\.0+)?)\)$/.test(color)) {
-        fail(`${layer.layerId} shadow ${shadowIndex} must use an rgba color.`);
-      }
-      return { ...shadow, color };
-    });
-    if (JSON.stringify(normalizedShadows) !== JSON.stringify(expectedLayerShadows)) {
-      fail(`${layer.layerId} shadows differ from the approved template.`);
-    }
-  }
 }
 
 function readManifest(source) {
@@ -509,131 +268,394 @@ function readManifest(source) {
     /<script id="asset-manifest" type="application\/json">([\s\S]*?)<\/script>/,
   );
   if (!match) fail("The source does not contain #asset-manifest.");
-
   const manifest = JSON.parse(match[1]);
-  if (!Array.isArray(manifest.assets)) {
-    fail("The manifest does not contain an asset list.");
+
+  if (
+    manifest.version !== 2 ||
+    manifest.canvas?.width !== 1080 ||
+    manifest.canvas?.height !== 1920 ||
+    manifest.photoCount !== 7 ||
+    manifest.defaultTemplateId !== "scrapbook-maximal"
+  ) {
+    fail("The source must preserve the v2 1080x1920 seven-photo contract.");
   }
+  if (!/seven-photo-only/i.test(manifest.photoPolicy ?? "")) {
+    fail("The source photo policy must explicitly remain seven-photo-only.");
+  }
+  if (!Array.isArray(manifest.assets)) fail("The source has no asset array.");
   const assetIds = manifest.assets.map((asset) => asset.id);
   if (JSON.stringify(assetIds) !== JSON.stringify(requiredAssetIds)) {
-    fail(
-      "The manifest asset IDs or order changed. Expected: " +
-        requiredAssetIds.join(", "),
-    );
-  }
-  for (const asset of manifest.assets) {
-    if (!Number.isInteger(asset.width) ||
-        !Number.isInteger(asset.height) ||
-        asset.width <= 0 ||
-        asset.height <= 0) {
-      fail(`${asset.id} has invalid dimensions.`);
-    }
-  }
-  if (manifest.template2a?.canvas?.width !== 1080 ||
-      manifest.template2a?.canvas?.height !== 1920) {
-    fail("template2a must use a 1080x1920 canvas.");
+    fail(`Asset IDs/order changed; expected ${requiredAssetIds.join(", ")}.`);
   }
 
   const assetsById = new Map(manifest.assets.map((asset) => [asset.id, asset]));
-  for (const [assetId, dimensions] of Object.entries({
-    "coffee-ring": [192, 192],
-    "sun-streak": [1080, 1920],
-    vignette: [1080, 1920],
-  })) {
+  for (const asset of manifest.assets) {
+    const expected = dimensions.get(asset.id);
+    if (
+      asset.width !== expected[0] ||
+      asset.height !== expected[1] ||
+      asset.width % 3 !== 0 ||
+      asset.height % 3 !== 0
+    ) {
+      fail(
+        `${asset.id} must be ${expected[0]}x${expected[1]} and divisible by three.`,
+      );
+    }
+    for (const window of asset.photoWindows ?? []) {
+      if (
+        !Number.isInteger(window.x) ||
+        !Number.isInteger(window.y) ||
+        !Number.isInteger(window.width) ||
+        !Number.isInteger(window.height) ||
+        window.x < 0 ||
+        window.y < 0 ||
+        window.width <= 0 ||
+        window.height <= 0 ||
+        window.x + window.width > asset.width ||
+        window.y + window.height > asset.height
+      ) {
+        fail(`${asset.id} contains an invalid photo window.`);
+      }
+    }
+  }
+  for (const [assetId, windows] of expectedPhotoWindows) {
+    if (JSON.stringify(assetsById.get(assetId).photoWindows) !== JSON.stringify(windows)) {
+      fail(`${assetId} photo windows differ from the approved geometry.`);
+    }
+  }
+  for (const [assetId, color] of generatedColors) {
     const asset = assetsById.get(assetId);
-    if (asset.width !== dimensions[0] || asset.height !== dimensions[1]) {
-      fail(`${assetId} must be ${dimensions[0]}x${dimensions[1]}.`);
-    }
-  }
-  const shadowSchema = manifest.template2a?.shadowSchema;
-  if (shadowSchema?.kind !== "dropShadow" ||
-      !/canvas pixels/i.test(shadowSchema?.units ?? "") ||
-      !/rotated layer silhouette/i.test(shadowSchema?.application ?? "")) {
-    fail("template2a must document the runtime drop-shadow coordinate contract.");
-  }
-  const layers = manifest.template2a?.layers;
-  if (!Array.isArray(layers) || layers.length === 0) {
-    fail("template2a must contain layers.");
-  }
-  validateLayerContract(layers);
-  const layerIds = layers.map((layer) => layer.layerId);
-  if (new Set(layerIds).size !== layerIds.length) {
-    fail("template2a contains duplicate layer IDs.");
-  }
-  for (const layer of layers) {
-    if (!assetsById.has(layer.asset)) {
-      fail(`${layer.layerId} references unknown asset ${layer.asset}.`);
-    }
-  }
-  const layersById = new Map(layers.map((layer) => [layer.layerId, layer]));
-  const photoLayouts = manifest.template2a?.photoLayouts;
-  if (JSON.stringify(photoLayouts) !== JSON.stringify(expectedPhotoLayouts)) {
-    fail("template2a must preserve the approved six/seven photo layouts.");
-  }
-  for (const layout of photoLayouts) {
-    if (layout.photoSlots.length !== layout.photoCount) {
-      fail(`The ${layout.photoCount}-photo layout has the wrong slot count.`);
-    }
-    const slotNumbers = layout.photoSlots.map((slot) => slot.slot).sort();
-    if (slotNumbers.some((slot, index) => slot !== index)) {
-      fail(`The ${layout.photoCount}-photo layout slots must be contiguous.`);
-    }
-    const targets = new Set();
-    for (const slot of layout.photoSlots) {
-      const target = `${slot.layerId}:${slot.windowIndex}`;
-      if (targets.has(target)) {
-        fail(`The ${layout.photoCount}-photo layout repeats ${target}.`);
-      }
-      targets.add(target);
-      const layer = layersById.get(slot.layerId);
-      const assetId = layout.assetOverrides?.[slot.layerId] ?? layer?.asset;
-      const asset = assetId && assetsById.get(assetId);
-      if (!asset?.photoWindows?.[slot.windowIndex]) {
-        fail(
-          `Photo slot ${slot.slot} in the ${layout.photoCount}-photo layout ` +
-            "references a missing window.",
-        );
-      }
-    }
-    for (const [layerId, assetId] of Object.entries(layout.assetOverrides)) {
-      if (!layersById.has(layerId) || !assetsById.has(assetId)) {
-        fail(
-          `The ${layout.photoCount}-photo layout has an invalid asset override ` +
-            `${layerId}:${assetId}.`,
-        );
-      }
+    if (
+      asset.source !== "generatedColor" ||
+      asset.color?.toLowerCase() !== color ||
+      asset.opaque !== true ||
+      asset.role !== "background"
+    ) {
+      fail(`${assetId} must remain the generated opaque ${color} background.`);
     }
   }
 
-  const omittedDecor = JSON.stringify(
-    manifest.template2a?.omittedDecor ?? "",
-  ).toLowerCase().replaceAll("-", " ");
-  for (const restoredAsset of ["coffee ring", "sun streak", "vignette"]) {
-    if (omittedDecor.includes(restoredAsset)) {
-      fail(`omittedDecor must not name restored asset ${restoredAsset}.`);
+  if (
+    !manifest.templates ||
+    JSON.stringify(Object.keys(manifest.templates)) !== JSON.stringify(expectedTemplateIds)
+  ) {
+    fail(`Templates must be ordered ${expectedTemplateIds.join(", ")}.`);
+  }
+  for (const templateId of expectedTemplateIds) {
+    const template = manifest.templates[templateId];
+    if (!Array.isArray(template.backgrounds) || template.backgrounds.length === 0) {
+      fail(`${templateId} must declare asset-backed backgrounds.`);
+    }
+    const backgroundIds = template.backgrounds.map((background) => background.id);
+    if (!backgroundIds.includes(template.defaultBackgroundId)) {
+      fail(`${templateId} default background is not in its background palette.`);
+    }
+    for (const background of template.backgrounds) {
+      if (background.kind !== "asset" || !assetsById.has(background.id)) {
+        fail(`${templateId} has an invalid background ${background.id}.`);
+      }
+    }
+
+    if (!Array.isArray(template.layers)) fail(`${templateId} must declare layers.`);
+    const layerIds = template.layers.map((layer) => layer.layerId);
+    if (new Set(layerIds).size !== layerIds.length) {
+      fail(`${templateId} contains duplicate layer IDs.`);
+    }
+    const layersById = new Map(template.layers.map((layer) => [layer.layerId, layer]));
+    for (const layer of template.layers) {
+      if (!assetsById.has(layer.asset)) {
+        fail(`${templateId}.${layer.layerId} references unknown asset ${layer.asset}.`);
+      }
+    }
+
+    if (
+      !Array.isArray(template.photoSlots) ||
+      template.photoSlots.length !== 7 ||
+      template.photoSlots.some((slot, index) => slot.slot !== index)
+    ) {
+      fail(`${templateId} must contain seven contiguous photo slots.`);
+    }
+    const targets = new Set();
+    for (const slot of template.photoSlots) {
+      if (slot.kind === "canvasRect") {
+        const rect = slot.rect;
+        if (
+          !rect ||
+          rect.x < 0 ||
+          rect.y < 0 ||
+          rect.width <= 0 ||
+          rect.height <= 0 ||
+          rect.x + rect.width > manifest.canvas.width ||
+          rect.y + rect.height > manifest.canvas.height
+        ) {
+          fail(`${templateId} slot ${slot.slot} has an invalid canvas rect.`);
+        }
+        continue;
+      }
+      const layer = layersById.get(slot.layerId);
+      const asset = layer && assetsById.get(layer.asset);
+      if (!asset?.photoWindows?.[slot.windowIndex]) {
+        fail(`${templateId} slot ${slot.slot} references a missing asset window.`);
+      }
+      const target = `${slot.layerId}:${slot.windowIndex}`;
+      if (targets.has(target)) fail(`${templateId} repeats photo target ${target}.`);
+      targets.add(target);
     }
   }
-  const appRendered = JSON.stringify(
-    manifest.template2a?.appRendered ?? "",
-  );
-  if (!/banner/i.test(appRendered) || !/(?:title|text)/i.test(appRendered)) {
-    fail("template2a appRendered metadata must assign the banner title to the app.");
+
+  const maximalDigest = sha256(JSON.stringify(manifest.templates["scrapbook-maximal"]));
+  if (maximalDigest !== expectedMaximalTemplateDigest) {
+    fail(`The approved 2a template contract changed: ${maximalDigest}.`);
   }
-  if (JSON.stringify(manifest.template2a?.titleStyle) !==
-      JSON.stringify(expectedTitleStyle)) {
-    fail("template2a titleStyle differs from the approved Lora title contract.");
+  const newDesignProjection = {
+    assets: manifest.assets.slice(retainedAssetIds.length),
+    templates: {
+      "scrapbook-calm": manifest.templates["scrapbook-calm"],
+      "minimal-editorial": manifest.templates["minimal-editorial"],
+    },
+  };
+  const newDesignDigest = sha256(JSON.stringify(newDesignProjection));
+  if (newDesignDigest !== expectedNewDesignContractDigest) {
+    fail(`The approved 2b/2c source contract changed: ${newDesignDigest}.`);
   }
   return manifest;
 }
 
-function dimensionsAtScale(asset, numerator) {
-  if (asset.width % 3 !== 0 || asset.height % 3 !== 0) {
-    fail(`${asset.id} dimensions must be divisible by three.`);
+function cleanAsset(asset) {
+  if (generatedColorAssetIdSet.has(asset.id)) {
+    return {
+      id: asset.id,
+      width: asset.width,
+      height: asset.height,
+      opaque: true,
+      ...(asset.id === "editorial-charcoal" ? { dark: true } : {}),
+      role: "background",
+    };
   }
+  const noteOverrides = {
+    "film-strip-four-horizontal":
+      "calm umber film stock with four live horizontal windows",
+    "print-frame-hero": "even-border cream print frame with a baked alpha seam",
+    "paper-notebook-blush": "cream fiber sheet with a blush notebook spine",
+    "paper-notebook-sage": "cream fiber sheet with a sage notebook spine",
+  };
+  return noteOverrides[asset.id]
+    ? { ...asset, note: noteOverrides[asset.id] }
+    : { ...asset };
+}
+
+function cleanLayers(layers) {
+  return layers.map(({ backgroundSwappable, ...layer }) => layer);
+}
+
+function assetWindowSlots(slots) {
+  return slots.map((slot) => ({
+    slot: slot.slot,
+    kind: "assetWindow",
+    layerId: slot.layerId,
+    windowIndex: slot.windowIndex,
+  }));
+}
+
+function runtimeTitleStyle(source, { z, layerId } = {}) {
+  const placement = layerId
+    ? { kind: "layer", layerId }
+    : {
+        kind: "rect",
+        ...source.box,
+        z,
+        rotation: source.rotation,
+      };
+  return {
+    placement,
+    units: "1080x1920 canvas pixels",
+    fontFamily: "Lora",
+    fontAsset: source.fontStyle === "italic"
+      ? "fonts/Lora-Italic.ttf"
+      : "fonts/Lora-SemiBold.ttf",
+    fontWeight: source.fontWeight,
+    fontStyle: source.fontStyle,
+    fontSize: source.fontSize,
+    minFontSize: source.minFontSize ?? 27,
+    lineHeight: source.lineHeight ?? 1,
+    maxLines: source.maxLines ?? 1,
+    letterSpacing: source.letterSpacing,
+    color: source.color,
+    ...(source.colorOnDark ? { colorOnDark: source.colorOnDark } : {}),
+    textAlign: source.textAlign ?? source.align,
+    verticalAlign: (source.verticalAlign ?? source.vAlign) === "middle"
+      ? "center"
+      : source.verticalAlign ?? source.vAlign,
+    memoryTitleCasing: "preserve",
+    generatedMonthLabelCasing:
+      source.generatedMonthLabelCasing ?? "preserve",
+    glyphFallback: "platform",
+    shadow: source.shadow ?? {
+      dx: 0,
+      dy: 0,
+      blur: 0,
+      color: "rgba(0,0,0,0)",
+    },
+  };
+}
+
+function normalizeRuntimeManifest(source) {
+  const maximal = source.templates["scrapbook-maximal"];
+  const calm = source.templates["scrapbook-calm"];
+  const minimal = source.templates["minimal-editorial"];
+  const common = {
+    rotationOrigin: source.rotationOrigin,
+    overflow: source.overflow,
+  };
+  const background = (template) => ({
+    layerId: "bg",
+    defaultAssetId: template.defaultBackgroundId,
+    assetIds: template.backgrounds.map((entry) => entry.id),
+  });
+
+  return {
+    version: source.version,
+    scale: source.scale,
+    canvas: source.canvas,
+    assets: source.assets.map(cleanAsset),
+    defaultTemplateId: source.defaultTemplateId,
+    templates: [
+      {
+        id: "scrapbook-maximal",
+        ...common,
+        background: background(maximal),
+        shadowSchema: {
+          kind: "dropShadow",
+          units: "1080x1920 canvas pixels",
+          fields: ["dx", "dy", "blur", "color"],
+          application:
+            "cast from the rotated layer silhouette and rendered under the art",
+        },
+        layers: cleanLayers(maximal.layers),
+        photoSlots: assetWindowSlots(maximal.photoSlots),
+        appRendered: maximal.appRendered,
+        titleStyle: runtimeTitleStyle(maximal.titleStyle, {
+          layerId: maximal.titleStyle.layerId,
+        }),
+      },
+      {
+        id: "scrapbook-calm",
+        ...common,
+        background: background(calm),
+        layers: cleanLayers(calm.layers),
+        photoSlots: assetWindowSlots(calm.photoSlots),
+        appRendered: "title text is typeset directly by the app",
+        titleStyle: runtimeTitleStyle(calm.titleStyle, { z: 20 }),
+      },
+      {
+        id: "minimal-editorial",
+        ...common,
+        background: background(minimal),
+        layers: [
+          {
+            layerId: "bg",
+            asset: minimal.defaultBackgroundId,
+            x: 0,
+            y: 0,
+            width: source.canvas.width,
+            height: source.canvas.height,
+            z: 0,
+            rotation: 0,
+          },
+        ],
+        rules: minimal.rules.map((rule) => ({
+          x: rule.x,
+          y: rule.y,
+          width: rule.width,
+          height: rule.height,
+          z: 1,
+          color: rule.color,
+          colorOnDark: rule.colorOnDark,
+        })),
+        photoSlots: minimal.photoSlots.map((slot) => ({
+          slot: slot.slot,
+          kind: "rect",
+          ...slot.rect,
+          z: 4,
+          rotation: slot.rotation,
+        })),
+        appRendered:
+          "flat background, hairlines, title, and photo tiles are composed by the app",
+        titleStyle: runtimeTitleStyle(minimal.titleStyle, { z: 2 }),
+      },
+    ],
+  };
+}
+
+function dimensionsAtScale(asset, numerator) {
   return {
     width: (asset.width / 3) * numerator,
     height: (asset.height / 3) * numerator,
   };
+}
+
+function parseSelectedAssets() {
+  const raw = process.env.COLLAGE_ASSET_IDS;
+  const ids = raw
+    ? raw.split(",").map((id) => id.trim()).filter(Boolean)
+    : isRealOutput
+      ? newAssetIds
+      : requiredAssetIds;
+  if (ids.length === 0) fail("COLLAGE_ASSET_IDS selected no assets.");
+  if (new Set(ids).size !== ids.length) fail("COLLAGE_ASSET_IDS has duplicates.");
+  for (const id of ids) {
+    if (!requiredAssetIds.includes(id)) fail(`Unknown selected asset ${id}.`);
+  }
+  if (isRealOutput && ids.some((id) => retainedAssetIdSet.has(id))) {
+    fail(
+      "Refusing to overwrite retained approved assets in the real output tree. " +
+        "Use a staging COLLAGE_OUTPUT for a full verification export.",
+    );
+  }
+  return ids;
+}
+
+async function inventoryDigest(root, assetIds) {
+  let lines = "";
+  for (const variant of ["", "2.0x", "3.0x"]) {
+    for (const id of assetIds) {
+      const relativePath = join(variant, `${id}.png`);
+      const bytes = await readFile(join(root, relativePath));
+      lines += `${relativePath}:${sha256(bytes)}\n`;
+    }
+  }
+  return sha256(lines);
+}
+
+async function assertRealRetainedInventory() {
+  const digest = await inventoryDigest(realOutputDirectory, retainedAssetIds);
+  if (digest !== expectedRetainedInventoryDigest) {
+    fail(
+      `Retained real asset inventory changed: ${digest}; expected ` +
+        `${expectedRetainedInventoryDigest}.`,
+    );
+  }
+  return digest;
+}
+
+async function outputAliasesRealTree() {
+  const [resolvedOutput, resolvedRealOutput] = await Promise.all([
+    realpath(outputDirectory),
+    realpath(realOutputDirectory),
+  ]);
+  return resolvedOutput === resolvedRealOutput;
+}
+
+async function validateNoStalePngs(manifest) {
+  const expected = new Set(manifest.assets.map((asset) => `${asset.id}.png`));
+  for (const variant of ["", "2.0x", "3.0x"]) {
+    const directory = join(outputDirectory, variant);
+    const names = await readdir(directory);
+    const stale = names.filter((name) => name.endsWith(".png") && !expected.has(name));
+    if (stale.length > 0) {
+      fail(`Remove stale generated PNGs from ${directory}: ${stale.join(", ")}`);
+    }
+  }
 }
 
 async function alphaRange(sharp, path) {
@@ -650,6 +672,15 @@ async function alphaRange(sharp, path) {
   return { minimum, maximum, data, info };
 }
 
+function rgbFromHex(color) {
+  const value = Number.parseInt(color.slice(1), 16);
+  return {
+    r: (value >> 16) & 0xff,
+    g: (value >> 8) & 0xff,
+    b: value & 0xff,
+  };
+}
+
 async function validatePng(sharp, path, asset, numerator) {
   const expected = dimensionsAtScale(asset, numerator);
   const metadata = await sharp(path).metadata();
@@ -659,31 +690,49 @@ async function validatePng(sharp, path, asset, numerator) {
         `${expected.width}x${expected.height}.`,
     );
   }
-  if (!metadata.hasAlpha && asset.opaque !== true) {
-    fail(`${path} does not contain an alpha channel.`);
-  }
-
   const alpha = await alphaRange(sharp, path);
   if (asset.opaque === true) {
     if (alpha.minimum !== 255 || alpha.maximum !== 255) {
-      fail(`${path} is marked opaque but contains transparent pixels.`);
+      fail(`${path} is marked opaque but contains transparency.`);
     }
   } else if (translucentOverlayIds.has(asset.id)) {
     const mustReachTransparent = asset.id !== "grain-overlay";
-    if ((mustReachTransparent && alpha.minimum > 1) ||
-        alpha.maximum >= 255 || alpha.maximum === 0) {
-      fail(`${path} must contain transparent pixels and visible translucent art.`);
+    if (
+      (mustReachTransparent && alpha.minimum > 1) ||
+      alpha.maximum >= 255 ||
+      alpha.maximum === 0
+    ) {
+      fail(`${path} must contain transparent pixels and translucent visible art.`);
     }
   } else if (alpha.minimum >= 255 || alpha.maximum === 0) {
     fail(`${path} must contain visible art and transparency.`);
   }
 
+  if (generatedColorAssetIdSet.has(asset.id)) {
+    const expectedRgb = rgbFromHex(generatedColors.get(asset.id));
+    for (let index = 0; index < alpha.data.length; index += alpha.info.channels) {
+      if (
+        alpha.data[index] !== expectedRgb.r ||
+        alpha.data[index + 1] !== expectedRgb.g ||
+        alpha.data[index + 2] !== expectedRgb.b ||
+        alpha.data[index + 3] !== 255
+      ) {
+        fail(`${path} contains pixels outside its exact generated solid color.`);
+      }
+    }
+  }
+
   const windowAlpha = [];
   for (const window of asset.photoWindows ?? []) {
     const scale = numerator / 3;
-    const inset = asset.id === "polaroid-frame"
-      ? Math.max(1, Math.ceil(36 * scale))
-      : 3;
+    const sourceInset = asset.id === "polaroid-frame"
+      ? 36
+      : asset.id === "print-frame-hero"
+        ? 57
+        : asset.id === "film-strip-four-horizontal"
+          ? 9
+          : 9;
+    const inset = Math.max(1, Math.ceil(sourceInset * scale));
     const left = Math.floor(window.x * scale);
     const top = Math.floor(window.y * scale);
     const right = Math.ceil((window.x + window.width) * scale);
@@ -707,32 +756,26 @@ async function validatePng(sharp, path, asset, numerator) {
         }
       }
     }
-    const pixels = (right - left) * (bottom - top);
-    const nonzeroFraction = nonzero / pixels;
+    const nonzeroFraction = nonzero / ((right - left) * (bottom - top));
+    const fractionLimit = asset.id === "polaroid-frame"
+      ? 0.31
+      : asset.id === "print-frame-hero"
+        ? 0.29
+        : asset.id === "film-strip-four-horizontal"
+          ? 0.13
+          : 0.12;
+    if (nonzeroFraction > fractionLimit) {
+      fail(
+        `${path} window alpha fraction ${nonzeroFraction} exceeds ${fractionLimit}.`,
+      );
+    }
     if (
       asset.id === "polaroid-frame" &&
-      (nonzeroFraction > 0.31 || maximum > 105)
+      maximum > 105
     ) {
-      fail(`${path} polaroid seam is wider or darker than the approved art.`);
+      fail(`${path} frame seam is darker than the approved art.`);
     }
     windowAlpha.push({ nonzeroFraction, maximum, clearInset: inset });
-  }
-
-  // The approved strip ends in plain rust leader. A prior source revision left
-  // an opaque, near-black fourth frame here even though only three windows were
-  // declared, so keep a targeted regression check on the leader's center.
-  if (asset.id === "film-strip") {
-    const x = Math.floor(alpha.info.width * 0.5);
-    const y = Math.floor(alpha.info.height * 0.78);
-    const index = (y * alpha.info.width + x) * alpha.info.channels;
-    const red = alpha.data[index];
-    const green = alpha.data[index + 1];
-    const blue = alpha.data[index + 2];
-    const pixelAlpha = alpha.data[index + 3];
-    const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-    if (pixelAlpha < 200 || luminance < 55) {
-      fail(`${path} still contains a dark fourth film frame.`);
-    }
   }
 
   return {
@@ -740,6 +783,7 @@ async function validatePng(sharp, path, asset, numerator) {
     height: metadata.height,
     alpha: [alpha.minimum, alpha.maximum],
     windowAlpha,
+    sha256: sha256(await readFile(path)),
   };
 }
 
@@ -774,108 +818,14 @@ function pngOptions(asset) {
   return common;
 }
 
-async function validateNoStalePngs(manifest) {
-  const expected = new Set(manifest.assets.map((asset) => `${asset.id}.png`));
-  for (const variant of ["", "2.0x", "3.0x"]) {
-    const directory = join(outputDirectory, variant);
-    const names = await readdir(directory);
-    const stale = names.filter((name) => name.endsWith(".png") && !expected.has(name));
-    if (stale.length > 0) {
-      fail(`Remove stale generated PNGs from ${directory}: ${stale.join(", ")}`);
-    }
-  }
-}
-
 async function renderAsset(page, asset) {
-  const sourceAssetId = asset.id === "film-strip-four"
-    ? "film-strip"
-    : asset.id;
   const url = new URL(pathToFileURL(sourcePath));
-  url.searchParams.set("exportAsset", sourceAssetId);
+  url.searchParams.set("exportAsset", asset.id);
   await page.goto(url.href, { waitUntil: "load" });
   await page.waitForFunction(
     (assetId) => document.querySelector(`[data-export-asset="${assetId}"]`),
-    sourceAssetId,
+    asset.id,
   );
-  if (asset.id === "film-strip" || asset.id === "film-strip-four") {
-    await page.evaluate(
-      ({ sourceAssetId, outputAssetId, fourFrames }) => {
-        const root = document.querySelector(
-          `[data-export-asset="${sourceAssetId}"]`,
-        );
-        const surface = root?.firstElementChild?.firstElementChild;
-        const filmRow = surface?.firstElementChild;
-        const centerColumn = filmRow?.children?.[1];
-        if (!root || !surface || !centerColumn) {
-          throw new Error("Unable to locate the authored film-strip structure.");
-        }
-
-        const sizes = fourFrames
-          ? [
-              "100% 23px",
-              "100% 22px",
-              "100% 22px",
-              "100% 22px",
-              "100% 87px",
-              "19px 100%",
-              "19px 100%",
-            ]
-          : [
-              "100% 87px",
-              "100% 22px",
-              "100% 22px",
-              "100% 151px",
-              "19px 100%",
-              "19px 100%",
-            ];
-        const positions = fourFrames
-          ? [
-              "0 0",
-              "0 129px",
-              "0 257px",
-              "0 385px",
-              "0 513px",
-              "0 0",
-              "100% 0",
-            ]
-          : [
-              "0 0",
-              "0 193px",
-              "0 321px",
-              "0 449px",
-              "0 0",
-              "100% 0",
-            ];
-        const maskImages = sizes.map(() => "linear-gradient(#000,#000)");
-        surface.style.maskImage = maskImages.join(",");
-        surface.style.maskSize = sizes.join(",");
-        surface.style.maskPosition = positions.join(",");
-        surface.style.maskRepeat = "no-repeat";
-        surface.style.webkitMaskImage = maskImages.join(",");
-        surface.style.webkitMaskSize = sizes.join(",");
-        surface.style.webkitMaskPosition = positions.join(",");
-        surface.style.webkitMaskRepeat = "no-repeat";
-        centerColumn.style.paddingTop = fourFrames ? "7px" : "71px";
-
-        const frames = [...centerColumn.children].filter(
-          (child) => child.style.width === "92px" &&
-            child.style.height === "106px",
-        );
-        if (frames.length !== 3) {
-          throw new Error(`Expected three authored film frames, got ${frames.length}.`);
-        }
-        if (fourFrames) {
-          centerColumn.append(frames.at(-1).cloneNode(true));
-        }
-        root.dataset.exportAsset = outputAssetId;
-      },
-      {
-        sourceAssetId,
-        outputAssetId: asset.id,
-        fourFrames: asset.id === "film-strip-four",
-      },
-    );
-  }
   await page.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all(
@@ -886,16 +836,11 @@ async function renderAsset(page, asset) {
     );
   });
   if (asset.id === "banner") {
-    const titleFontLoaded = await page.evaluate(async () => {
+    const loaded = await page.evaluate(async () => {
       const faces = await document.fonts.load("600 45px Lora", "DECEMBER");
-      return faces.some((face) =>
-        face.family.replaceAll(/["']/g, "") === "Lora" &&
-        face.status === "loaded"
-      );
+      return faces.some((face) => face.status === "loaded");
     });
-    if (!titleFontLoaded) {
-      fail("The approved Lora title font did not load in the design preview.");
-    }
+    if (!loaded) fail("The approved Lora title font did not load.");
   }
 
   const locator = page.locator(`[data-export-asset="${asset.id}"]`);
@@ -903,11 +848,13 @@ async function renderAsset(page, asset) {
     fail(`${asset.id} must render exactly one isolated export root.`);
   }
   const box = await locator.boundingBox();
-  if (!box ||
-      Math.abs(box.x) > 0.01 ||
-      Math.abs(box.y) > 0.01 ||
-      Math.abs(box.width - asset.width) > 0.01 ||
-      Math.abs(box.height - asset.height) > 0.01) {
+  if (
+    !box ||
+    Math.abs(box.x) > 0.01 ||
+    Math.abs(box.y) > 0.01 ||
+    Math.abs(box.width - asset.width) > 0.01 ||
+    Math.abs(box.height - asset.height) > 0.01
+  ) {
     fail(`${asset.id} rendered with unexpected bounds: ${JSON.stringify(box)}.`);
   }
   return locator.screenshot({
@@ -918,7 +865,51 @@ async function renderAsset(page, asset) {
   });
 }
 
+async function writeVariants(sharp, asset, captured) {
+  const paths = {
+    "1x": join(outputDirectory, `${asset.id}.png`),
+    "2x": join(outputDirectory, "2.0x", `${asset.id}.png`),
+    "3x": join(outputDirectory, "3.0x", `${asset.id}.png`),
+  };
+  for (const [label, numerator] of [["1x", 1], ["2x", 2], ["3x", 3]]) {
+    const target = paths[label];
+    const size = dimensionsAtScale(asset, numerator);
+    if (generatedColorAssetIdSet.has(asset.id)) {
+      await sharp({
+        create: {
+          width: size.width,
+          height: size.height,
+          channels: 4,
+          background: { ...rgbFromHex(generatedColors.get(asset.id)), alpha: 1 },
+        },
+      }).png(pngOptions(asset)).toFile(target);
+    } else {
+      let pipeline = sharp(captured).ensureAlpha();
+      if (numerator !== 3) {
+        pipeline = pipeline.resize(size.width, size.height, { kernel: "lanczos3" });
+      }
+      await pipeline.png(pngOptions(asset)).toFile(target);
+    }
+  }
+  return {
+    id: asset.id,
+    "1x": await validatePng(sharp, paths["1x"], asset, 1),
+    "2x": await validatePng(sharp, paths["2x"], asset, 2),
+    "3x": await validatePng(sharp, paths["3x"], asset, 3),
+  };
+}
+
 async function main() {
+  const selectedIds = parseSelectedAssets();
+  await mkdir(outputDirectory, { recursive: true });
+  const writesRealTree = await outputAliasesRealTree();
+  if (writesRealTree && selectedIds.some((id) => retainedAssetIdSet.has(id))) {
+    fail(
+      "Refusing to overwrite retained approved assets through a path alias to " +
+        "the real output tree.",
+    );
+  }
+  const retainedBefore = await assertRealRetainedInventory();
   const source = await verifySource(
     sourcePath,
     expectedSourceHashes["Memory Collage.dc.html"],
@@ -929,115 +920,122 @@ async function main() {
     expectedSourceHashes["support.js"],
     { allowDrift: true },
   );
-  await verifySource(
-    titleFontPath,
-    expectedTitleFontHashes["Lora-SemiBold.ttf"],
-  );
-  await verifySource(
-    titleFontLicensePath,
-    expectedTitleFontHashes["Lora-OFL.txt"],
-  );
-  const offlineRuntime = await loadOfflineRuntime();
+  for (const font of fontSpecs) {
+    await verifySource(join(appDirectory, "fonts", font.file), font.hash);
+  }
   const manifest = readManifest(source.bytes.toString("utf8"));
-  const { chromium } = loadDependency(
-    "playwright",
-    process.env.PLAYWRIGHT_MODULE,
-  );
-  const sharp = loadDependency("sharp", process.env.SHARP_MODULE);
+  const runtimeManifest = normalizeRuntimeManifest(manifest);
+  if (process.env.COLLAGE_WRITE_MANIFEST === "1") {
+    if (writesRealTree) {
+      fail(
+        "Refusing to write the runtime manifest from the exporter into the real " +
+          "asset tree; use a staging COLLAGE_OUTPUT.",
+      );
+    }
+  }
 
+  const sharp = loadDependency("sharp", process.env.SHARP_MODULE);
   await mkdir(join(outputDirectory, "2.0x"), { recursive: true });
   await mkdir(join(outputDirectory, "3.0x"), { recursive: true });
-  await validateNoStalePngs(manifest);
-  await writeFile(
-    join(outputDirectory, "manifest.json"),
-    `${JSON.stringify(manifest, null, 2)}\n`,
-  );
+  if (process.env.COLLAGE_WRITE_MANIFEST === "1") {
+    await writeFile(
+      join(outputDirectory, "manifest.json"),
+      `${JSON.stringify(runtimeManifest, null, 2)}\n`,
+    );
+  }
 
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: findChrome(),
-  });
+  const assetsById = new Map(manifest.assets.map((asset) => [asset.id, asset]));
+  const browserAssetIds = selectedIds.filter(
+    (id) => !generatedColorAssetIdSet.has(id),
+  );
+  const results = [];
+  let browser;
   const pageErrors = [];
   try {
-    const page = await browser.newPage({
-      viewport: { width: 1200, height: 2000 },
-      deviceScaleFactor: 1,
-    });
-    page.on("pageerror", (error) => pageErrors.push(error.message));
-    await page.route("**/*", async (route) => {
-      const url = route.request().url();
-      const runtime = offlineRuntime.get(url);
-      if (runtime) {
-        await route.fulfill({
-          status: 200,
-          body: runtime.body,
-          headers: {
-            "content-type": "application/javascript; charset=utf-8",
-            "access-control-allow-origin": "*",
-          },
-        });
-      } else if (url.startsWith("http://") || url.startsWith("https://")) {
-        await route.abort("blockedbyclient");
-      } else {
-        await route.continue();
-      }
-    });
-
-    const results = [];
-    for (const asset of manifest.assets) {
-      const captured = await renderAsset(page, asset);
-      const basePath = join(outputDirectory, `${asset.id}.png`);
-      const twoPath = join(outputDirectory, "2.0x", `${asset.id}.png`);
-      const threePath = join(outputDirectory, "3.0x", `${asset.id}.png`);
-      const base = dimensionsAtScale(asset, 1);
-      const two = dimensionsAtScale(asset, 2);
-
-      await sharp(captured)
-        .resize(base.width, base.height, { kernel: "lanczos3" })
-        .ensureAlpha()
-        .png(pngOptions(asset))
-        .toFile(basePath);
-      await sharp(captured)
-        .resize(two.width, two.height, { kernel: "lanczos3" })
-        .ensureAlpha()
-        .png(pngOptions(asset))
-        .toFile(twoPath);
-      await sharp(captured)
-        .ensureAlpha()
-        .png(pngOptions(asset))
-        .toFile(threePath);
-
-      results.push({
-        id: asset.id,
-        "1x": await validatePng(sharp, basePath, asset, 1),
-        "2x": await validatePng(sharp, twoPath, asset, 2),
-        "3x": await validatePng(sharp, threePath, asset, 3),
+    let page;
+    if (browserAssetIds.length > 0) {
+      const offlineRuntime = await loadOfflineRuntime();
+      const { chromium } = loadDependency(
+        "playwright",
+        process.env.PLAYWRIGHT_MODULE,
+      );
+      browser = await chromium.launch({
+        headless: true,
+        executablePath: findChrome(),
       });
-      console.log(`exported ${asset.id}`);
+      page = await browser.newPage({
+        viewport: { width: 1200, height: 2000 },
+        deviceScaleFactor: 1,
+      });
+      page.on("pageerror", (error) => pageErrors.push(error.message));
+      await page.route("**/*", async (route) => {
+        const requestUrl = route.request().url();
+        const runtime = offlineRuntime.get(requestUrl);
+        if (runtime) {
+          await route.fulfill({
+            status: 200,
+            body: runtime.body,
+            headers: {
+              "content-type": "application/javascript; charset=utf-8",
+              "access-control-allow-origin": "*",
+            },
+          });
+        } else if (
+          requestUrl.startsWith("http://") ||
+          requestUrl.startsWith("https://")
+        ) {
+          await route.abort("blockedbyclient");
+        } else {
+          await route.continue();
+        }
+      });
     }
 
+    for (const assetId of selectedIds) {
+      const asset = assetsById.get(assetId);
+      const captured = generatedColorAssetIdSet.has(assetId)
+        ? undefined
+        : await renderAsset(page, asset);
+      results.push(await writeVariants(sharp, asset, captured));
+      console.log(`exported ${asset.id}`);
+    }
     if (pageErrors.length > 0) {
       fail(`The design source raised page errors: ${pageErrors.join(" | ")}`);
     }
-    console.log(
-      JSON.stringify(
-        {
-          assets: results.length,
-          variants: results.length * 3,
-          outputDirectory,
-          sourceSha256: source.actualHash,
-          supportSha256: support.actualHash,
-          offlineRuntime: [...offlineRuntime.values()].map(
-            ({ file, sha384 }) => ({ file, sha384 }),
-          ),
-        },
-        null,
-        2,
-      ),
-    );
   } finally {
-    await browser.close();
+    await browser?.close();
   }
+
+  await validateNoStalePngs(manifest);
+  const retainedAfter = await assertRealRetainedInventory();
+  let stagedRetainedDigest;
+  if (
+    !isRealOutput &&
+    retainedAssetIds.every((id) => selectedIds.includes(id))
+  ) {
+    stagedRetainedDigest = await inventoryDigest(outputDirectory, retainedAssetIds);
+    if (stagedRetainedDigest !== expectedRetainedInventoryDigest) {
+      fail(
+        `Staged retained assets are not byte-identical: ${stagedRetainedDigest}.`,
+      );
+    }
+  }
+
+  console.log(JSON.stringify({
+    assets: results.length,
+    variants: results.length * 3,
+    selectedIds,
+    outputDirectory,
+    wroteManifest: process.env.COLLAGE_WRITE_MANIFEST === "1",
+    sourceSha256: source.actualHash,
+    supportSha256: support.actualHash,
+    retainedRealSha256Before: retainedBefore,
+    retainedRealSha256After: retainedAfter,
+    ...(stagedRetainedDigest
+      ? { stagedRetainedSha256: stagedRetainedDigest }
+      : {}),
+    files: results,
+  }, null, 2));
 }
 
 await main();

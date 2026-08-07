@@ -40,26 +40,20 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   final _logger = Logger("MemoryCollageEditorPage");
   final _repaintKey = GlobalKey();
   final _shareButtonKey = GlobalKey();
-  final _loadedPhotoSlots = <(int, int)>{};
+  final _photoReadiness = MemoryCollageRendererReadiness();
 
-  late final MemoryCollageController _controller;
+  MemoryCollageController? _controller;
   Future<MemoryCollageManifest>? _manifestFuture;
   bool _assetsReady = false;
   bool _backgroundReady = true;
   bool _isExporting = false;
   bool _showPhotoRetry = false;
-  int _lastShuffleRevision = 0;
-  int _photoLoadGeneration = 0;
   int _photoLoadTimeoutToken = 0;
 
   bool get _photosReady {
-    if (!_controller.canCreate) return false;
-    for (var slot = 0; slot < _controller.selectedFiles.length; slot++) {
-      if (!_loadedPhotoSlots.contains((_photoLoadGeneration, slot))) {
-        return false;
-      }
-    }
-    return true;
+    final controller = _controller;
+    if (controller == null || !controller.canCreate) return false;
+    return _photoReadiness.areAllSlotsLoaded(controller.selectedFiles.length);
   }
 
   bool get _contentReady {
@@ -67,15 +61,6 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   }
 
   bool get _isReadyToExport => _contentReady && !_isExporting;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = MemoryCollageController(
-      memoryID: widget.memoryID,
-      files: widget.memories.map((memory) => memory.file),
-    )..addListener(_onControllerChanged);
-  }
 
   @override
   void didChangeDependencies() {
@@ -86,21 +71,31 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   @override
   void dispose() {
     _controller
-      ..removeListener(_onControllerChanged)
+      ?..removeListener(_onControllerChanged)
       ..dispose();
     super.dispose();
   }
 
   Future<MemoryCollageManifest> _loadManifestAndAssets() async {
-    final manifest = await MemoryCollageManifest.load();
+    final manifest =
+        _controller?.manifest ?? await MemoryCollageManifest.load();
     if (!mounted) return manifest;
+    final controller = _controller ??= MemoryCollageController(
+      memoryID: widget.memoryID,
+      files: widget.memories.map((memory) => memory.file),
+      manifest: manifest,
+    )..addListener(_onControllerChanged);
+    _photoReadiness.initialize(
+      shuffleRevision: controller.shuffleRevision,
+      templateID: controller.templateID,
+    );
     await MemoryCollageCanvasView.precacheAssets(
       context,
       manifest,
       assetIDs: memoryCollageRequiredAssetIDs(
         manifest,
-        _controller.backgroundAssetID,
-        photoCount: _controller.selectedFiles.length,
+        controller.backgroundAssetID,
+        templateID: controller.templateID,
       ),
     );
     if (mounted) {
@@ -118,10 +113,12 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   }
 
   void _onControllerChanged() {
-    if (_lastShuffleRevision != _controller.shuffleRevision) {
-      _lastShuffleRevision = _controller.shuffleRevision;
-      _photoLoadGeneration++;
-      _loadedPhotoSlots.clear();
+    final controller = _controller;
+    if (controller == null) return;
+    if (_photoReadiness.synchronize(
+      shuffleRevision: controller.shuffleRevision,
+      templateID: controller.templateID,
+    )) {
       _showPhotoRetry = false;
       _schedulePhotoRetryOffer();
     }
@@ -133,18 +130,19 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     required int generation,
     required int slot,
   }) {
-    if (generation != _photoLoadGeneration ||
+    final controller = _controller;
+    if (controller == null) return;
+    if (generation != _photoReadiness.generation ||
         slot < 0 ||
-        slot >= _controller.selectedFiles.length ||
-        !identical(file, _controller.selectedFiles[slot])) {
+        slot >= controller.selectedFiles.length ||
+        !identical(file, controller.selectedFiles[slot])) {
       return;
     }
-    final readySlot = (generation, slot);
-    if (_loadedPhotoSlots.contains(readySlot) || !mounted) {
+    if (!mounted ||
+        !_photoReadiness.markSlotLoaded(generation: generation, slot: slot)) {
       return;
     }
     setState(() {
-      _loadedPhotoSlots.add(readySlot);
       if (_photosReady) {
         _photoLoadTimeoutToken++;
         _showPhotoRetry = false;
@@ -164,8 +162,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     if (_isExporting) return;
     Bus.instance.fire(RetryFailedImageLoadEvent());
     setState(() {
-      _photoLoadGeneration++;
-      _loadedPhotoSlots.clear();
+      _photoReadiness.invalidate();
       _showPhotoRetry = false;
     });
     _schedulePhotoRetryOffer();
@@ -173,18 +170,60 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
 
   Future<void> _nextBackground() async {
     if (_isExporting || !_backgroundReady) return;
+    final controller = _controller;
+    if (controller == null) return;
     final nextIndex =
-        (_controller.backgroundIndex + 1) % _controller.backgroundIDs.length;
-    final nextBackgroundID = _controller.backgroundIDs[nextIndex];
+        (controller.backgroundIndex + 1) % controller.backgroundIDs.length;
+    final nextBackgroundID = controller.backgroundIDs[nextIndex];
     setState(() => _backgroundReady = false);
     try {
       await precacheMemoryCollageAsset(context, nextBackgroundID);
       if (!mounted) return;
-      _controller.nextBackground();
+      controller.nextBackground();
       await WidgetsBinding.instance.endOfFrame;
     } catch (error, stackTrace) {
       _logger.warning(
         "Failed to load memory collage background",
+        error,
+        stackTrace,
+      );
+      if (mounted) {
+        showShortToast(context, context.strings.somethingWentWrong);
+      }
+    } finally {
+      if (mounted) setState(() => _backgroundReady = true);
+    }
+  }
+
+  Future<void> _selectTemplate(String templateID) async {
+    if (_isExporting || !_backgroundReady) return;
+    final controller = _controller;
+    if (controller == null || controller.templateID == templateID) return;
+
+    setState(() => _backgroundReady = false);
+    try {
+      final destinationBackground = controller.backgroundAssetIDForTemplate(
+        templateID,
+      );
+      await MemoryCollageCanvasView.precacheAssets(
+        context,
+        controller.manifest,
+        assetIDs: memoryCollageRequiredAssetIDs(
+          controller.manifest,
+          destinationBackground,
+          templateID: templateID,
+        ),
+      );
+      if (!mounted) return;
+      if (_photoReadiness.prepareTemplate(templateID)) {
+        _showPhotoRetry = false;
+        _schedulePhotoRetryOffer();
+      }
+      controller.selectTemplate(templateID);
+      await WidgetsBinding.instance.endOfFrame;
+    } catch (error, stackTrace) {
+      _logger.warning(
+        "Failed to load memory collage template",
         error,
         stackTrace,
       );
@@ -349,11 +388,15 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   }
 
   Widget _buildEditor(BuildContext context, MemoryCollageManifest manifest) {
+    final controller = _controller;
+    if (controller == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final stackCustomizationActions =
         MediaQuery.sizeOf(context).width < 360 ||
         MediaQuery.textScalerOf(context).scale(1) > 1.3;
     final shuffleButton = FilledButton.tonalIcon(
-      onPressed: _isExporting ? null : _controller.shuffle,
+      onPressed: _isExporting || !_backgroundReady ? null : controller.shuffle,
       icon: const Icon(Icons.shuffle),
       label: Text(context.strings.shuffle),
     );
@@ -377,11 +420,12 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
                     child: RepaintBoundary(
                       key: _repaintKey,
                       child: MemoryCollageCanvasView(
-                        key: ValueKey(_controller.shuffleRevision),
+                        key: ValueKey(controller.shuffleRevision),
                         manifest: manifest,
-                        files: _controller.selectedFiles,
+                        files: controller.selectedFiles,
                         title: widget.title,
-                        backgroundAssetID: _controller.backgroundAssetID,
+                        backgroundAssetID: controller.backgroundAssetID,
+                        templateID: controller.templateID,
                         photoBuilder: _buildExportPhoto,
                       ),
                     ),
@@ -413,22 +457,32 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: stackCustomizationActions
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      shuffleButton,
-                      const SizedBox(height: 8),
-                      backgroundButton,
-                    ],
-                  )
-                : Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MemoryCollageTemplateSelector(
+                  availableTemplateIDs: manifest.templates.map(
+                    (template) => template.id,
+                  ),
+                  selectedTemplateID: controller.templateID,
+                  enabled: !_isExporting && _backgroundReady,
+                  onSelected: _selectTemplate,
+                ),
+                const SizedBox(height: 8),
+                if (stackCustomizationActions) ...[
+                  shuffleButton,
+                  const SizedBox(height: 8),
+                  backgroundButton,
+                ] else
+                  Row(
                     children: [
                       Expanded(child: shuffleButton),
                       const SizedBox(width: 12),
                       Expanded(child: backgroundButton),
                     ],
                   ),
+              ],
+            ),
           ),
           if (_isExporting) const LinearProgressIndicator(minHeight: 2),
         ],
@@ -437,7 +491,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   }
 
   Widget _buildExportPhoto(BuildContext context, EnteFile file, int slot) {
-    final generation = _photoLoadGeneration;
+    final generation = _photoReadiness.generation;
     final isLandscape = file.hasDimensions && file.width >= file.height;
     return ColoredBox(
       color: Colors.black,
@@ -460,5 +514,133 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
         ),
       ),
     );
+  }
+}
+
+class MemoryCollageRendererReadiness {
+  final Set<int> _loadedSlots = {};
+
+  int? _lastShuffleRevision;
+  String? _lastTemplateID;
+  int _generation = 0;
+
+  int get generation => _generation;
+
+  void initialize({required int shuffleRevision, required String templateID}) {
+    _lastShuffleRevision ??= shuffleRevision;
+    _lastTemplateID ??= templateID;
+  }
+
+  bool synchronize({required int shuffleRevision, required String templateID}) {
+    final didChange =
+        _lastShuffleRevision != shuffleRevision ||
+        _lastTemplateID != templateID;
+    _lastShuffleRevision = shuffleRevision;
+    _lastTemplateID = templateID;
+    if (didChange) invalidate();
+    return didChange;
+  }
+
+  bool prepareTemplate(String templateID) {
+    if (_lastTemplateID == templateID) return false;
+    _lastTemplateID = templateID;
+    invalidate();
+    return true;
+  }
+
+  void invalidate() {
+    _generation++;
+    _loadedSlots.clear();
+  }
+
+  bool markSlotLoaded({required int generation, required int slot}) {
+    if (generation != _generation) return false;
+    return _loadedSlots.add(slot);
+  }
+
+  bool areAllSlotsLoaded(int slotCount) {
+    if (_loadedSlots.length != slotCount) return false;
+    for (var slot = 0; slot < slotCount; slot++) {
+      if (!_loadedSlots.contains(slot)) return false;
+    }
+    return true;
+  }
+}
+
+class MemoryCollageTemplateSelector extends StatelessWidget {
+  static const templateIDs = [
+    "scrapbook-maximal",
+    "scrapbook-calm",
+    "minimal-editorial",
+  ];
+
+  final Iterable<String> availableTemplateIDs;
+  final String selectedTemplateID;
+  final bool enabled;
+  final ValueChanged<String> onSelected;
+
+  const MemoryCollageTemplateSelector({
+    required this.availableTemplateIDs,
+    required this.selectedTemplateID,
+    required this.enabled,
+    required this.onSelected,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final available = availableTemplateIDs.toSet();
+    final visibleTemplateIDs = templateIDs
+        .where(available.contains)
+        .toList(growable: false);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var index = 0; index < visibleTemplateIDs.length; index++)
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      end: index == visibleTemplateIDs.length - 1 ? 0 : 8,
+                    ),
+                    child: _buildChip(context, visibleTemplateIDs[index]),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChip(BuildContext context, String templateID) {
+    final isSelected = selectedTemplateID == templateID;
+    return Semantics(
+      selected: isSelected,
+      child: ChoiceChip(
+        key: ValueKey("memory-collage-template-$templateID"),
+        label: Text(_label(context, templateID)),
+        selected: isSelected,
+        onSelected: enabled
+            ? (selected) {
+                if (selected) onSelected(templateID);
+              }
+            : null,
+      ),
+    );
+  }
+
+  String _label(BuildContext context, String templateID) {
+    return switch (templateID) {
+      "scrapbook-maximal" => context.strings.memoryCollageTemplateScrapbook,
+      "scrapbook-calm" => context.strings.memoryCollageTemplateCalm,
+      "minimal-editorial" => context.strings.memoryCollageTemplateMinimal,
+      _ => throw ArgumentError.value(templateID, "templateID"),
+    };
   }
 }

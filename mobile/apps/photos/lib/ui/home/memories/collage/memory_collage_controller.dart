@@ -1,5 +1,6 @@
 import "package:flutter/foundation.dart";
 import "package:photos/models/file/file.dart";
+import "package:photos/models/memories/memory_collage_manifest.dart";
 import "package:photos/services/memories/memory_collage_selector.dart";
 
 typedef MemoryCollageSelection =
@@ -11,56 +12,54 @@ typedef MemoryCollageSelection =
 
 /// Transient state for a single memory's collage editor.
 ///
-/// A new controller starts at shuffle revision zero and the first background.
-/// Neither value is persisted after the editor is closed.
+/// A new controller starts at shuffle revision zero and the manifest's default
+/// template. Template and background choices are not persisted after the
+/// editor is closed.
 class MemoryCollageController extends ChangeNotifier {
-  static const List<String> defaultBackgroundIDs = [
-    "paper-washi",
-    "paper-cream-fiber",
-    "paper-blush-stripe",
-    "paper-sage-stripe",
-    "paper-terracotta-mottle",
-  ];
-
   final String memoryID;
+  final MemoryCollageManifest manifest;
   final MemoryCollageSelection _selector;
   final List<EnteFile> _sourceFiles;
-  final List<String> _backgroundIDs;
+  final Map<String, int> _backgroundIndexByTemplate = {};
 
   late List<EnteFile> _selectedFiles;
+  late String _templateID;
   int _shuffleRevision = 0;
-  int _backgroundIndex = 0;
 
   MemoryCollageController({
     required this.memoryID,
     required Iterable<EnteFile> files,
-    List<String> backgroundIDs = defaultBackgroundIDs,
+    required this.manifest,
+    String? templateID,
     MemoryCollageSelection? selector,
   }) : _sourceFiles = List<EnteFile>.unmodifiable(files),
-       _backgroundIDs = List<String>.unmodifiable(backgroundIDs),
        _selector = selector ?? MemoryCollageSelector.select {
-    if (_backgroundIDs.isEmpty) {
-      throw ArgumentError.value(
-        backgroundIDs,
-        "backgroundIDs",
-        "must contain at least one background",
-      );
-    }
+    _templateID = templateID ?? manifest.defaultTemplateID;
+    _ensureBackgroundIndex(_templateID);
     _selectedFiles = _selectFiles();
   }
 
   List<EnteFile> get selectedFiles => _selectedFiles;
 
-  List<String> get backgroundIDs => _backgroundIDs;
+  String get templateID => _templateID;
+
+  MemoryCollageTemplate get template => manifest.templateFor(_templateID);
+
+  List<String> get backgroundIDs => template.background.assetIDs;
 
   bool get canCreate =>
       MemoryCollageSelector.isSupportedPhotoCount(_selectedFiles.length);
 
   int get shuffleRevision => _shuffleRevision;
 
-  int get backgroundIndex => _backgroundIndex;
+  int get backgroundIndex => _ensureBackgroundIndex(_templateID);
 
-  String get backgroundAssetID => _backgroundIDs[_backgroundIndex];
+  String get backgroundAssetID => backgroundAssetIDForTemplate(_templateID);
+
+  String backgroundAssetIDForTemplate(String templateID) {
+    final template = manifest.templateFor(templateID);
+    return template.background.assetIDs[_ensureBackgroundIndex(templateID)];
+  }
 
   void shuffle() {
     _shuffleRevision++;
@@ -69,9 +68,34 @@ class MemoryCollageController extends ChangeNotifier {
   }
 
   void nextBackground() {
-    if (_backgroundIDs.length == 1) return;
-    _backgroundIndex = (_backgroundIndex + 1) % _backgroundIDs.length;
+    final backgrounds = backgroundIDs;
+    if (backgrounds.length == 1) return;
+    _backgroundIndexByTemplate[_templateID] =
+        (backgroundIndex + 1) % backgrounds.length;
     notifyListeners();
+  }
+
+  void selectTemplate(String templateID) {
+    manifest.templateFor(templateID);
+    if (_templateID == templateID) return;
+    _ensureBackgroundIndex(templateID);
+    _templateID = templateID;
+    notifyListeners();
+  }
+
+  int _ensureBackgroundIndex(String templateID) {
+    return _backgroundIndexByTemplate.putIfAbsent(templateID, () {
+      final background = manifest.templateFor(templateID).background;
+      final defaultIndex = background.assetIDs.indexOf(
+        background.defaultAssetID,
+      );
+      if (defaultIndex < 0) {
+        throw StateError(
+          "Template $templateID does not contain its default background",
+        );
+      }
+      return defaultIndex;
+    });
   }
 
   List<EnteFile> _selectFiles() {

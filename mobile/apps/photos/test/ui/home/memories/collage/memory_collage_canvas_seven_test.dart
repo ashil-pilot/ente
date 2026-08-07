@@ -7,6 +7,6 @@ void main() {
 
   testWidgets(
     "lays out the 7-photo canvas with the exact export contract",
-    (tester) => verifyMemoryCollageCanvas(tester, photoCount: 7),
+    verifyMemoryCollageCanvas,
   );
 }

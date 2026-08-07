@@ -5,9 +5,12 @@ import "package:photos/ui/home/memories/memory_progress_indicator.dart";
 void main() {
   test("adds a final progress step for the collage", () {
     expect(
-      memoryProgressTotalSteps(memoryItemCount: 6, includeCollage: true),
-      7,
+      memoryProgressTotalSteps(memoryItemCount: 7, includeCollage: true),
+      8,
     );
+  });
+
+  test("keeps six memories at six steps when collage is unavailable", () {
     expect(
       memoryProgressTotalSteps(memoryItemCount: 6, includeCollage: false),
       6,
@@ -71,7 +74,7 @@ void main() {
   testWidgets("renders the collage as the final active segment", (
     tester,
   ) async {
-    const memoryItemCount = 6;
+    const memoryItemCount = 7;
     final totalSteps = memoryProgressTotalSteps(
       memoryItemCount: memoryItemCount,
       includeCollage: true,
@@ -93,19 +96,19 @@ void main() {
     );
 
     expect(
-      find.byKey(const ValueKey("memory-progress-segment-6")),
+      find.byKey(const ValueKey("memory-progress-segment-7")),
       findsOneWidget,
     );
     expect(
       find.descendant(
-        of: find.byKey(const ValueKey("memory-progress-segment-6")),
+        of: find.byKey(const ValueKey("memory-progress-segment-7")),
         matching: find.byType(LinearProgressIndicator),
       ),
       findsOneWidget,
     );
     final finalSegment = tester.widget<LinearProgressIndicator>(
       find.descendant(
-        of: find.byKey(const ValueKey("memory-progress-segment-6")),
+        of: find.byKey(const ValueKey("memory-progress-segment-7")),
         matching: find.byType(LinearProgressIndicator),
       ),
     );

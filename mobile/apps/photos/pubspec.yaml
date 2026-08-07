@@ -356,6 +356,12 @@ flutter:
       fonts:
         - asset: fonts/Lora-SemiBold.ttf
           weight: 600
+        - asset: fonts/Lora-Italic.ttf
+          weight: 500
+          style: italic
+        - asset: fonts/Lora-Italic.ttf
+          weight: 600
+          style: italic
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

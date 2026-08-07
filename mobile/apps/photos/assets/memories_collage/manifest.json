@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "scale": "3x (1 CSS px in the approved 360×640 comp = 3 asset px)",
   "canvas": {
     "width": 1080,
@@ -61,31 +61,6 @@
         }
       ],
       "note": "window pixels transparent except a thin baked alpha seam shadow at the window edge"
-    },
-    {
-      "id": "film-strip",
-      "width": 390,
-      "height": 1800,
-      "photoWindows": [
-        {
-          "x": 57,
-          "y": 261,
-          "width": 276,
-          "height": 318
-        },
-        {
-          "x": 57,
-          "y": 645,
-          "width": 276,
-          "height": 318
-        },
-        {
-          "x": 57,
-          "y": 1029,
-          "width": 276,
-          "height": 318
-        }
-      ]
     },
     {
       "id": "film-strip-four",
@@ -187,439 +162,976 @@
       "recommendedBlendMode": "overlay",
       "recommendedOpacity": 0.55,
       "note": "flat-alpha approximation; composite with overlay blend to match the approved look"
+    },
+    {
+      "id": "film-strip-four-horizontal",
+      "width": 972,
+      "height": 252,
+      "photoWindows": [
+        {
+          "x": 30,
+          "y": 39,
+          "width": 210,
+          "height": 174
+        },
+        {
+          "x": 264,
+          "y": 39,
+          "width": 210,
+          "height": 174
+        },
+        {
+          "x": 498,
+          "y": 39,
+          "width": 210,
+          "height": 174
+        },
+        {
+          "x": 732,
+          "y": 39,
+          "width": 210,
+          "height": 174
+        }
+      ],
+      "note": "calm umber film stock with four live horizontal windows"
+    },
+    {
+      "id": "print-frame-hero",
+      "width": 876,
+      "height": 594,
+      "photoWindows": [
+        {
+          "x": 24,
+          "y": 24,
+          "width": 834,
+          "height": 546
+        }
+      ],
+      "note": "even-border cream print frame with a baked alpha seam"
+    },
+    {
+      "id": "paper-notebook-blush",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background",
+      "note": "cream fiber sheet with a blush notebook spine"
+    },
+    {
+      "id": "paper-notebook-sage",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background",
+      "note": "cream fiber sheet with a sage notebook spine"
+    },
+    {
+      "id": "editorial-bone",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "editorial-sand",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "editorial-sage",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "role": "background"
+    },
+    {
+      "id": "editorial-charcoal",
+      "width": 1080,
+      "height": 1920,
+      "opaque": true,
+      "dark": true,
+      "role": "background"
     }
   ],
-  "template2a": {
-    "canvas": {
-      "width": 1080,
-      "height": 1920
-    },
-    "rotationOrigin": "layer center",
-    "overflow": "crop to canvas",
-    "shadowSchema": {
-      "kind": "dropShadow",
-      "units": "1080x1920 canvas pixels",
-      "fields": [
-        "dx",
-        "dy",
-        "blur",
-        "color"
-      ],
-      "application": "cast from the rotated layer silhouette and rendered under the art"
-    },
-    "layers": [
-      {
+  "defaultTemplateId": "scrapbook-maximal",
+  "templates": [
+    {
+      "id": "scrapbook-maximal",
+      "rotationOrigin": "layer center",
+      "overflow": "crop to canvas",
+      "background": {
         "layerId": "bg",
-        "asset": "paper-washi",
-        "x": 0,
-        "y": 0,
-        "width": 1080,
-        "height": 1920,
-        "z": 0,
-        "rotation": 0,
-        "backgroundSwappable": true
-      },
-      {
-        "layerId": "torn",
-        "asset": "paper-torn",
-        "x": -12,
-        "y": 162,
-        "width": 1098,
-        "height": 1734,
-        "z": 2,
-        "rotation": 0.8,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 42,
-            "blur": 66,
-            "color": "rgba(80,50,22,0.3)"
-          }
+        "defaultAssetId": "paper-washi",
+        "assetIds": [
+          "paper-washi",
+          "paper-cream-fiber",
+          "paper-blush-stripe",
+          "paper-sage-stripe",
+          "paper-terracotta-mottle"
         ]
       },
-      {
-        "layerId": "ring",
-        "asset": "coffee-ring",
-        "x": 444,
-        "y": 1530,
-        "width": 192,
-        "height": 192,
-        "z": 3,
-        "rotation": 8
+      "shadowSchema": {
+        "kind": "dropShadow",
+        "units": "1080x1920 canvas pixels",
+        "fields": [
+          "dx",
+          "dy",
+          "blur",
+          "color"
+        ],
+        "application": "cast from the rotated layer silhouette and rendered under the art"
       },
-      {
-        "layerId": "fern",
-        "asset": "fern",
-        "x": 897,
-        "y": 114,
-        "width": 228,
-        "height": 408,
-        "z": 4,
-        "rotation": 196,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 3,
-            "dy": 6,
-            "blur": 9,
-            "color": "rgba(80,60,30,0.3)"
-          }
-        ]
-      },
-      {
-        "layerId": "star",
-        "asset": "star",
-        "x": 336,
-        "y": 240,
-        "width": 282,
-        "height": 282,
-        "z": 9,
-        "rotation": 12,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 3,
-            "dy": 9,
-            "blur": 15,
-            "color": "rgba(90,55,15,0.35)"
-          }
-        ]
-      },
-      {
-        "layerId": "strip",
-        "asset": "film-strip",
-        "x": 618,
-        "y": 312,
-        "width": 390,
-        "height": 1800,
-        "z": 10,
-        "rotation": 2,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 30,
-            "blur": 54,
-            "color": "rgba(70,32,12,0.38)"
-          }
-        ]
-      },
-      {
-        "layerId": "p1",
-        "asset": "polaroid-frame",
-        "x": 18,
-        "y": 354,
-        "width": 462,
-        "height": 534,
-        "z": 12,
-        "rotation": -4.5,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 9,
-            "blur": 18,
-            "color": "rgba(90,60,30,0.22)"
-          },
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 36,
-            "blur": 72,
-            "color": "rgba(90,60,30,0.26)"
-          }
-        ]
-      },
-      {
-        "layerId": "p2",
-        "asset": "polaroid-frame",
-        "x": 72,
-        "y": 900,
-        "width": 462,
-        "height": 534,
-        "z": 13,
-        "rotation": 3,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 9,
-            "blur": 18,
-            "color": "rgba(90,60,30,0.22)"
-          },
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 36,
-            "blur": 72,
-            "color": "rgba(90,60,30,0.26)"
-          }
-        ]
-      },
-      {
-        "layerId": "p3",
-        "asset": "polaroid-frame",
-        "x": 24,
-        "y": 1404,
-        "width": 462,
-        "height": 534,
-        "z": 14,
-        "rotation": -2,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 9,
-            "blur": 18,
-            "color": "rgba(90,60,30,0.22)"
-          },
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 36,
-            "blur": 72,
-            "color": "rgba(90,60,30,0.26)"
-          }
-        ]
-      },
-      {
-        "layerId": "banner",
-        "asset": "banner",
-        "x": 264,
-        "y": 198,
-        "width": 546,
-        "height": 150,
-        "z": 16,
-        "rotation": -2.5,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 9,
-            "blur": 18,
-            "color": "rgba(80,40,15,0.35)"
-          }
-        ]
-      },
-      {
-        "layerId": "tapeA",
-        "asset": "tape-mustard",
-        "x": 54,
-        "y": 162,
-        "width": 336,
-        "height": 72,
-        "z": 17,
-        "rotation": -4,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 6,
-            "blur": 12,
-            "color": "rgba(90,60,25,0.22)"
-          }
-        ]
-      },
-      {
-        "layerId": "tapeB",
-        "asset": "tape-blush",
-        "x": 132,
-        "y": 318,
-        "width": 228,
-        "height": 66,
-        "z": 15,
-        "rotation": 2,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 6,
-            "blur": 12,
-            "color": "rgba(110,60,45,0.22)"
-          }
-        ]
-      },
-      {
-        "layerId": "tapeC",
-        "asset": "tape-sage",
-        "x": 444,
-        "y": 864,
-        "width": 210,
-        "height": 63,
-        "z": 15,
-        "rotation": -36,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 6,
-            "blur": 12,
-            "color": "rgba(70,80,45,0.22)"
-          }
-        ]
-      },
-      {
-        "layerId": "stamp",
-        "asset": "stamp-postmark",
-        "x": 678,
-        "y": 150,
-        "width": 240,
-        "height": 270,
-        "z": 17,
-        "rotation": 5,
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 6,
-            "blur": 12,
-            "color": "rgba(90,60,30,0.3)"
-          }
-        ]
-      },
-      {
-        "layerId": "sunStreak",
-        "asset": "sun-streak",
-        "x": 0,
-        "y": 0,
-        "width": 1080,
-        "height": 1920,
-        "z": 34,
-        "rotation": 0,
-        "blendMode": "soft-light",
-        "opacity": 1
-      },
-      {
-        "layerId": "vignette",
-        "asset": "vignette",
-        "x": 0,
-        "y": 0,
-        "width": 1080,
-        "height": 1920,
-        "z": 36,
-        "rotation": 0,
-        "blendMode": "multiply",
-        "opacity": 1
-      },
-      {
-        "layerId": "grain",
-        "asset": "grain-overlay",
-        "x": 0,
-        "y": 0,
-        "width": 1080,
-        "height": 1920,
-        "z": 38,
-        "rotation": 0,
-        "blendMode": "overlay",
-        "opacity": 0.55
-      }
-    ],
-    "photoLayouts": [
-      {
-        "photoCount": 6,
-        "assetOverrides": {
-          "strip": "film-strip"
+      "layers": [
+        {
+          "layerId": "bg",
+          "asset": "paper-washi",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 0,
+          "rotation": 0
         },
-        "photoSlots": [
-          {
-            "slot": 0,
-            "layerId": "strip",
-            "windowIndex": 0
-          },
-          {
-            "slot": 1,
-            "layerId": "strip",
-            "windowIndex": 1
-          },
-          {
-            "slot": 2,
-            "layerId": "strip",
-            "windowIndex": 2
-          },
-          {
-            "slot": 3,
-            "layerId": "p1",
-            "windowIndex": 0
-          },
-          {
-            "slot": 4,
-            "layerId": "p2",
-            "windowIndex": 0
-          },
-          {
-            "slot": 5,
-            "layerId": "p3",
-            "windowIndex": 0
-          }
+        {
+          "layerId": "torn",
+          "asset": "paper-torn",
+          "x": -12,
+          "y": 162,
+          "width": 1098,
+          "height": 1734,
+          "z": 2,
+          "rotation": 0.8,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 42,
+              "blur": 66,
+              "color": "rgba(80,50,22,0.3)"
+            }
+          ]
+        },
+        {
+          "layerId": "ring",
+          "asset": "coffee-ring",
+          "x": 444,
+          "y": 1530,
+          "width": 192,
+          "height": 192,
+          "z": 3,
+          "rotation": 8
+        },
+        {
+          "layerId": "fern",
+          "asset": "fern",
+          "x": 897,
+          "y": 114,
+          "width": 228,
+          "height": 408,
+          "z": 4,
+          "rotation": 196,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 3,
+              "dy": 6,
+              "blur": 9,
+              "color": "rgba(80,60,30,0.3)"
+            }
+          ]
+        },
+        {
+          "layerId": "star",
+          "asset": "star",
+          "x": 336,
+          "y": 240,
+          "width": 282,
+          "height": 282,
+          "z": 9,
+          "rotation": 12,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 3,
+              "dy": 9,
+              "blur": 15,
+              "color": "rgba(90,55,15,0.35)"
+            }
+          ]
+        },
+        {
+          "layerId": "strip",
+          "asset": "film-strip-four",
+          "x": 618,
+          "y": 312,
+          "width": 390,
+          "height": 1800,
+          "z": 10,
+          "rotation": 2,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 30,
+              "blur": 54,
+              "color": "rgba(70,32,12,0.38)"
+            }
+          ]
+        },
+        {
+          "layerId": "p1",
+          "asset": "polaroid-frame",
+          "x": 18,
+          "y": 354,
+          "width": 462,
+          "height": 534,
+          "z": 12,
+          "rotation": -4.5,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(90,60,30,0.22)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 36,
+              "blur": 72,
+              "color": "rgba(90,60,30,0.26)"
+            }
+          ]
+        },
+        {
+          "layerId": "p2",
+          "asset": "polaroid-frame",
+          "x": 72,
+          "y": 900,
+          "width": 462,
+          "height": 534,
+          "z": 13,
+          "rotation": 3,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(90,60,30,0.22)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 36,
+              "blur": 72,
+              "color": "rgba(90,60,30,0.26)"
+            }
+          ]
+        },
+        {
+          "layerId": "p3",
+          "asset": "polaroid-frame",
+          "x": 24,
+          "y": 1404,
+          "width": 462,
+          "height": 534,
+          "z": 14,
+          "rotation": -2,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(90,60,30,0.22)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 36,
+              "blur": 72,
+              "color": "rgba(90,60,30,0.26)"
+            }
+          ]
+        },
+        {
+          "layerId": "banner",
+          "asset": "banner",
+          "x": 264,
+          "y": 198,
+          "width": 546,
+          "height": 150,
+          "z": 16,
+          "rotation": -2.5,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(80,40,15,0.35)"
+            }
+          ]
+        },
+        {
+          "layerId": "tapeA",
+          "asset": "tape-mustard",
+          "x": 54,
+          "y": 162,
+          "width": 336,
+          "height": 72,
+          "z": 17,
+          "rotation": -4,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(90,60,25,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "tapeB",
+          "asset": "tape-blush",
+          "x": 132,
+          "y": 318,
+          "width": 228,
+          "height": 66,
+          "z": 15,
+          "rotation": 2,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(110,60,45,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "tapeC",
+          "asset": "tape-sage",
+          "x": 444,
+          "y": 864,
+          "width": 210,
+          "height": 63,
+          "z": 15,
+          "rotation": -36,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(70,80,45,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "stamp",
+          "asset": "stamp-postmark",
+          "x": 678,
+          "y": 150,
+          "width": 240,
+          "height": 270,
+          "z": 17,
+          "rotation": 5,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(90,60,30,0.3)"
+            }
+          ]
+        },
+        {
+          "layerId": "sunStreak",
+          "asset": "sun-streak",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 34,
+          "rotation": 0,
+          "blendMode": "soft-light",
+          "opacity": 1
+        },
+        {
+          "layerId": "vignette",
+          "asset": "vignette",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 36,
+          "rotation": 0,
+          "blendMode": "multiply",
+          "opacity": 1
+        },
+        {
+          "layerId": "grain",
+          "asset": "grain-overlay",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 38,
+          "rotation": 0,
+          "blendMode": "overlay",
+          "opacity": 0.55
+        }
+      ],
+      "photoSlots": [
+        {
+          "slot": 0,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 0
+        },
+        {
+          "slot": 1,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 1
+        },
+        {
+          "slot": 2,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 2
+        },
+        {
+          "slot": 3,
+          "kind": "assetWindow",
+          "layerId": "p1",
+          "windowIndex": 0
+        },
+        {
+          "slot": 4,
+          "kind": "assetWindow",
+          "layerId": "p2",
+          "windowIndex": 0
+        },
+        {
+          "slot": 5,
+          "kind": "assetWindow",
+          "layerId": "p3",
+          "windowIndex": 0
+        },
+        {
+          "slot": 6,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 3
+        }
+      ],
+      "appRendered": "banner title text is typeset by the app over the banner",
+      "titleStyle": {
+        "placement": {
+          "kind": "layer",
+          "layerId": "banner"
+        },
+        "units": "1080x1920 canvas pixels",
+        "fontFamily": "Lora",
+        "fontAsset": "fonts/Lora-SemiBold.ttf",
+        "fontWeight": 600,
+        "fontStyle": "normal",
+        "fontSize": 45,
+        "minFontSize": 27,
+        "lineHeight": 1,
+        "maxLines": 1,
+        "letterSpacing": 12,
+        "color": "#f4e7cf",
+        "textAlign": "center",
+        "verticalAlign": "center",
+        "memoryTitleCasing": "preserve",
+        "generatedMonthLabelCasing": "uppercase",
+        "glyphFallback": "platform",
+        "shadow": {
+          "dx": 0,
+          "dy": 3,
+          "blur": 3,
+          "color": "rgba(90,40,15,0.5)"
+        }
+      }
+    },
+    {
+      "id": "scrapbook-calm",
+      "rotationOrigin": "layer center",
+      "overflow": "crop to canvas",
+      "background": {
+        "layerId": "bg",
+        "defaultAssetId": "paper-notebook-blush",
+        "assetIds": [
+          "paper-notebook-blush",
+          "paper-notebook-sage",
+          "paper-cream-fiber",
+          "paper-blush-stripe"
         ]
       },
-      {
-        "photoCount": 7,
-        "assetOverrides": {
-          "strip": "film-strip-four"
+      "layers": [
+        {
+          "layerId": "bg",
+          "asset": "paper-notebook-blush",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 0,
+          "rotation": 0
         },
-        "photoSlots": [
-          {
-            "slot": 0,
-            "layerId": "strip",
-            "windowIndex": 0
-          },
-          {
-            "slot": 1,
-            "layerId": "strip",
-            "windowIndex": 1
-          },
-          {
-            "slot": 2,
-            "layerId": "strip",
-            "windowIndex": 2
-          },
-          {
-            "slot": 3,
-            "layerId": "p1",
-            "windowIndex": 0
-          },
-          {
-            "slot": 4,
-            "layerId": "p2",
-            "windowIndex": 0
-          },
-          {
-            "slot": 5,
-            "layerId": "p3",
-            "windowIndex": 0
-          },
-          {
-            "slot": 6,
-            "layerId": "strip",
-            "windowIndex": 3
-          }
-        ]
+        {
+          "layerId": "fern",
+          "asset": "fern",
+          "x": 882,
+          "y": -42,
+          "width": 228,
+          "height": 408,
+          "z": 3,
+          "rotation": 188,
+          "opacity": 0.85,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 3,
+              "dy": 6,
+              "blur": 9,
+              "color": "rgba(80,60,30,0.28)"
+            }
+          ]
+        },
+        {
+          "layerId": "strip",
+          "asset": "film-strip-four-horizontal",
+          "x": 54,
+          "y": 1566,
+          "width": 972,
+          "height": 252,
+          "z": 5,
+          "rotation": -1.2,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 24,
+              "blur": 48,
+              "color": "rgba(70,40,18,0.3)"
+            }
+          ]
+        },
+        {
+          "layerId": "hero",
+          "asset": "print-frame-hero",
+          "x": 102,
+          "y": 264,
+          "width": 876,
+          "height": 594,
+          "z": 6,
+          "rotation": -0.8,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 21,
+              "color": "rgba(90,60,30,0.2)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 30,
+              "blur": 66,
+              "color": "rgba(90,60,30,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "p1",
+          "asset": "polaroid-frame",
+          "x": 78,
+          "y": 900,
+          "width": 462,
+          "height": 534,
+          "z": 7,
+          "rotation": 1.2,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(90,60,30,0.2)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 30,
+              "blur": 60,
+              "color": "rgba(90,60,30,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "p2",
+          "asset": "polaroid-frame",
+          "x": 546,
+          "y": 918,
+          "width": 462,
+          "height": 534,
+          "z": 8,
+          "rotation": -1,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(90,60,30,0.2)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 30,
+              "blur": 60,
+              "color": "rgba(90,60,30,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "tapeL",
+          "asset": "tape-blush",
+          "x": 48,
+          "y": 228,
+          "width": 228,
+          "height": 66,
+          "z": 10,
+          "rotation": -43,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(110,60,45,0.2)"
+            }
+          ]
+        },
+        {
+          "layerId": "tapeR",
+          "asset": "tape-sage",
+          "x": 816,
+          "y": 222,
+          "width": 210,
+          "height": 63,
+          "z": 11,
+          "rotation": 44,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(70,80,45,0.2)"
+            }
+          ]
+        },
+        {
+          "layerId": "stamp",
+          "asset": "stamp-postmark",
+          "x": 840,
+          "y": 1398,
+          "width": 192,
+          "height": 216,
+          "z": 12,
+          "rotation": -6,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 6,
+              "blur": 12,
+              "color": "rgba(90,60,30,0.28)"
+            }
+          ]
+        },
+        {
+          "layerId": "sunStreak",
+          "asset": "sun-streak",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 34,
+          "rotation": 0,
+          "blendMode": "soft-light",
+          "opacity": 1
+        },
+        {
+          "layerId": "vignette",
+          "asset": "vignette",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 36,
+          "rotation": 0,
+          "blendMode": "multiply",
+          "opacity": 0.7
+        },
+        {
+          "layerId": "grain",
+          "asset": "grain-overlay",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 38,
+          "rotation": 0,
+          "blendMode": "overlay",
+          "opacity": 0.41
+        }
+      ],
+      "photoSlots": [
+        {
+          "slot": 0,
+          "kind": "assetWindow",
+          "layerId": "hero",
+          "windowIndex": 0
+        },
+        {
+          "slot": 1,
+          "kind": "assetWindow",
+          "layerId": "p1",
+          "windowIndex": 0
+        },
+        {
+          "slot": 2,
+          "kind": "assetWindow",
+          "layerId": "p2",
+          "windowIndex": 0
+        },
+        {
+          "slot": 3,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 0
+        },
+        {
+          "slot": 4,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 1
+        },
+        {
+          "slot": 5,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 2
+        },
+        {
+          "slot": 6,
+          "kind": "assetWindow",
+          "layerId": "strip",
+          "windowIndex": 3
+        }
+      ],
+      "appRendered": "title text is typeset directly by the app",
+      "titleStyle": {
+        "placement": {
+          "kind": "rect",
+          "x": 114,
+          "y": 66,
+          "width": 672,
+          "height": 180,
+          "z": 20,
+          "rotation": -2
+        },
+        "units": "1080x1920 canvas pixels",
+        "fontFamily": "Lora",
+        "fontAsset": "fonts/Lora-Italic.ttf",
+        "fontWeight": 600,
+        "fontStyle": "italic",
+        "fontSize": 102,
+        "minFontSize": 66,
+        "lineHeight": 1.08,
+        "maxLines": 2,
+        "letterSpacing": 0,
+        "color": "#6f5642",
+        "textAlign": "left",
+        "verticalAlign": "top",
+        "memoryTitleCasing": "preserve",
+        "generatedMonthLabelCasing": "preserve",
+        "glyphFallback": "platform",
+        "shadow": {
+          "dx": 0,
+          "dy": 0,
+          "blur": 0,
+          "color": "rgba(0,0,0,0)"
+        }
       }
-    ],
-    "appRendered": "banner title text is typeset by the app over the banner",
-    "titleStyle": {
-      "layerId": "banner",
-      "units": "1080x1920 canvas pixels",
-      "fontFamily": "Lora",
-      "fontAsset": "fonts/Lora-SemiBold.ttf",
-      "fontWeight": 600,
-      "fontStyle": "normal",
-      "fontSize": 45,
-      "letterSpacing": 12,
-      "color": "#f4e7cf",
-      "textAlign": "center",
-      "verticalAlign": "center",
-      "memoryTitleCasing": "preserve",
-      "generatedMonthLabelCasing": "uppercase",
-      "glyphFallback": "platform",
-      "shadow": {
-        "dx": 0,
-        "dy": 3,
-        "blur": 3,
-        "color": "rgba(90,40,15,0.5)"
+    },
+    {
+      "id": "minimal-editorial",
+      "rotationOrigin": "layer center",
+      "overflow": "crop to canvas",
+      "background": {
+        "layerId": "bg",
+        "defaultAssetId": "editorial-bone",
+        "assetIds": [
+          "editorial-bone",
+          "editorial-sand",
+          "editorial-sage",
+          "editorial-charcoal"
+        ]
+      },
+      "layers": [
+        {
+          "layerId": "bg",
+          "asset": "editorial-bone",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 0,
+          "rotation": 0
+        }
+      ],
+      "rules": [
+        {
+          "x": 78,
+          "y": 288,
+          "width": 924,
+          "height": 3,
+          "z": 1,
+          "color": "#d9d2c2",
+          "colorOnDark": "rgba(244,240,232,0.3)"
+        },
+        {
+          "x": 78,
+          "y": 1842,
+          "width": 924,
+          "height": 3,
+          "z": 1,
+          "color": "#d9d2c2",
+          "colorOnDark": "rgba(244,240,232,0.3)"
+        }
+      ],
+      "photoSlots": [
+        {
+          "slot": 0,
+          "kind": "rect",
+          "x": 78,
+          "y": 390,
+          "width": 924,
+          "height": 798,
+          "z": 4,
+          "rotation": 0
+        },
+        {
+          "slot": 1,
+          "kind": "rect",
+          "x": 78,
+          "y": 1212,
+          "width": 450,
+          "height": 318,
+          "z": 4,
+          "rotation": 0
+        },
+        {
+          "slot": 2,
+          "kind": "rect",
+          "x": 552,
+          "y": 1212,
+          "width": 450,
+          "height": 318,
+          "z": 4,
+          "rotation": 0
+        },
+        {
+          "slot": 3,
+          "kind": "rect",
+          "x": 78,
+          "y": 1554,
+          "width": 213,
+          "height": 252,
+          "z": 4,
+          "rotation": 0
+        },
+        {
+          "slot": 4,
+          "kind": "rect",
+          "x": 315,
+          "y": 1554,
+          "width": 213,
+          "height": 252,
+          "z": 4,
+          "rotation": 0
+        },
+        {
+          "slot": 5,
+          "kind": "rect",
+          "x": 552,
+          "y": 1554,
+          "width": 213,
+          "height": 252,
+          "z": 4,
+          "rotation": 0
+        },
+        {
+          "slot": 6,
+          "kind": "rect",
+          "x": 789,
+          "y": 1554,
+          "width": 213,
+          "height": 252,
+          "z": 4,
+          "rotation": 0
+        }
+      ],
+      "appRendered": "flat background, hairlines, title, and photo tiles are composed by the app",
+      "titleStyle": {
+        "placement": {
+          "kind": "rect",
+          "x": 78,
+          "y": 84,
+          "width": 924,
+          "height": 186,
+          "z": 2,
+          "rotation": 0
+        },
+        "units": "1080x1920 canvas pixels",
+        "fontFamily": "Lora",
+        "fontAsset": "fonts/Lora-Italic.ttf",
+        "fontWeight": 500,
+        "fontStyle": "italic",
+        "fontSize": 132,
+        "minFontSize": 84,
+        "lineHeight": 1.05,
+        "maxLines": 2,
+        "letterSpacing": 1.5,
+        "color": "#24201a",
+        "colorOnDark": "#f2ede2",
+        "textAlign": "left",
+        "verticalAlign": "top",
+        "memoryTitleCasing": "preserve",
+        "generatedMonthLabelCasing": "preserve",
+        "glyphFallback": "platform",
+        "shadow": {
+          "dx": 0,
+          "dy": 0,
+          "blur": 0,
+          "color": "rgba(0,0,0,0)"
+        }
       }
     }
-  }
+  ]
 }

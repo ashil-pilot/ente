@@ -24,9 +24,9 @@ List<int?> _ids(Iterable<EnteFile> files) {
 
 void main() {
   group("MemoryCollageSelector", () {
-    test("supports exactly the six- and seven-photo layouts", () {
+    test("supports only the seven-photo layout", () {
       expect(MemoryCollageSelector.isSupportedPhotoCount(5), isFalse);
-      expect(MemoryCollageSelector.isSupportedPhotoCount(6), isTrue);
+      expect(MemoryCollageSelector.isSupportedPhotoCount(6), isFalse);
       expect(MemoryCollageSelector.isSupportedPhotoCount(7), isTrue);
       expect(MemoryCollageSelector.isSupportedPhotoCount(8), isFalse);
     });
@@ -63,32 +63,14 @@ void main() {
       expect(_ids(MemoryCollageSelector.eligibleFiles(files)), [1, 2]);
     });
 
-    test("returns empty when fewer than six eligible files exist", () {
+    test("returns empty when fewer than seven eligible files exist", () {
       final result = MemoryCollageSelector.select(
         memoryID: "memory",
         shuffleRevision: 0,
-        files: [
-          ...List.generate(5, (index) => _file(index)),
-          _file(10, fileType: FileType.video),
-        ],
+        files: List.generate(6, (index) => _file(index)),
       );
 
       expect(result, isEmpty);
-      expect(() => result.add(_file(99)), throwsUnsupportedError);
-    });
-
-    test("returns exactly six when six are eligible without mutating", () {
-      final files = List.generate(6, (index) => _file(index));
-      final before = _ids(files);
-
-      final result = MemoryCollageSelector.select(
-        memoryID: "memory",
-        shuffleRevision: 0,
-        files: files,
-      );
-
-      expect(result, hasLength(6));
-      expect(_ids(files), before);
       expect(() => result.add(_file(99)), throwsUnsupportedError);
     });
 
@@ -127,8 +109,8 @@ void main() {
       expect(_ids(first), _ids(second));
     });
 
-    test("shuffle revision deterministically changes six and seven slots", () {
-      for (final eligibleCount in [6, 7, 20]) {
+    test("shuffle revision deterministically changes the seven slots", () {
+      for (final eligibleCount in [7, 20]) {
         final files = List.generate(eligibleCount, (index) => _file(index));
 
         final initial = MemoryCollageSelector.select(
@@ -168,11 +150,12 @@ void main() {
           _file(4),
           _file(5),
           _file(6),
+          _file(7),
         ],
       );
 
-      expect(result, hasLength(6));
-      expect(_ids(result).toSet(), hasLength(6));
+      expect(result, hasLength(7));
+      expect(_ids(result).toSet(), hasLength(7));
     });
   });
 }
