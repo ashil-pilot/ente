@@ -1,9 +1,23 @@
-import "package:flutter/widgets.dart";
+import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:photos/ui/home/memories/custom_listener.dart";
 
 void main() {
   const targetKey = ValueKey("gesture-target");
+
+  test("routes the same left-side threshold as the memory viewer", () {
+    expect(
+      memoryTapNavigatesToPrevious(
+        horizontalPosition: 79.9,
+        availableWidth: 400,
+      ),
+      isTrue,
+    );
+    expect(
+      memoryTapNavigatesToPrevious(horizontalPosition: 80, availableWidth: 400),
+      isFalse,
+    );
+  });
 
   Future<void> pumpListener(
     WidgetTester tester, {
@@ -91,5 +105,38 @@ void main() {
     await firstPointer.up();
 
     expect(swipeCount, 0);
+  });
+
+  testWidgets("side taps navigate without intercepting child buttons", (
+    tester,
+  ) async {
+    var previousCount = 0;
+    var nextCount = 0;
+    var buttonCount = 0;
+    const buttonKey = ValueKey("side-tap-child-button");
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MemorySideTapGestureDetector(
+          onPrevious: () => previousCount++,
+          onNext: () => nextCount++,
+          child: Center(
+            child: FilledButton(
+              key: buttonKey,
+              onPressed: () => buttonCount++,
+              child: const Text("Action"),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tapAt(const Offset(40, 300));
+    await tester.tapAt(const Offset(760, 300));
+    await tester.tap(find.byKey(buttonKey));
+
+    expect(previousCount, 1);
+    expect(nextCount, 1);
+    expect(buttonCount, 1);
   });
 }

@@ -4,6 +4,11 @@ const double kMemoryProgressGap = 10.0;
 const double kMemoryProgressHeight = 4.0;
 const double kMemoryProgressMinSegmentWidth = 8.0;
 
+int memoryProgressTotalSteps({
+  required int memoryItemCount,
+  required bool includeCollage,
+}) => memoryItemCount + (includeCollage ? 1 : 0);
+
 double memoryProgressSegmentWidthForLayout({
   required int totalSteps,
   required double availableWidth,
@@ -38,6 +43,9 @@ class MemoryProgressIndicator extends StatefulWidget {
   final Color unselectedColor;
   final double height;
   final double gap;
+
+  /// Overrides the animated fill for an untimed current step.
+  final double? currentStepProgress;
   final void Function(AnimationController)? animationController;
   final void Function(AnimationController)? onAnimationControllerDisposed;
   final VoidCallback? onComplete;
@@ -51,6 +59,7 @@ class MemoryProgressIndicator extends StatefulWidget {
     this.unselectedColor = Colors.white54,
     this.height = kMemoryProgressHeight,
     this.gap = kMemoryProgressGap,
+    this.currentStepProgress,
     this.animationController,
     this.onAnimationControllerDisposed,
     this.onComplete,
@@ -110,8 +119,13 @@ class _MemoryProgressIndicatorState extends State<MemoryProgressIndicator>
           return AnimatedBuilder(
             animation: _animation,
             builder: (context, _) {
+              final currentStepProgress =
+                  (widget.currentStepProgress ?? _animation.value)
+                      .clamp(0.0, 1.0)
+                      .toDouble();
               final progress =
-                  (widget.currentIndex + _animation.value) / widget.totalSteps;
+                  (widget.currentIndex + currentStepProgress) /
+                  widget.totalSteps;
               return LinearProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
                 backgroundColor: widget.unselectedColor,
@@ -133,8 +147,12 @@ class _MemoryProgressIndicatorState extends State<MemoryProgressIndicator>
               ? AnimatedBuilder(
                   animation: _animation,
                   builder: (context, _) {
+                    final currentStepProgress =
+                        (widget.currentStepProgress ?? _animation.value)
+                            .clamp(0.0, 1.0)
+                            .toDouble();
                     return LinearProgressIndicator(
-                      value: _animation.value,
+                      value: currentStepProgress,
                       backgroundColor: widget.unselectedColor,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         widget.selectedColor,

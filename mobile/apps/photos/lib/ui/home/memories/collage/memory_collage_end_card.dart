@@ -1,6 +1,8 @@
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:ente_strings/ente_strings.dart";
 import "package:flutter/material.dart";
+import "package:flutter/semantics.dart";
+import "package:flutter/services.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/models/memories/memory.dart";
 import "package:photos/models/memories/memory_collage_manifest.dart";
@@ -8,6 +10,8 @@ import "package:photos/services/memories/memory_collage_selector.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_controller.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_editor_page.dart";
+import "package:photos/ui/home/memories/custom_listener.dart";
+import "package:photos/ui/home/memories/memory_progress_indicator.dart";
 import "package:photos/ui/viewer/file/thumbnail_widget.dart";
 
 class MemoryCollageEndCard extends StatefulWidget {
@@ -43,12 +47,21 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   Future<MemoryCollageManifest> _loadManifestAndAssets() async {
     final manifest = await MemoryCollageManifest.load();
     if (!mounted) return manifest;
+    final files = MemoryCollageSelector.select(
+      memoryID: widget.memoryID,
+      shuffleRevision: 0,
+      files: widget.memories.map((memory) => memory.file),
+    );
+    if (!MemoryCollageSelector.isSupportedPhotoCount(files.length)) {
+      return manifest;
+    }
     await MemoryCollageCanvasView.precacheAssets(
       context,
       manifest,
       assetIDs: memoryCollageRequiredAssetIDs(
         manifest,
         MemoryCollageController.defaultBackgroundIDs.first,
+        photoCount: files.length,
       ),
     );
     return manifest;
@@ -68,12 +81,22 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
         shuffleRevision: 0,
         files: widget.memories.map((memory) => memory.file),
       );
-      if (files.length != MemoryCollageSelector.photoCount) {
+      if (!MemoryCollageSelector.isSupportedPhotoCount(files.length)) {
         widget.onContinue();
       } else {
         _ineligibleContinueScheduled = false;
       }
     });
+  }
+
+  void _navigatePrevious() {
+    HapticFeedback.selectionClick();
+    widget.onPrevious();
+  }
+
+  void _navigateNext() {
+    HapticFeedback.selectionClick();
+    widget.onContinue();
   }
 
   @override
@@ -83,25 +106,11 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       shuffleRevision: 0,
       files: widget.memories.map((memory) => memory.file),
     );
-    if (files.length != MemoryCollageSelector.photoCount) {
+    if (!MemoryCollageSelector.isSupportedPhotoCount(files.length)) {
       _continueIfStillIneligible();
       return const SizedBox.shrink();
     }
     _ineligibleContinueScheduled = false;
-    final stackNavigationActions =
-        MediaQuery.sizeOf(context).width < 360 ||
-        MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final previousButton = OutlinedButton.icon(
-      onPressed: widget.onPrevious,
-      icon: const Icon(Icons.arrow_back),
-      label: Text(context.strings.previous),
-    );
-    final continueButton = OutlinedButton.icon(
-      onPressed: widget.onContinue,
-      iconAlignment: IconAlignment.end,
-      icon: const Icon(Icons.arrow_forward),
-      label: Text(context.strings.continueLabel),
-    );
 
     return ColoredBox(
       color: const Color(0xFF161412),
@@ -110,6 +119,17 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: Column(
             children: [
+              MemoryProgressIndicator(
+                totalSteps: memoryProgressTotalSteps(
+                  memoryItemCount: widget.memories.length,
+                  includeCollage: true,
+                ),
+                currentIndex: widget.memories.length,
+                currentStepProgress: 1,
+                selectedColor: Colors.white,
+                unselectedColor: Colors.white.withValues(alpha: 0.4),
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   IconButton(
@@ -131,70 +151,88 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
               ),
               const SizedBox(height: 8),
               Expanded(
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 9 / 16,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: FutureBuilder<MemoryCollageManifest>(
-                        future: _manifestFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasError) {
-                            return SizedBox(
-                              width: 360,
-                              height: 640,
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      context.strings.somethingWentWrong,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
+                child: Semantics(
+                  container: true,
+                  customSemanticsActions: {
+                    CustomSemanticsAction(label: context.strings.previous):
+                        _navigatePrevious,
+                    CustomSemanticsAction(label: context.strings.continueLabel):
+                        _navigateNext,
+                  },
+                  child: MemorySideTapGestureDetector(
+                    key: const ValueKey("memory-collage-side-navigation"),
+                    onPrevious: _navigatePrevious,
+                    onNext: _navigateNext,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: FutureBuilder<MemoryCollageManifest>(
+                            future: _manifestFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return SizedBox(
+                                  width: 360,
+                                  height: 640,
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          context.strings.somethingWentWrong,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        FilledButton.icon(
+                                          onPressed: _retryManifest,
+                                          icon: const Icon(Icons.refresh),
+                                          label: Text(context.strings.tryAgain),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 12),
-                                    FilledButton.icon(
-                                      onPressed: _retryManifest,
-                                      icon: const Icon(Icons.refresh),
-                                      label: Text(context.strings.tryAgain),
+                                  ),
+                                );
+                              }
+                              final manifest = snapshot.data;
+                              if (manifest == null) {
+                                return const SizedBox(
+                                  width: 360,
+                                  height: 640,
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              return MemoryCollageCanvasView(
+                                manifest: manifest,
+                                files: files,
+                                title: widget.title,
+                                backgroundAssetID: MemoryCollageController
+                                    .defaultBackgroundIDs
+                                    .first,
+                                photoBuilder: (context, file, slot) {
+                                  return ThumbnailWidget(
+                                    file,
+                                    key: ValueKey(
+                                      "memory-collage-preview-$slot",
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          final manifest = snapshot.data;
-                          if (manifest == null) {
-                            return const SizedBox(
-                              width: 360,
-                              height: 640,
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          return MemoryCollageCanvasView(
-                            manifest: manifest,
-                            files: files,
-                            title: widget.title,
-                            backgroundAssetID: MemoryCollageController
-                                .defaultBackgroundIDs
-                                .first,
-                            photoBuilder: (context, file, slot) {
-                              return ThumbnailWidget(
-                                file,
-                                key: ValueKey("memory-collage-preview-$slot"),
-                                fit: BoxFit.cover,
-                                rawThumbnail: true,
-                                thumbnailSize: thumbnailLargeSize,
-                                shouldShowSyncStatus: false,
-                                shouldShowFavoriteIcon: false,
-                                shouldShowLivePhotoOverlay: false,
-                                shouldShowVideoOverlayIcon: false,
+                                    fit: BoxFit.cover,
+                                    rawThumbnail: true,
+                                    thumbnailSize: thumbnailLargeSize,
+                                    shouldShowSyncStatus: false,
+                                    shouldShowFavoriteIcon: false,
+                                    shouldShowLivePhotoOverlay: false,
+                                    shouldShowVideoOverlayIcon: false,
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -216,24 +254,6 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
                   label: Text(context.strings.createCollage),
                 ),
               ),
-              const SizedBox(height: 8),
-              if (stackNavigationActions)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    previousButton,
-                    const SizedBox(height: 8),
-                    continueButton,
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(child: previousButton),
-                    const SizedBox(width: 12),
-                    Expanded(child: continueButton),
-                  ],
-                ),
             ],
           ),
         ),

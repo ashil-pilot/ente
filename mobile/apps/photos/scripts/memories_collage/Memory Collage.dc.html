@@ -89,19 +89,50 @@ a{color:#8a4a2a}a:hover{color:#68371d}
    "photoWindows": [
     {
      "x": 57,
-     "y": 78,
+     "y": 261,
      "width": 276,
      "height": 318
     },
     {
      "x": 57,
-     "y": 462,
+     "y": 645,
      "width": 276,
      "height": 318
     },
     {
      "x": 57,
-     "y": 846,
+     "y": 1029,
+     "width": 276,
+     "height": 318
+    }
+   ]
+  },
+  {
+   "id": "film-strip-four",
+   "width": 390,
+   "height": 1800,
+   "photoWindows": [
+    {
+     "x": 57,
+     "y": 69,
+     "width": 276,
+     "height": 318
+    },
+    {
+     "x": 57,
+     "y": 453,
+     "width": 276,
+     "height": 318
+    },
+    {
+     "x": 57,
+     "y": 837,
+     "width": 276,
+     "height": 318
+    },
+    {
+     "x": 57,
+     "y": 1221,
      "width": 276,
      "height": 318
     }
@@ -409,36 +440,87 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     "opacity": 0.55
    }
   ],
-  "photoSlots": [
+  "photoLayouts": [
    {
-    "slot": 0,
-    "layerId": "strip",
-    "windowIndex": 0
+    "photoCount": 6,
+    "assetOverrides": {
+     "strip": "film-strip"
+    },
+    "photoSlots": [
+     {
+      "slot": 0,
+      "layerId": "strip",
+      "windowIndex": 0
+     },
+     {
+      "slot": 1,
+      "layerId": "strip",
+      "windowIndex": 1
+     },
+     {
+      "slot": 2,
+      "layerId": "strip",
+      "windowIndex": 2
+     },
+     {
+      "slot": 3,
+      "layerId": "p1",
+      "windowIndex": 0
+     },
+     {
+      "slot": 4,
+      "layerId": "p2",
+      "windowIndex": 0
+     },
+     {
+      "slot": 5,
+      "layerId": "p3",
+      "windowIndex": 0
+     }
+    ]
    },
    {
-    "slot": 1,
-    "layerId": "strip",
-    "windowIndex": 1
-   },
-   {
-    "slot": 2,
-    "layerId": "strip",
-    "windowIndex": 2
-   },
-   {
-    "slot": 3,
-    "layerId": "p1",
-    "windowIndex": 0
-   },
-   {
-    "slot": 4,
-    "layerId": "p2",
-    "windowIndex": 0
-   },
-   {
-    "slot": 5,
-    "layerId": "p3",
-    "windowIndex": 0
+    "photoCount": 7,
+    "assetOverrides": {
+     "strip": "film-strip-four"
+    },
+    "photoSlots": [
+     {
+      "slot": 0,
+      "layerId": "strip",
+      "windowIndex": 0
+     },
+     {
+      "slot": 1,
+      "layerId": "strip",
+      "windowIndex": 1
+     },
+     {
+      "slot": 2,
+      "layerId": "strip",
+      "windowIndex": 2
+     },
+     {
+      "slot": 3,
+      "layerId": "p1",
+      "windowIndex": 0
+     },
+     {
+      "slot": 4,
+      "layerId": "p2",
+      "windowIndex": 0
+     },
+     {
+      "slot": 5,
+      "layerId": "p3",
+      "windowIndex": 0
+     },
+     {
+      "slot": 6,
+      "layerId": "strip",
+      "windowIndex": 3
+     }
+    ]
    }
   ],
   "appRendered": "banner title text is typeset by the app over the banner",
@@ -477,7 +559,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
   </defs>
 </svg>
 <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:22">
-  <div style="padding:22px 24px 4px;font-size:13px;color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif" data-om-id="dd620bf5:23">Asset export index — 19 assets. Load with ?exportAsset=&lt;id&gt; for an isolated render at intrinsic pixel size on a transparent page. Manifest: &lt;script id=&quot;asset-manifest&quot;&gt;.</div>
+  <div style="padding:22px 24px 4px;font-size:13px;color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif" data-om-id="dd620bf5:23">Asset export index — 20 assets. Load with ?exportAsset=&lt;id&gt; for an isolated render at intrinsic pixel size on a transparent page. Manifest: &lt;script id=&quot;asset-manifest&quot;&gt;.</div>
 </sc-if>
 <sc-if value="{{ axPaperWashi }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:24">
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start" data-om-id="dd620bf5:25">
@@ -749,8 +831,8 @@ a{color:#8a4a2a}a:hover{color:#68371d}
       <div style="font-size:12px;color:#6f6353" data-om-id="dd620bf5:188">Ente Photos · crisp die-cut edges, wear lives in the print texture · one photo set fills all three · stays on-device</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px" data-om-id="dd620bf5:189">
-      <div style="font-size:11px;color:#6f6353" data-om-id="dd620bf5:190">{{ photoCount }} / 6 added</div>
-      <label style="display:inline-flex;align-items:center;gap:8px;background:#463828;color:#f0e7d3;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;cursor:pointer;box-shadow:0 2px 6px rgba(70,56,40,0.35)" data-om-id="dd620bf5:191"><input type="file" accept="image/*" multiple onChange="{{ pick }}" style="display:none" data-om-id="dd620bf5:192">Add up to 6 photos</label>
+      <div style="font-size:11px;color:#6f6353" data-om-id="dd620bf5:190">{{ photoCount }} / 7 added</div>
+      <label style="display:inline-flex;align-items:center;gap:8px;background:#463828;color:#f0e7d3;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;cursor:pointer;box-shadow:0 2px 6px rgba(70,56,40,0.35)" data-om-id="dd620bf5:191"><input type="file" accept="image/*" multiple onChange="{{ pick }}" style="display:none" data-om-id="dd620bf5:192">Add up to 7 photos</label>
       <button onClick="{{ reset }}" style="background:rgba(255,252,244,0.45);border:1px solid rgba(70,56,40,0.35);color:#4a3d2d;font-size:12px;font-weight:600;padding:7px 14px;border-radius:999px;cursor:pointer" data-om-id="dd620bf5:193">Reset</button>
     </div>
   </div>
@@ -810,7 +892,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
                 <div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(80,45,20,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94" data-om-id="dd620bf5:238"></div>
               </sc-for>
             </div>
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top:10px" data-om-id="dd620bf5:239">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top: {{ filmPaddingTop }}" data-om-id="dd620bf5:239">
               <div style="height:16px;display:flex;align-items:center;font-size:6.5px;letter-spacing:2px;color:rgba(244,224,192,0.55)" data-om-id="dd620bf5:240"></div>
               <div style="position:relative;width:92px;height:106px;background:#3a2a1c;box-shadow:0 0 0 2px rgba(46,26,14,0.5),0 1px 3px rgba(40,20,8,0.3);overflow:hidden" data-om-id="dd620bf5:241">
                 <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:242"></div>
@@ -825,6 +907,11 @@ a{color:#8a4a2a}a:hover{color:#68371d}
                 <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center;filter: {{ photoFilter }}" data-om-id="dd620bf5:249"></div>
               </div>
               <div style="height:22px;display:flex;align-items:center;font-size:7px;letter-spacing:1.5px;color:rgba(244,224,192,0.6);font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif" data-om-id="dd620bf5:250"></div>
+              <sc-if value="{{ sevenPhotoLayout }}" hint-placeholder-val="{{ false }}">
+                <div style="position:relative;width:92px;height:106px;background:#3a2a1c;box-shadow:0 0 0 2px rgba(46,26,14,0.5),0 1px 3px rgba(40,20,8,0.3);overflow:hidden">
+                  <div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center;filter: {{ photoFilter }}"></div>
+                </div>
+              </sc-if>
             </div>
             <div style="width:18px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:12px 0" data-om-id="dd620bf5:251">
               <sc-for list="{{ sprockets }}" as="s" hint-placeholder-count="21" data-om-id="dd620bf5:252">
@@ -1004,14 +1091,15 @@ a{color:#8a4a2a}a:hover{color:#68371d}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1290,&quot;height&quot;:940},&quot;grain&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:1,&quot;step&quot;:0.05,&quot;default&quot;:0.55,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Materiality&quot;},&quot;filmTint&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Materiality&quot;},&quot;showEphemera&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Scrapbook&quot;}}">
 class Component extends DCLogic {
-  state = { photos: [null, null, null, null, null, null] };
+  state = { photos: [null, null, null, null, null, null, null] };
   sprockets = Array.from({ length: 21 }, (_, i) => ({
     r: +(Math.sin(i * 7.31) * 2.4).toFixed(1),
     o: +(0.86 + Math.sin(i * 2.17 + 1) * 0.12).toFixed(2)
   }));
   placeholders = [
     ['#c98d6b', '#ead2b6', 520, 700], ['#a9b295', '#e6dfc6', 700, 520], ['#9fb2bd', '#e8dac4', 600, 600],
-    ['#c2a0a6', '#eedbcd', 520, 700], ['#c3a45e', '#ecdcb6', 700, 520], ['#b0836d', '#e2ccb0', 600, 600]
+    ['#c2a0a6', '#eedbcd', 520, 700], ['#c3a45e', '#ecdcb6', 700, 520], ['#b0836d', '#e2ccb0', 600, 600],
+    ['#8fa6a8', '#e5d7bd', 520, 700]
   ].map((p, i) => {
     const a = p[0], b = p[1], w = p[2], h = p[3];
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
@@ -1024,7 +1112,7 @@ class Component extends DCLogic {
     return 'data:image/svg+xml,' + encodeURIComponent(svg);
   });
   pick = (e) => {
-    const files = Array.from(e.target.files || []).slice(0, 6);
+    const files = Array.from(e.target.files || []).slice(0, 7);
     if (!files.length) return;
     Promise.all(files.map(f => new Promise(res => {
       const r = new FileReader();
@@ -1038,7 +1126,7 @@ class Component extends DCLogic {
     }));
     e.target.value = '';
   };
-  reset = () => this.setState({ photos: [null, null, null, null, null, null] });
+  reset = () => this.setState({ photos: [null, null, null, null, null, null, null] });
   componentDidMount() {
     if (new URLSearchParams(window.location.search).get('exportAsset')) {
       document.documentElement.style.background = 'transparent';
@@ -1047,6 +1135,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const p = this.state.photos, ph = this.placeholders;
+    const photoCount = p.filter(Boolean).length;
     const g = Math.max(0, Math.min(1, this.props.grain ?? 0.55));
     const bg = (i) => 'url("' + (p[i] || ph[i]) + '")';
     const q = new URLSearchParams(window.location.search);
@@ -1055,8 +1144,10 @@ class Component extends DCLogic {
     const ax = (id) => isIndex || singleAsset === id;
     return {
       photoBg0: bg(0), photoBg1: bg(1), photoBg2: bg(2),
-      photoBg3: bg(3), photoBg4: bg(4), photoBg5: bg(5),
-      photoCount: p.filter(Boolean).length,
+      photoBg3: bg(3), photoBg4: bg(4), photoBg5: bg(5), photoBg6: bg(6),
+      photoCount: photoCount,
+      sevenPhotoLayout: photoCount >= 7,
+      filmPaddingTop: photoCount >= 7 ? '7px' : '71px',
       pick: this.pick, reset: this.reset, sprockets: this.sprockets,
       grainOpacity: +g.toFixed(2), grainOpacitySoft: +(g * 0.75).toFixed(2),
       photoFilter: (this.props.filmTint ?? true) ? 'saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)' : 'none',

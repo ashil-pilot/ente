@@ -69,19 +69,50 @@
       "photoWindows": [
         {
           "x": 57,
-          "y": 78,
+          "y": 261,
           "width": 276,
           "height": 318
         },
         {
           "x": 57,
-          "y": 462,
+          "y": 645,
           "width": 276,
           "height": 318
         },
         {
           "x": 57,
-          "y": 846,
+          "y": 1029,
+          "width": 276,
+          "height": 318
+        }
+      ]
+    },
+    {
+      "id": "film-strip-four",
+      "width": 390,
+      "height": 1800,
+      "photoWindows": [
+        {
+          "x": 57,
+          "y": 69,
+          "width": 276,
+          "height": 318
+        },
+        {
+          "x": 57,
+          "y": 453,
+          "width": 276,
+          "height": 318
+        },
+        {
+          "x": 57,
+          "y": 837,
+          "width": 276,
+          "height": 318
+        },
+        {
+          "x": 57,
+          "y": 1221,
           "width": 276,
           "height": 318
         }
@@ -484,36 +515,87 @@
         "opacity": 0.55
       }
     ],
-    "photoSlots": [
+    "photoLayouts": [
       {
-        "slot": 0,
-        "layerId": "strip",
-        "windowIndex": 0
+        "photoCount": 6,
+        "assetOverrides": {
+          "strip": "film-strip"
+        },
+        "photoSlots": [
+          {
+            "slot": 0,
+            "layerId": "strip",
+            "windowIndex": 0
+          },
+          {
+            "slot": 1,
+            "layerId": "strip",
+            "windowIndex": 1
+          },
+          {
+            "slot": 2,
+            "layerId": "strip",
+            "windowIndex": 2
+          },
+          {
+            "slot": 3,
+            "layerId": "p1",
+            "windowIndex": 0
+          },
+          {
+            "slot": 4,
+            "layerId": "p2",
+            "windowIndex": 0
+          },
+          {
+            "slot": 5,
+            "layerId": "p3",
+            "windowIndex": 0
+          }
+        ]
       },
       {
-        "slot": 1,
-        "layerId": "strip",
-        "windowIndex": 1
-      },
-      {
-        "slot": 2,
-        "layerId": "strip",
-        "windowIndex": 2
-      },
-      {
-        "slot": 3,
-        "layerId": "p1",
-        "windowIndex": 0
-      },
-      {
-        "slot": 4,
-        "layerId": "p2",
-        "windowIndex": 0
-      },
-      {
-        "slot": 5,
-        "layerId": "p3",
-        "windowIndex": 0
+        "photoCount": 7,
+        "assetOverrides": {
+          "strip": "film-strip-four"
+        },
+        "photoSlots": [
+          {
+            "slot": 0,
+            "layerId": "strip",
+            "windowIndex": 0
+          },
+          {
+            "slot": 1,
+            "layerId": "strip",
+            "windowIndex": 1
+          },
+          {
+            "slot": 2,
+            "layerId": "strip",
+            "windowIndex": 2
+          },
+          {
+            "slot": 3,
+            "layerId": "p1",
+            "windowIndex": 0
+          },
+          {
+            "slot": 4,
+            "layerId": "p2",
+            "windowIndex": 0
+          },
+          {
+            "slot": 5,
+            "layerId": "p3",
+            "windowIndex": 0
+          },
+          {
+            "slot": 6,
+            "layerId": "strip",
+            "windowIndex": 3
+          }
+        ]
       }
     ],
     "appRendered": "banner title text is typeset by the app over the banner",

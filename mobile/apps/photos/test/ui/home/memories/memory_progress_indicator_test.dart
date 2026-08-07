@@ -3,6 +3,17 @@ import "package:flutter_test/flutter_test.dart";
 import "package:photos/ui/home/memories/memory_progress_indicator.dart";
 
 void main() {
+  test("adds a final progress step for the collage", () {
+    expect(
+      memoryProgressTotalSteps(memoryItemCount: 6, includeCollage: true),
+      7,
+    );
+    expect(
+      memoryProgressTotalSteps(memoryItemCount: 6, includeCollage: false),
+      6,
+    );
+  });
+
   testWidgets("fills the available width with equal chunks", (tester) async {
     const totalSteps = 6;
     const availableWidth = 343.0;
@@ -55,5 +66,75 @@ void main() {
 
     expect(find.byType(Row), findsNothing);
     expect(tester.getSize(find.byType(LinearProgressIndicator)).width, 343);
+  });
+
+  testWidgets("renders the collage as the final active segment", (
+    tester,
+  ) async {
+    const memoryItemCount = 6;
+    final totalSteps = memoryProgressTotalSteps(
+      memoryItemCount: memoryItemCount,
+      includeCollage: true,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 343,
+            child: MemoryProgressIndicator(
+              totalSteps: totalSteps,
+              currentIndex: memoryItemCount,
+              currentStepProgress: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey("memory-progress-segment-6")),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey("memory-progress-segment-6")),
+        matching: find.byType(LinearProgressIndicator),
+      ),
+      findsOneWidget,
+    );
+    final finalSegment = tester.widget<LinearProgressIndicator>(
+      find.descendant(
+        of: find.byKey(const ValueKey("memory-progress-segment-6")),
+        matching: find.byType(LinearProgressIndicator),
+      ),
+    );
+    expect(finalSegment.value, 1);
+  });
+
+  testWidgets("completes a continuous track on the collage step", (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 343,
+            child: MemoryProgressIndicator(
+              totalSteps: 20,
+              currentIndex: 19,
+              currentStepProgress: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester
+          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
+          .value,
+      1,
+    );
   });
 }

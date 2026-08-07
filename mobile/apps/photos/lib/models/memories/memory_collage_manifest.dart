@@ -158,7 +158,7 @@ class MemoryCollageTemplate {
   final String rotationOrigin;
   final String overflow;
   final List<MemoryCollageLayer> layers;
-  final List<MemoryCollagePhotoSlot> photoSlots;
+  final List<MemoryCollagePhotoLayout> photoLayouts;
   final String appRendered;
   final MemoryCollageTitleStyle titleStyle;
 
@@ -167,11 +167,11 @@ class MemoryCollageTemplate {
     required this.rotationOrigin,
     required this.overflow,
     required List<MemoryCollageLayer> layers,
-    required List<MemoryCollagePhotoSlot> photoSlots,
+    required List<MemoryCollagePhotoLayout> photoLayouts,
     required this.appRendered,
     required this.titleStyle,
   }) : layers = List.unmodifiable(layers),
-       photoSlots = List.unmodifiable(photoSlots);
+       photoLayouts = List.unmodifiable(photoLayouts);
 
   factory MemoryCollageTemplate.fromJson(Map<String, dynamic> json) {
     final sourceLayers = _jsonList(json, "layers");
@@ -189,19 +189,19 @@ class MemoryCollageTemplate {
               : left.sourceIndex.compareTo(right.sourceIndex);
         });
 
-    final photoSlots =
+    final photoLayouts =
         _jsonList(
             json,
-            "photoSlots",
-          ).map(MemoryCollagePhotoSlot.fromJson).toList(growable: false)
-          ..sort((left, right) => left.slot.compareTo(right.slot));
+            "photoLayouts",
+          ).map(MemoryCollagePhotoLayout.fromJson).toList(growable: false)
+          ..sort((left, right) => left.photoCount.compareTo(right.photoCount));
 
     return MemoryCollageTemplate._(
       canvas: MemoryCollageCanvas.fromJson(_jsonMap(json, "canvas")),
       rotationOrigin: _jsonString(json, "rotationOrigin"),
       overflow: _jsonString(json, "overflow"),
       layers: layers,
-      photoSlots: photoSlots,
+      photoLayouts: photoLayouts,
       appRendered: _jsonString(json, "appRendered"),
       titleStyle: MemoryCollageTitleStyle.fromJson(
         _jsonMap(json, "titleStyle"),
@@ -214,6 +214,15 @@ class MemoryCollageTemplate {
       if (layer.layerID == layerID) return layer;
     }
     throw FormatException("Unknown memory collage layer: $layerID");
+  }
+
+  MemoryCollagePhotoLayout layoutForPhotoCount(int photoCount) {
+    for (final layout in photoLayouts) {
+      if (layout.photoCount == photoCount) return layout;
+    }
+    throw FormatException(
+      "No memory collage photo layout for $photoCount photos",
+    );
   }
 }
 
@@ -322,6 +331,37 @@ class MemoryCollagePhotoSlot {
   }
 }
 
+class MemoryCollagePhotoLayout {
+  final int photoCount;
+  final Map<String, String> assetOverrides;
+  final List<MemoryCollagePhotoSlot> photoSlots;
+
+  MemoryCollagePhotoLayout({
+    required this.photoCount,
+    required Map<String, String> assetOverrides,
+    required List<MemoryCollagePhotoSlot> photoSlots,
+  }) : assetOverrides = Map.unmodifiable(assetOverrides),
+       photoSlots = List.unmodifiable(photoSlots);
+
+  factory MemoryCollagePhotoLayout.fromJson(Map<String, dynamic> json) {
+    final photoSlots =
+        _jsonList(
+            json,
+            "photoSlots",
+          ).map(MemoryCollagePhotoSlot.fromJson).toList(growable: false)
+          ..sort((left, right) => left.slot.compareTo(right.slot));
+    return MemoryCollagePhotoLayout(
+      photoCount: _jsonInt(json, "photoCount"),
+      assetOverrides: _jsonStringMap(json, "assetOverrides"),
+      photoSlots: photoSlots,
+    );
+  }
+
+  String assetIDFor(MemoryCollageLayer layer) {
+    return assetOverrides[layer.layerID] ?? layer.assetID;
+  }
+}
+
 class MemoryCollageTitleStyle {
   final String layerID;
   final String units;
@@ -382,6 +422,16 @@ Map<String, dynamic> _jsonMap(Map<String, dynamic> json, String key) {
   final value = json[key];
   if (value is! Map) throw FormatException("$key must be an object");
   return Map<String, dynamic>.from(value);
+}
+
+Map<String, String> _jsonStringMap(Map<String, dynamic> json, String key) {
+  final value = _jsonMap(json, key);
+  return value.map((mapKey, mapValue) {
+    if (mapValue is! String) {
+      throw FormatException("$key values must be strings");
+    }
+    return MapEntry(mapKey, mapValue);
+  });
 }
 
 List<Map<String, dynamic>> _jsonList(Map<String, dynamic> json, String key) {

@@ -40,12 +40,16 @@ Future<void> precacheMemoryCollageAsset(
 
 Set<String> memoryCollageRequiredAssetIDs(
   MemoryCollageManifest manifest,
-  String backgroundAssetID,
-) => {
-  backgroundAssetID,
-  for (final layer in manifest.template.layers)
-    if (!layer.backgroundSwappable) layer.assetID,
-};
+  String backgroundAssetID, {
+  required int photoCount,
+}) {
+  final layout = manifest.template.layoutForPhotoCount(photoCount);
+  return {
+    backgroundAssetID,
+    for (final layer in manifest.template.layers)
+      if (!layer.backgroundSwappable) layout.assetIDFor(layer),
+  };
+}
 
 /// Renders the approved memory collage at a fixed 360 x 640 logical size.
 ///
@@ -81,8 +85,9 @@ class MemoryCollageCanvasView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final template = manifest.template;
+    final layout = template.layoutForPhotoCount(files.length);
     final slotByLayerAndWindow = <(String, int), int>{
-      for (final slot in template.photoSlots)
+      for (final slot in layout.photoSlots)
         (slot.layerID, slot.windowIndex): slot.slot,
     };
 
@@ -94,8 +99,8 @@ class MemoryCollageCanvasView extends StatelessWidget {
           children: [
             for (final layer in template.layers) ...[
               for (final shadow in layer.shadows.reversed)
-                _buildShadow(layer, shadow),
-              _buildLayer(context, layer, slotByLayerAndWindow),
+                _buildShadow(layer, shadow, layout),
+              _buildLayer(context, layer, layout, slotByLayerAndWindow),
             ],
           ],
         ),
@@ -106,11 +111,12 @@ class MemoryCollageCanvasView extends StatelessWidget {
   Widget _buildLayer(
     BuildContext context,
     MemoryCollageLayer layer,
+    MemoryCollagePhotoLayout layout,
     Map<(String, int), int> slotByLayerAndWindow,
   ) {
     final assetID = layer.backgroundSwappable
         ? backgroundAssetID
-        : layer.assetID;
+        : layout.assetIDFor(layer);
     final asset = manifest.assetFor(assetID);
     final width = layer.width / memoryCollageExportPixelRatio;
     final height = layer.height / memoryCollageExportPixelRatio;
@@ -184,10 +190,14 @@ class MemoryCollageCanvasView extends StatelessWidget {
     );
   }
 
-  Widget _buildShadow(MemoryCollageLayer layer, MemoryCollageShadow shadow) {
+  Widget _buildShadow(
+    MemoryCollageLayer layer,
+    MemoryCollageShadow shadow,
+    MemoryCollagePhotoLayout layout,
+  ) {
     final assetID = layer.backgroundSwappable
         ? backgroundAssetID
-        : layer.assetID;
+        : layout.assetIDFor(layer);
     final width = layer.width / memoryCollageExportPixelRatio;
     final height = layer.height / memoryCollageExportPixelRatio;
     final color = parseMemoryCollageColor(shadow.color);

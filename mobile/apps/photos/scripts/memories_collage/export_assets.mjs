@@ -24,7 +24,7 @@ const titleFontLicensePath = join(scriptDirectory, "..", "..", "fonts", "Lora-OF
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "b068c928077adece9e859bc86f2e3ea1b7be89d7ff240bd75146ea918c6134af",
+    "115a6fe96caa01e0183d104aac8e2b98ffbdbc34833ef9601e9d6c172e0e6eb3",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
@@ -32,7 +32,7 @@ const expectedTitleFontHashes = {
   "Lora-SemiBold.ttf":
     "a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81",
   "Lora-OFL.txt":
-    "1d9a970809ac804b582a6ce7f0ebc4e7fefcbfd7ff6299cad35ee656a21be716",
+    "6d6bc7bbb828514925dabcaf89e4771398d12c60dd1cb2bbb90eea129535d0f4",
 };
 const expectedTitleStyle = {
   layerId: "banner",
@@ -65,6 +65,7 @@ const requiredAssetIds = [
   "paper-torn",
   "polaroid-frame",
   "film-strip",
+  "film-strip-four",
   "banner",
   "tape-mustard",
   "tape-blush",
@@ -272,13 +273,32 @@ const expectedLayers = [
     opacity: 0.55,
   },
 ];
-const expectedPhotoSlots = [
-  { slot: 0, layerId: "strip", windowIndex: 0 },
-  { slot: 1, layerId: "strip", windowIndex: 1 },
-  { slot: 2, layerId: "strip", windowIndex: 2 },
-  { slot: 3, layerId: "p1", windowIndex: 0 },
-  { slot: 4, layerId: "p2", windowIndex: 0 },
-  { slot: 5, layerId: "p3", windowIndex: 0 },
+const expectedPhotoLayouts = [
+  {
+    photoCount: 6,
+    assetOverrides: { strip: "film-strip" },
+    photoSlots: [
+      { slot: 0, layerId: "strip", windowIndex: 0 },
+      { slot: 1, layerId: "strip", windowIndex: 1 },
+      { slot: 2, layerId: "strip", windowIndex: 2 },
+      { slot: 3, layerId: "p1", windowIndex: 0 },
+      { slot: 4, layerId: "p2", windowIndex: 0 },
+      { slot: 5, layerId: "p3", windowIndex: 0 },
+    ],
+  },
+  {
+    photoCount: 7,
+    assetOverrides: { strip: "film-strip-four" },
+    photoSlots: [
+      { slot: 0, layerId: "strip", windowIndex: 0 },
+      { slot: 1, layerId: "strip", windowIndex: 1 },
+      { slot: 2, layerId: "strip", windowIndex: 2 },
+      { slot: 3, layerId: "p1", windowIndex: 0 },
+      { slot: 4, layerId: "p2", windowIndex: 0 },
+      { slot: 5, layerId: "p3", windowIndex: 0 },
+      { slot: 6, layerId: "strip", windowIndex: 3 },
+    ],
+  },
 ];
 const expectedShadows = new Map([
   ["torn", [
@@ -546,15 +566,42 @@ function readManifest(source) {
     }
   }
   const layersById = new Map(layers.map((layer) => [layer.layerId, layer]));
-  const photoSlots = manifest.template2a?.photoSlots;
-  if (JSON.stringify(photoSlots) !== JSON.stringify(expectedPhotoSlots)) {
-    fail("template2a must preserve the approved six-photo slot mapping.");
+  const photoLayouts = manifest.template2a?.photoLayouts;
+  if (JSON.stringify(photoLayouts) !== JSON.stringify(expectedPhotoLayouts)) {
+    fail("template2a must preserve the approved six/seven photo layouts.");
   }
-  for (const slot of photoSlots) {
-    const layer = layersById.get(slot.layerId);
-    const asset = layer && assetsById.get(layer.asset);
-    if (!asset?.photoWindows?.[slot.windowIndex]) {
-      fail(`Photo slot ${slot.slot} references a missing window.`);
+  for (const layout of photoLayouts) {
+    if (layout.photoSlots.length !== layout.photoCount) {
+      fail(`The ${layout.photoCount}-photo layout has the wrong slot count.`);
+    }
+    const slotNumbers = layout.photoSlots.map((slot) => slot.slot).sort();
+    if (slotNumbers.some((slot, index) => slot !== index)) {
+      fail(`The ${layout.photoCount}-photo layout slots must be contiguous.`);
+    }
+    const targets = new Set();
+    for (const slot of layout.photoSlots) {
+      const target = `${slot.layerId}:${slot.windowIndex}`;
+      if (targets.has(target)) {
+        fail(`The ${layout.photoCount}-photo layout repeats ${target}.`);
+      }
+      targets.add(target);
+      const layer = layersById.get(slot.layerId);
+      const assetId = layout.assetOverrides?.[slot.layerId] ?? layer?.asset;
+      const asset = assetId && assetsById.get(assetId);
+      if (!asset?.photoWindows?.[slot.windowIndex]) {
+        fail(
+          `Photo slot ${slot.slot} in the ${layout.photoCount}-photo layout ` +
+            "references a missing window.",
+        );
+      }
+    }
+    for (const [layerId, assetId] of Object.entries(layout.assetOverrides)) {
+      if (!layersById.has(layerId) || !assetsById.has(assetId)) {
+        fail(
+          `The ${layout.photoCount}-photo layout has an invalid asset override ` +
+            `${layerId}:${assetId}.`,
+        );
+      }
     }
   }
 
@@ -740,13 +787,95 @@ async function validateNoStalePngs(manifest) {
 }
 
 async function renderAsset(page, asset) {
+  const sourceAssetId = asset.id === "film-strip-four"
+    ? "film-strip"
+    : asset.id;
   const url = new URL(pathToFileURL(sourcePath));
-  url.searchParams.set("exportAsset", asset.id);
+  url.searchParams.set("exportAsset", sourceAssetId);
   await page.goto(url.href, { waitUntil: "load" });
   await page.waitForFunction(
     (assetId) => document.querySelector(`[data-export-asset="${assetId}"]`),
-    asset.id,
+    sourceAssetId,
   );
+  if (asset.id === "film-strip" || asset.id === "film-strip-four") {
+    await page.evaluate(
+      ({ sourceAssetId, outputAssetId, fourFrames }) => {
+        const root = document.querySelector(
+          `[data-export-asset="${sourceAssetId}"]`,
+        );
+        const surface = root?.firstElementChild?.firstElementChild;
+        const filmRow = surface?.firstElementChild;
+        const centerColumn = filmRow?.children?.[1];
+        if (!root || !surface || !centerColumn) {
+          throw new Error("Unable to locate the authored film-strip structure.");
+        }
+
+        const sizes = fourFrames
+          ? [
+              "100% 23px",
+              "100% 22px",
+              "100% 22px",
+              "100% 22px",
+              "100% 87px",
+              "19px 100%",
+              "19px 100%",
+            ]
+          : [
+              "100% 87px",
+              "100% 22px",
+              "100% 22px",
+              "100% 151px",
+              "19px 100%",
+              "19px 100%",
+            ];
+        const positions = fourFrames
+          ? [
+              "0 0",
+              "0 129px",
+              "0 257px",
+              "0 385px",
+              "0 513px",
+              "0 0",
+              "100% 0",
+            ]
+          : [
+              "0 0",
+              "0 193px",
+              "0 321px",
+              "0 449px",
+              "0 0",
+              "100% 0",
+            ];
+        const maskImages = sizes.map(() => "linear-gradient(#000,#000)");
+        surface.style.maskImage = maskImages.join(",");
+        surface.style.maskSize = sizes.join(",");
+        surface.style.maskPosition = positions.join(",");
+        surface.style.maskRepeat = "no-repeat";
+        surface.style.webkitMaskImage = maskImages.join(",");
+        surface.style.webkitMaskSize = sizes.join(",");
+        surface.style.webkitMaskPosition = positions.join(",");
+        surface.style.webkitMaskRepeat = "no-repeat";
+        centerColumn.style.paddingTop = fourFrames ? "7px" : "71px";
+
+        const frames = [...centerColumn.children].filter(
+          (child) => child.style.width === "92px" &&
+            child.style.height === "106px",
+        );
+        if (frames.length !== 3) {
+          throw new Error(`Expected three authored film frames, got ${frames.length}.`);
+        }
+        if (fourFrames) {
+          centerColumn.append(frames.at(-1).cloneNode(true));
+        }
+        root.dataset.exportAsset = outputAssetId;
+      },
+      {
+        sourceAssetId,
+        outputAssetId: asset.id,
+        fourFrames: asset.id === "film-strip-four",
+      },
+    );
+  }
   await page.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all(

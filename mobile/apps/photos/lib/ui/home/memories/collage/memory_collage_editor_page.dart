@@ -100,6 +100,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
       assetIDs: memoryCollageRequiredAssetIDs(
         manifest,
         _controller.backgroundAssetID,
+        photoCount: _controller.selectedFiles.length,
       ),
     );
     if (mounted) {

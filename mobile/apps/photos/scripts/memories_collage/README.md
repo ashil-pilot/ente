@@ -26,16 +26,16 @@ node mobile/apps/photos/scripts/memories_collage/export_assets.mjs
 The exporter reads the embedded JSON manifest, captures every
 `data-export-asset` root, writes 1x/2x/3x variants, and verifies dimensions,
 alpha/window bounds, the exact asset and layer references, stale output, the
-1080x1920 canvas, all runtime shadow definitions, and the six-slot template
-contract. Capture is offline: the
+1080x1920 canvas, all runtime shadow definitions, and the adaptive six/seven
+photo template contract. Capture is offline: the
 two pinned React UMD files needed by Design's runtime are served from `vendor/`,
 and every other HTTP(S) request is blocked. Their SHA-384 values are checked
 before Chrome starts; their MIT license is in `vendor/REACT_LICENSE`.
 
 Large paper and grain textures use a visually loss-minimized 256-color PNG
 palette. The faint sun-streak and vignette use a lossless-quality palette so
-their alpha ramps survive export. The 57 PNGs total 9,214,606 bytes (8.79 MiB).
-Set
+their alpha ramps survive export. The 20 assets produce 60 PNG variants
+totaling 10,032,289 bytes (9.57 MiB). Set
 `COLLAGE_TRUECOLOR=1` only to inspect unoptimized true-color output; do not ship
 the larger variant set without making an explicit app-size decision.
 
@@ -47,7 +47,7 @@ Source provenance:
 
 - `Memory Collage.dc.html` is the approved 2a design/export source with trailing
   whitespace normalized, SHA-256
-  `b068c928077adece9e859bc86f2e3ea1b7be89d7ff240bd75146ea918c6134af`.
+  `115a6fe96caa01e0183d104aac8e2b98ffbdbc34833ef9601e9d6c172e0e6eb3`.
 - `support.js` is the matching generated Design document runtime, SHA-256
   `8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe`.
 - `fonts/Lora-SemiBold.ttf` is the unmodified static 600-weight face from Lora
@@ -55,15 +55,19 @@ Source provenance:
   `a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81`.
   It is distributed under the SIL Open Font License 1.1 in
   `fonts/Lora-OFL.txt`, SHA-256
-  `1d9a970809ac804b582a6ce7f0ebc4e7fefcbfd7ff6299cad35ee656a21be716`.
+  `6d6bc7bbb828514925dabcaf89e4771398d12c60dd1cb2bbb90eea129535d0f4`.
 
 ## Compositor contract
 
 - Layout coordinates in `manifest.json` are authored against 1080x1920.
 - For a 1080x1920 export, explicitly load the `3.0x` PNG variants; do not rely
   on `AssetImage` device-pixel-ratio selection.
-- Exactly six photos fill the three film-strip windows and three reused
-  polaroid windows.
+- The collage requires at least six eligible photos. Exactly six use the
+  vertically centered three-window film strip plus three reused polaroid
+  windows. With seven or more eligible photos, selection is capped at exactly
+  seven: four fill the four-window film strip and three fill the polaroids.
+  Both strip variants are derived from the shared authored film source during
+  export.
 - The polaroid keeps the approved soft inset seam over the edge of its declared
   photo rect (up to 36 px at 3x); the exporter verifies the entire inset core is
   alpha-zero and caps the seam's coverage and opacity so it cannot silently

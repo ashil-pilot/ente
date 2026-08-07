@@ -24,6 +24,13 @@ List<int?> _ids(Iterable<EnteFile> files) {
 
 void main() {
   group("MemoryCollageSelector", () {
+    test("supports exactly the six- and seven-photo layouts", () {
+      expect(MemoryCollageSelector.isSupportedPhotoCount(5), isFalse);
+      expect(MemoryCollageSelector.isSupportedPhotoCount(6), isTrue);
+      expect(MemoryCollageSelector.isSupportedPhotoCount(7), isTrue);
+      expect(MemoryCollageSelector.isSupportedPhotoCount(8), isFalse);
+    });
+
     test(
       "stable key prefers uploaded, then generated, then local identity",
       () {
@@ -70,8 +77,8 @@ void main() {
       expect(() => result.add(_file(99)), throwsUnsupportedError);
     });
 
-    test("returns exactly six without mutating the source", () {
-      final files = List.generate(12, (index) => _file(index));
+    test("returns exactly six when six are eligible without mutating", () {
+      final files = List.generate(6, (index) => _file(index));
       final before = _ids(files);
 
       final result = MemoryCollageSelector.select(
@@ -83,6 +90,23 @@ void main() {
       expect(result, hasLength(6));
       expect(_ids(files), before);
       expect(() => result.add(_file(99)), throwsUnsupportedError);
+    });
+
+    test("returns exactly seven when at least seven are eligible", () {
+      for (final eligibleCount in [7, 12]) {
+        final files = List.generate(eligibleCount, (index) => _file(index));
+        final before = _ids(files);
+
+        final result = MemoryCollageSelector.select(
+          memoryID: "memory",
+          shuffleRevision: 0,
+          files: files,
+        );
+
+        expect(result, hasLength(7));
+        expect(_ids(files), before);
+        expect(() => result.add(_file(99)), throwsUnsupportedError);
+      }
     });
 
     test("selection is deterministic and independent of input order", () {
@@ -103,31 +127,33 @@ void main() {
       expect(_ids(first), _ids(second));
     });
 
-    test("shuffle revision deterministically changes the selection", () {
-      final files = List.generate(20, (index) => _file(index));
+    test("shuffle revision deterministically changes six and seven slots", () {
+      for (final eligibleCount in [6, 7, 20]) {
+        final files = List.generate(eligibleCount, (index) => _file(index));
 
-      final initial = MemoryCollageSelector.select(
-        memoryID: "summer-2025",
-        shuffleRevision: 0,
-        files: files,
-      );
-      final shuffled = MemoryCollageSelector.select(
-        memoryID: "summer-2025",
-        shuffleRevision: 1,
-        files: files,
-      );
+        final initial = MemoryCollageSelector.select(
+          memoryID: "summer-2025",
+          shuffleRevision: 0,
+          files: files,
+        );
+        final shuffled = MemoryCollageSelector.select(
+          memoryID: "summer-2025",
+          shuffleRevision: 1,
+          files: files,
+        );
 
-      expect(_ids(shuffled), isNot(_ids(initial)));
-      expect(
-        _ids(
-          MemoryCollageSelector.select(
-            memoryID: "summer-2025",
-            shuffleRevision: 1,
-            files: files,
+        expect(_ids(shuffled), isNot(_ids(initial)));
+        expect(
+          _ids(
+            MemoryCollageSelector.select(
+              memoryID: "summer-2025",
+              shuffleRevision: 1,
+              files: files,
+            ),
           ),
-        ),
-        _ids(shuffled),
-      );
+          _ids(shuffled),
+        );
+      }
     });
 
     test("deduplicates repeated stable identities", () {

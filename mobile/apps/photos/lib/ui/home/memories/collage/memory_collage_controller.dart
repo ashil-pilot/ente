@@ -14,8 +14,6 @@ typedef MemoryCollageSelection =
 /// A new controller starts at shuffle revision zero and the first background.
 /// Neither value is persisted after the editor is closed.
 class MemoryCollageController extends ChangeNotifier {
-  static const int requiredPhotoCount = 6;
-
   static const List<String> defaultBackgroundIDs = [
     "paper-washi",
     "paper-cream-fiber",
@@ -55,7 +53,8 @@ class MemoryCollageController extends ChangeNotifier {
 
   List<String> get backgroundIDs => _backgroundIDs;
 
-  bool get canCreate => _selectedFiles.length == requiredPhotoCount;
+  bool get canCreate =>
+      MemoryCollageSelector.isSupportedPhotoCount(_selectedFiles.length);
 
   int get shuffleRevision => _shuffleRevision;
 

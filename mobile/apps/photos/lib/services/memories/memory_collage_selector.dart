@@ -6,15 +6,22 @@ import "package:photos/models/file/file_type.dart";
 import "package:photos/utils/image_util.dart";
 
 class MemoryCollageSelector {
-  static const photoCount = 6;
+  static const minimumPhotoCount = 6;
+  static const maximumPhotoCount = 7;
 
   const MemoryCollageSelector._();
 
-  /// Returns the six photo-capable files selected for a memory.
+  static bool isSupportedPhotoCount(int photoCount) {
+    return photoCount >= minimumPhotoCount && photoCount <= maximumPhotoCount;
+  }
+
+  /// Returns the photo-capable files selected for a memory.
   ///
   /// Selection is deterministic for the same memory and shuffle revision. It
-  /// is independent of the source iterable's order and never mutates it. An
-  /// empty list means there are fewer than six uniquely identifiable photos.
+  /// is independent of the source iterable's order and never mutates it. Six
+  /// files are returned when exactly six are eligible, and seven are returned
+  /// whenever at least seven are eligible. An empty list means there are fewer
+  /// than six uniquely identifiable photos.
   static List<EnteFile> select({
     required String memoryID,
     required int shuffleRevision,
@@ -26,7 +33,11 @@ class MemoryCollageSelector {
       final key = stableFileKey(file);
       if (key != null) eligibleByKey.putIfAbsent(key, () => file);
     }
-    if (eligibleByKey.length < photoCount) return const [];
+    if (eligibleByKey.length < minimumPhotoCount) return const [];
+
+    final selectionCount = eligibleByKey.length >= maximumPhotoCount
+        ? maximumPhotoCount
+        : minimumPhotoCount;
 
     final ranked = <_RankedFile>[
       for (final entry in eligibleByKey.entries)
@@ -40,7 +51,7 @@ class MemoryCollageSelector {
     ]..sort(_compareRankedFiles);
 
     return List.unmodifiable(
-      ranked.take(photoCount).map((entry) => entry.file),
+      ranked.take(selectionCount).map((entry) => entry.file),
     );
   }
 

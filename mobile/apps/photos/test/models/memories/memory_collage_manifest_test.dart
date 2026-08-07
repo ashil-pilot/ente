@@ -14,10 +14,13 @@ void main() {
     expect(manifest.version, 1);
     expect(manifest.canvas.width, 1080);
     expect(manifest.canvas.height, 1920);
-    expect(manifest.assets, hasLength(19));
+    expect(manifest.assets, hasLength(20));
     expect(manifest.backgroundAssets, hasLength(5));
     expect(manifest.template.layers, hasLength(17));
-    expect(manifest.template.photoSlots, hasLength(6));
+    expect(
+      manifest.template.photoLayouts.map((layout) => layout.photoCount),
+      orderedEquals([6, 7]),
+    );
   });
 
   test("sorts layers by z and preserves source order for ties", () {
@@ -36,31 +39,91 @@ void main() {
     );
   });
 
-  test("every layer and photo slot resolves to a declared asset window", () {
-    for (final layer in manifest.template.layers) {
-      expect(() => manifest.assetFor(layer.assetID), returnsNormally);
-    }
-
-    for (final slot in manifest.template.photoSlots) {
-      final layer = manifest.template.layerFor(slot.layerID);
-      final asset = manifest.assetFor(layer.assetID);
+  test("every adaptive layout resolves to declared asset windows", () {
+    for (final layout in manifest.template.photoLayouts) {
+      expect(layout.photoSlots, hasLength(layout.photoCount));
       expect(
-        slot.windowIndex,
-        inInclusiveRange(0, asset.photoWindows.length - 1),
+        layout.photoSlots.map((slot) => slot.slot),
+        orderedEquals(List.generate(layout.photoCount, (index) => index)),
       );
+
+      for (final layer in manifest.template.layers) {
+        expect(
+          () => manifest.assetFor(layout.assetIDFor(layer)),
+          returnsNormally,
+        );
+      }
+
+      for (final slot in layout.photoSlots) {
+        final layer = manifest.template.layerFor(slot.layerID);
+        final asset = manifest.assetFor(layout.assetIDFor(layer));
+        expect(
+          slot.windowIndex,
+          inInclusiveRange(0, asset.photoWindows.length - 1),
+        );
+      }
     }
   });
 
-  test("parses the six fixed photo windows", () {
-    final filmWindows = manifest.assetFor("film-strip").photoWindows;
+  test("parses the exact six- and seven-photo layouts", () {
+    final sixPhotoLayout = manifest.template.layoutForPhotoCount(6);
+    final sevenPhotoLayout = manifest.template.layoutForPhotoCount(7);
+
+    expect(sixPhotoLayout.assetOverrides, {"strip": "film-strip"});
+    expect(
+      sixPhotoLayout.photoSlots.map(_slotContract),
+      orderedEquals([
+        (0, "strip", 0),
+        (1, "strip", 1),
+        (2, "strip", 2),
+        (3, "p1", 0),
+        (4, "p2", 0),
+        (5, "p3", 0),
+      ]),
+    );
+    expect(sevenPhotoLayout.assetOverrides, {"strip": "film-strip-four"});
+    expect(
+      sevenPhotoLayout.photoSlots.map(_slotContract),
+      orderedEquals([
+        (0, "strip", 0),
+        (1, "strip", 1),
+        (2, "strip", 2),
+        (3, "p1", 0),
+        (4, "p2", 0),
+        (5, "p3", 0),
+        (6, "strip", 3),
+      ]),
+    );
+  });
+
+  test("parses the centered three- and four-frame film windows", () {
+    final threeFrameWindows = manifest.assetFor("film-strip").photoWindows;
+    final fourFrameWindows = manifest.assetFor("film-strip-four").photoWindows;
     final polaroidWindows = manifest.assetFor("polaroid-frame").photoWindows;
 
-    expect(filmWindows, hasLength(3));
-    expect(filmWindows.first.width, 276);
-    expect(filmWindows.first.height, 318);
+    expect(threeFrameWindows, hasLength(3));
+    expect(threeFrameWindows.map((window) => window.y), [261, 645, 1029]);
+    expect(fourFrameWindows, hasLength(4));
+    expect(fourFrameWindows.map((window) => window.y), [69, 453, 837, 1221]);
+    for (final window in [...threeFrameWindows, ...fourFrameWindows]) {
+      expect(window.x, 57);
+      expect(window.width, 276);
+      expect(window.height, 318);
+    }
     expect(polaroidWindows, hasLength(1));
     expect(polaroidWindows.single.width, 414);
     expect(polaroidWindows.single.height, 420);
+  });
+
+  test("rejects unsupported photo counts", () {
+    expect(
+      () => manifest.template.layoutForPhotoCount(5),
+      throwsA(isA<FormatException>()),
+    );
+    expect(
+      () => manifest.template.layoutForPhotoCount(8),
+      throwsA(isA<FormatException>()),
+    );
   });
 
   test("parses approved title typography and overlay blends", () {
@@ -88,9 +151,22 @@ void main() {
       throwsUnsupportedError,
     );
     expect(
-      () =>
-          manifest.template.photoSlots.add(manifest.template.photoSlots.first),
+      () => manifest.template.photoLayouts.add(
+        manifest.template.photoLayouts.first,
+      ),
+      throwsUnsupportedError,
+    );
+    final layout = manifest.template.layoutForPhotoCount(6);
+    expect(
+      () => layout.photoSlots.add(layout.photoSlots.first),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => layout.assetOverrides["strip"] = "film-strip-four",
       throwsUnsupportedError,
     );
   });
 }
+
+(int, String, int) _slotContract(MemoryCollagePhotoSlot slot) =>
+    (slot.slot, slot.layerID, slot.windowIndex);

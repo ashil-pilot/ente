@@ -606,7 +606,7 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
       shuffleRevision: 0,
       files: inheritedData.memories.map((memory) => memory.file),
     );
-    return selectedFiles.length == MemoryCollageSelector.photoCount;
+    return MemoryCollageSelector.isSupportedPhotoCount(selectedFiles.length);
   }
 
   void _enterCollageEndCard() {
@@ -669,6 +669,10 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     if (inheritedData == null || inheritedData.memories.isEmpty) {
       return const SizedBox.shrink();
     }
+    final progressTotalSteps = memoryProgressTotalSteps(
+      memoryItemCount: inheritedData.memories.length,
+      includeCollage: _isCollageEligible(inheritedData),
+    );
     if (_showCollageEndCard) {
       return AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -730,8 +734,10 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
                     _autoAdvanceTransition = false;
                     HapticFeedback.selectionClick();
                     final screenWidth = MediaQuery.sizeOf(context).width;
-                    final goToPreviousTapAreaWidth = screenWidth * 0.20;
-                    if (event.localPosition.dx < goToPreviousTapAreaWidth) {
+                    if (memoryTapNavigatesToPrevious(
+                      horizontalPosition: event.position.dx,
+                      availableWidth: screenWidth,
+                    )) {
                       _goToPrevious(inheritedData);
                     } else {
                       _goToNext(inheritedData);
@@ -842,6 +848,7 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
             const BottomIcons(),
             _MemoryTopOverlay(
               title: widget.title,
+              totalSteps: progressTotalSteps,
               onClose: () => Navigator.pop(context),
               onDateTap: (file) {
                 _runWithViewerPaused(
@@ -1038,6 +1045,7 @@ class _MemoryActionButton extends StatelessWidget {
 
 class _MemoryTopOverlay extends StatelessWidget {
   final String title;
+  final int totalSteps;
   final VoidCallback onClose;
   final ValueChanged<EnteFile> onDateTap;
   final void Function(AnimationController) animationController;
@@ -1046,6 +1054,7 @@ class _MemoryTopOverlay extends StatelessWidget {
 
   const _MemoryTopOverlay({
     required this.title,
+    required this.totalSteps,
     required this.onClose,
     required this.onDateTap,
     required this.animationController,
@@ -1085,7 +1094,7 @@ class _MemoryTopOverlay extends StatelessWidget {
                     0,
                   ),
                   child: MemoryProgressIndicator(
-                    totalSteps: inheritedData.memories.length,
+                    totalSteps: totalSteps,
                     currentIndex: safeIndex,
                     selectedColor: Colors.white,
                     unselectedColor: Colors.white.withValues(alpha: 0.4),

@@ -1,6 +1,45 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 
+const double kMemoryPreviousTapAreaFraction = 0.20;
+
+bool memoryTapNavigatesToPrevious({
+  required double horizontalPosition,
+  required double availableWidth,
+}) => horizontalPosition < availableWidth * kMemoryPreviousTapAreaFraction;
+
+class MemorySideTapGestureDetector extends StatelessWidget {
+  final Widget child;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  const MemorySideTapGestureDetector({
+    required this.child,
+    required this.onPrevious,
+    required this.onNext,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapUp: (details) {
+        final goToPrevious = memoryTapNavigatesToPrevious(
+          horizontalPosition: details.globalPosition.dx,
+          availableWidth: MediaQuery.sizeOf(context).width,
+        );
+        if (goToPrevious) {
+          onPrevious();
+        } else {
+          onNext();
+        }
+      },
+      child: child,
+    );
+  }
+}
+
 class ActivePointers with ChangeNotifier {
   final Set<int> _activePointers = {};
   bool get hasActivePointers => _activePointers.isNotEmpty;

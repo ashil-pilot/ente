@@ -20,7 +20,7 @@ void main() {
           ({required memoryID, required shuffleRevision, required files}) {
             expect(memoryID, "memory-1");
             calls.add(shuffleRevision);
-            return files.take(6).toList();
+            return files.take(7).toList();
           },
     );
 
@@ -29,7 +29,7 @@ void main() {
     expect(controller.backgroundIndex, 0);
     expect(controller.backgroundAssetID, "first");
     expect(controller.canCreate, isTrue);
-    expect(controller.selectedFiles, files.take(6));
+    expect(controller.selectedFiles, files.take(7));
   });
 
   test("shuffle advances the revision and replaces only the photos", () {
@@ -39,7 +39,7 @@ void main() {
       backgroundIDs: const ["first", "second"],
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
-              files.skip(shuffleRevision).take(6).toList(),
+              files.skip(shuffleRevision).take(7).toList(),
     );
     controller.nextBackground();
     var notifications = 0;
@@ -48,7 +48,7 @@ void main() {
     controller.shuffle();
 
     expect(controller.shuffleRevision, 1);
-    expect(controller.selectedFiles, files.skip(1).take(6));
+    expect(controller.selectedFiles, files.skip(1).take(7));
     expect(controller.backgroundAssetID, "second");
     expect(notifications, 1);
   });
@@ -116,6 +116,34 @@ void main() {
     );
 
     expect(controller.selectedFiles, hasLength(5));
+    expect(controller.canCreate, isFalse);
+  });
+
+  test("can create with either six or seven selected photos", () {
+    for (final photoCount in [6, 7]) {
+      final controller = MemoryCollageController(
+        memoryID: "memory-1",
+        files: files,
+        selector:
+            ({required memoryID, required shuffleRevision, required files}) =>
+                files.take(photoCount).toList(),
+      );
+
+      expect(controller.selectedFiles, hasLength(photoCount));
+      expect(controller.canCreate, isTrue);
+    }
+  });
+
+  test("cannot create with more than seven selected photos", () {
+    final controller = MemoryCollageController(
+      memoryID: "memory-1",
+      files: files,
+      selector:
+          ({required memoryID, required shuffleRevision, required files}) =>
+              files.toList(),
+    );
+
+    expect(controller.selectedFiles, hasLength(8));
     expect(controller.canCreate, isFalse);
   });
 
