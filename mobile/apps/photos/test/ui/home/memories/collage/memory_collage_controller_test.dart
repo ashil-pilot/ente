@@ -40,9 +40,9 @@ void main() {
 
     expect(calls, [0]);
     expect(controller.shuffleRevision, 0);
-    expect(controller.templateID, "scrapbook-maximal");
-    expect(controller.backgroundIndex, 1);
-    expect(controller.backgroundAssetID, "paper-washi");
+    expect(controller.templateID, "scrapbook-calm");
+    expect(controller.backgroundIndex, 0);
+    expect(controller.backgroundAssetID, "paper-blush-stripe");
     expect(controller.canCreate, isTrue);
     expect(controller.selectedFiles, files.take(7));
   });
@@ -52,15 +52,12 @@ void main() {
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
-      templateID: "scrapbook-calm",
+      templateID: "scrapbook-maximal",
     );
 
-    expect(controller.templateID, "scrapbook-calm");
-    expect(controller.backgroundIDs, [
-      "paper-blush-stripe",
-      "paper-sage-stripe",
-    ]);
-    expect(controller.backgroundAssetID, "paper-blush-stripe");
+    expect(controller.templateID, "scrapbook-maximal");
+    expect(controller.backgroundIDs, ["paper-cream-fiber", "paper-washi"]);
+    expect(controller.backgroundAssetID, "paper-washi");
   });
 
   test("shuffle advances the revision and replaces only the photos", () {
@@ -68,6 +65,7 @@ void main() {
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
+      templateID: "scrapbook-calm",
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
               files.skip(shuffleRevision).take(7).toList(),
@@ -91,6 +89,7 @@ void main() {
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
+      templateID: "scrapbook-maximal",
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
               files.take(7).toList(),
@@ -124,6 +123,7 @@ void main() {
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
+      templateID: "scrapbook-maximal",
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
               files.take(7).toList(),
@@ -253,7 +253,7 @@ MemoryCollageManifest _threeTemplateManifest(Map<String, dynamic> source) {
   final sourceTemplate = (json["templates"]! as List<dynamic>)
       .cast<Map<String, dynamic>>()
       .singleWhere((template) => template["id"] == "scrapbook-maximal");
-  json["defaultTemplateId"] = "scrapbook-maximal";
+  json["defaultTemplateId"] = "scrapbook-calm";
   json["templates"] = [
     _template(
       sourceTemplate,

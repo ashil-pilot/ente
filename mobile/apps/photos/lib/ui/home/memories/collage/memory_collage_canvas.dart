@@ -56,7 +56,9 @@ Set<String> memoryCollageRequiredAssetIDs(
   return {
     backgroundAssetID,
     for (final layer in template.layers)
-      if (layer.layerID != template.background.layerID) layer.assetID,
+      if (layer.layerID != template.background.layerID &&
+          layer.appliesToBackground(backgroundAssetID))
+        layer.assetID,
   };
 }
 
@@ -119,6 +121,7 @@ class MemoryCollageCanvasView extends StatelessWidget {
     final entries = <_MemoryCollageStackEntry>[];
     var sourceOrder = 0;
     for (final layer in template.layers) {
+      if (!layer.appliesToBackground(backgroundAssetID)) continue;
       entries.add(
         _MemoryCollageStackEntry(
           z: layer.z,
@@ -138,25 +141,44 @@ class MemoryCollageCanvasView extends StatelessWidget {
       );
     }
     for (final slot in template.photoSlots) {
-      if (slot is! MemoryCollageRectPhotoSlot) continue;
-      entries.add(
-        _MemoryCollageStackEntry(
-          z: slot.z,
-          sourceOrder: sourceOrder++,
-          children: [
-            for (final shadow in slot.shadows.reversed)
-              _buildRectPhotoShadow(slot, shadow),
-            _buildRectPhoto(context, slot),
-          ],
-        ),
-      );
+      switch (slot) {
+        case MemoryCollageAssetWindowPhotoSlot():
+          break;
+        case MemoryCollageRectPhotoSlot():
+          entries.add(
+            _MemoryCollageStackEntry(
+              z: slot.z,
+              sourceOrder: sourceOrder++,
+              children: [
+                for (final shadow in slot.shadows.reversed)
+                  _buildRectPhotoShadow(slot, shadow),
+                _buildRectPhoto(context, slot),
+              ],
+            ),
+          );
+        case MemoryCollageMattedRectPhotoSlot():
+          entries.add(
+            _MemoryCollageStackEntry(
+              z: slot.z,
+              sourceOrder: sourceOrder++,
+              children: [
+                _buildMattedRectPhoto(
+                  context,
+                  slot,
+                  template.matStyle!,
+                  isDarkBackground,
+                ),
+              ],
+            ),
+          );
+      }
     }
     for (final rule in template.rules) {
       entries.add(
         _MemoryCollageStackEntry(
           z: rule.z,
           sourceOrder: sourceOrder++,
-          children: [_buildRule(rule, isDarkBackground)],
+          children: [_buildRule(rule, isDarkBackground, backgroundAssetID)],
         ),
       );
     }
@@ -256,12 +278,20 @@ class MemoryCollageCanvasView extends StatelessWidget {
     final titlePlacement = template.titleStyle.placement;
     if (titlePlacement is MemoryCollageTitleAnchor &&
         titlePlacement.layerID == layer.layerID) {
+      final safetyMargin = asset.safetyMarginPx;
+      final horizontalTitlePadding = safetyMargin == null
+          ? 10.0
+          : safetyMargin / asset.width * width;
       layerChildren.add(
         Positioned.fill(
           child: _MemoryCollageTitle(
             title: title,
             style: template.titleStyle,
             useDarkColors: isDarkBackground,
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalTitlePadding,
+              vertical: 4,
+            ),
           ),
         ),
       );
@@ -363,6 +393,75 @@ class MemoryCollageCanvasView extends StatelessWidget {
     );
   }
 
+  Widget _buildMattedRectPhoto(
+    BuildContext context,
+    MemoryCollageMattedRectPhotoSlot slot,
+    MemoryCollageMatStyle style,
+    bool isDarkBackground,
+  ) {
+    final matRect = slot.matRect;
+    final photoRect = slot.photoRect;
+    final radius = BorderRadius.circular(
+      (slot.radius ?? 0) / memoryCollageExportPixelRatio,
+    );
+    final fill = isDarkBackground ? style.fillOnDark ?? style.fill : style.fill;
+
+    return Positioned(
+      left: matRect.x / memoryCollageExportPixelRatio,
+      top: matRect.y / memoryCollageExportPixelRatio,
+      width: matRect.width / memoryCollageExportPixelRatio,
+      height: matRect.height / memoryCollageExportPixelRatio,
+      child: Transform.rotate(
+        angle: slot.rotation * math.pi / 180,
+        alignment: Alignment.center,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                key: ValueKey("memory-collage-mat-${slot.slot}"),
+                decoration: BoxDecoration(
+                  color: parseMemoryCollageColor(fill),
+                  boxShadow: style.shadows.isEmpty
+                      ? null
+                      : [
+                          for (final shadow in style.shadows)
+                            BoxShadow(
+                              color: parseMemoryCollageColor(shadow.color),
+                              offset: Offset(
+                                shadow.dx / memoryCollageExportPixelRatio,
+                                shadow.dy / memoryCollageExportPixelRatio,
+                              ),
+                              blurRadius:
+                                  shadow.blur / memoryCollageExportPixelRatio,
+                            ),
+                        ],
+                  border: Border.all(
+                    color: parseMemoryCollageColor(style.border.color),
+                    width: style.border.width / memoryCollageExportPixelRatio,
+                    strokeAlign: BorderSide.strokeAlignInside,
+                  ),
+                  borderRadius: radius,
+                ),
+              ),
+            ),
+            Positioned(
+              left: (photoRect.x - matRect.x) / memoryCollageExportPixelRatio,
+              top: (photoRect.y - matRect.y) / memoryCollageExportPixelRatio,
+              width: photoRect.width / memoryCollageExportPixelRatio,
+              height: photoRect.height / memoryCollageExportPixelRatio,
+              child: ClipRRect(
+                key: ValueKey("memory-collage-matted-photo-${slot.slot}"),
+                borderRadius: radius,
+                child: photoBuilder(context, files[slot.slot], slot.slot),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRectPhotoShadow(
     MemoryCollageRectPhotoSlot slot,
     MemoryCollageShadow shadow,
@@ -410,14 +509,20 @@ class MemoryCollageCanvasView extends StatelessWidget {
         title: title,
         style: style,
         useDarkColors: isDarkBackground,
+        padding: EdgeInsets.zero,
       ),
     );
   }
 
-  Widget _buildRule(MemoryCollageRule rule, bool isDarkBackground) {
-    final colorValue = isDarkBackground
-        ? rule.colorOnDark ?? rule.color
-        : rule.color;
+  Widget _buildRule(
+    MemoryCollageRule rule,
+    bool isDarkBackground,
+    String backgroundAssetID,
+  ) {
+    final colorValue = rule.colorFor(
+      backgroundAssetID,
+      isDark: isDarkBackground,
+    );
     return _positionedRect(
       rect: rule.rect,
       rotation: 0,
@@ -460,35 +565,46 @@ class _MemoryCollageTitle extends StatelessWidget {
   final String title;
   final MemoryCollageTitleStyle style;
   final bool useDarkColors;
+  final EdgeInsets padding;
 
   const _MemoryCollageTitle({
     required this.title,
     required this.style,
     required this.useDarkColors,
+    required this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    final shadow = style.shadow;
-    final padding = style.placement is MemoryCollageTitleAnchor
-        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 4)
-        : EdgeInsets.zero;
+    final displayTitle = title.replaceAll(
+      RegExp(r"[\r\n\u000B\u000C\u0085\u2028\u2029]+"),
+      " ",
+    );
+    final locale = Localizations.maybeLocaleOf(context);
+    final textDirection = Directionality.of(context);
+    final textHeightBehavior = DefaultTextHeightBehavior.maybeOf(context);
     return Padding(
       padding: padding,
       child: LayoutBuilder(
+        key: const ValueKey("memory-collage-title-bounds"),
         builder: (context, constraints) {
-          final titleLayout = _titleLayout(context, constraints);
+          final titleLayout = _titleLayout(context, constraints, displayTitle);
           return Align(
             alignment: _titleAlignment(style.textAlign, style.verticalAlign),
             child: SizedBox(
               width: constraints.maxWidth,
               child: Text(
-                title,
+                displayTitle,
                 maxLines: titleLayout.maxLines,
-                overflow: TextOverflow.ellipsis,
+                overflow: TextOverflow.clip,
+                softWrap: true,
                 textAlign: _textAlignFor(style.textAlign),
+                textDirection: textDirection,
                 textScaler: TextScaler.noScaling,
-                style: _textStyle(titleLayout.fontSize, shadow),
+                locale: locale,
+                textHeightBehavior: textHeightBehavior,
+                textWidthBasis: TextWidthBasis.parent,
+                style: _textStyle(context, titleLayout.fontSize),
               ),
             ),
           );
@@ -500,48 +616,122 @@ class _MemoryCollageTitle extends StatelessWidget {
   ({double fontSize, int maxLines}) _titleLayout(
     BuildContext context,
     BoxConstraints constraints,
+    String displayTitle,
   ) {
     final maximum = style.fontSize / memoryCollageExportPixelRatio;
     final minimum = style.minFontSize / memoryCollageExportPixelRatio;
-    if (_fits(context, constraints, maximum, maxLines: 1)) {
+    if (_fits(context, constraints, displayTitle, maximum, maxLines: 1)) {
       return (fontSize: maximum, maxLines: 1);
     }
-    if (!_fits(context, constraints, minimum, maxLines: 1)) {
+    if (_fits(context, constraints, displayTitle, minimum, maxLines: 1)) {
+      return (
+        fontSize: _largestFittingFontSize(
+          context,
+          constraints,
+          displayTitle,
+          lower: minimum,
+          upper: maximum,
+          maxLines: 1,
+        ),
+        maxLines: 1,
+      );
+    }
+    if (_fits(
+      context,
+      constraints,
+      displayTitle,
+      minimum,
+      maxLines: style.maxLines,
+    )) {
       return (fontSize: minimum, maxLines: style.maxLines);
     }
 
-    var lower = minimum;
-    var upper = maximum;
-    for (var iteration = 0; iteration < 12; iteration++) {
+    var nonFittingSize = minimum;
+    for (var iteration = 0; iteration < 64; iteration++) {
+      final fittingSize = nonFittingSize / 2;
+      if (_fits(
+        context,
+        constraints,
+        displayTitle,
+        fittingSize,
+        maxLines: style.maxLines,
+      )) {
+        return (
+          fontSize: _largestFittingFontSize(
+            context,
+            constraints,
+            displayTitle,
+            lower: fittingSize,
+            upper: nonFittingSize,
+            maxLines: style.maxLines,
+          ),
+          maxLines: style.maxLines,
+        );
+      }
+      nonFittingSize = fittingSize;
+    }
+
+    // Hard line separators have already been normalized, so reaching this
+    // branch would require an unrealistically large title or degenerate
+    // constraints. Keep the result deterministic and, critically, bounded.
+    return (fontSize: nonFittingSize, maxLines: style.maxLines);
+  }
+
+  double _largestFittingFontSize(
+    BuildContext context,
+    BoxConstraints constraints,
+    String displayTitle, {
+    required double lower,
+    required double upper,
+    required int maxLines,
+  }) {
+    for (var iteration = 0; iteration < 16; iteration++) {
       final candidate = (lower + upper) / 2;
-      if (_fits(context, constraints, candidate, maxLines: 1)) {
+      if (_fits(
+        context,
+        constraints,
+        displayTitle,
+        candidate,
+        maxLines: maxLines,
+      )) {
         lower = candidate;
       } else {
         upper = candidate;
       }
     }
-    return (fontSize: lower, maxLines: 1);
+    return lower;
   }
 
   bool _fits(
     BuildContext context,
     BoxConstraints constraints,
+    String displayTitle,
     double fontSize, {
     required int maxLines,
   }) {
     final painter = TextPainter(
-      text: TextSpan(text: title, style: _textStyle(fontSize, style.shadow)),
+      text: TextSpan(text: displayTitle, style: _textStyle(context, fontSize)),
       maxLines: maxLines,
       textAlign: _textAlignFor(style.textAlign),
       textDirection: Directionality.of(context),
       textScaler: TextScaler.noScaling,
+      locale: Localizations.maybeLocaleOf(context),
+      textHeightBehavior: DefaultTextHeightBehavior.maybeOf(context),
+      textWidthBasis: TextWidthBasis.parent,
     )..layout(maxWidth: constraints.maxWidth);
-    return !painter.didExceedMaxLines &&
+    final fits =
+        !painter.didExceedMaxLines &&
         painter.height <= constraints.maxHeight + 0.001;
+    painter.dispose();
+    return fits;
   }
 
-  TextStyle _textStyle(double fontSize, MemoryCollageShadow shadow) {
-    return TextStyle(
+  TextStyle _textStyle(BuildContext context, double fontSize) {
+    final preferredFontSize = style.fontSize / memoryCollageExportPixelRatio;
+    final scale = fontSize / preferredFontSize;
+    final shadow = style.shadow;
+    var textStyle = TextStyle(
+      inherit: false,
       color: parseMemoryCollageColor(
         useDarkColors ? style.colorOnDark ?? style.color : style.color,
       ),
@@ -549,19 +739,24 @@ class _MemoryCollageTitle extends StatelessWidget {
       fontSize: fontSize,
       fontWeight: _fontWeightFor(style.fontWeight),
       fontStyle: _fontStyleFor(style.fontStyle),
-      letterSpacing: style.letterSpacing / memoryCollageExportPixelRatio,
+      letterSpacing:
+          style.letterSpacing / memoryCollageExportPixelRatio * scale,
       height: style.lineHeight,
       shadows: [
         Shadow(
           offset: Offset(
-            shadow.dx / memoryCollageExportPixelRatio,
-            shadow.dy / memoryCollageExportPixelRatio,
+            shadow.dx / memoryCollageExportPixelRatio * scale,
+            shadow.dy / memoryCollageExportPixelRatio * scale,
           ),
-          blurRadius: shadow.blur / memoryCollageExportPixelRatio,
+          blurRadius: shadow.blur / memoryCollageExportPixelRatio * scale,
           color: parseMemoryCollageColor(shadow.color),
         ),
       ],
     );
+    if (MediaQuery.boldTextOf(context)) {
+      textStyle = textStyle.merge(const TextStyle(fontWeight: FontWeight.bold));
+    }
+    return textStyle;
   }
 }
 
@@ -654,15 +849,20 @@ class _BlendAssetPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final source = image;
     if (source == null) return;
+    final bounds = Offset.zero & size;
+    canvas.saveLayer(
+      bounds,
+      Paint()
+        ..blendMode = blendMode
+        ..color = Color.fromRGBO(255, 255, 255, opacity.clamp(0, 1)),
+    );
     canvas.drawImageRect(
       source,
       Rect.fromLTWH(0, 0, source.width.toDouble(), source.height.toDouble()),
-      Offset.zero & size,
-      Paint()
-        ..blendMode = blendMode
-        ..color = Color.fromRGBO(255, 255, 255, opacity.clamp(0, 1))
-        ..filterQuality = FilterQuality.high,
+      bounds,
+      Paint()..filterQuality = FilterQuality.high,
     );
+    canvas.restore();
   }
 
   @override

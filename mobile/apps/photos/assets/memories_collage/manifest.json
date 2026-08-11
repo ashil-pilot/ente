@@ -94,11 +94,11 @@
       ]
     },
     {
-      "id": "banner",
-      "width": 546,
+      "id": "banner-wide",
+      "width": 900,
       "height": 150,
       "safetyMarginPx": 18,
-      "note": "no text baked; title is typeset by the app"
+      "note": "wider rust ribbon with no baked text; title is typeset by the app in its asymmetric safe rect"
     },
     {
       "id": "tape-mustard",
@@ -210,29 +210,6 @@
       "note": "even-border cream print frame with a baked alpha seam"
     },
     {
-      "id": "paper-notebook-blush",
-      "width": 1080,
-      "height": 1920,
-      "opaque": true,
-      "role": "background",
-      "note": "cream fiber sheet with a blush notebook spine"
-    },
-    {
-      "id": "paper-notebook-sage",
-      "width": 1080,
-      "height": 1920,
-      "opaque": true,
-      "role": "background",
-      "note": "cream fiber sheet with a sage notebook spine"
-    },
-    {
-      "id": "editorial-bone",
-      "width": 1080,
-      "height": 1920,
-      "opaque": true,
-      "role": "background"
-    },
-    {
       "id": "editorial-sand",
       "width": 1080,
       "height": 1920,
@@ -255,7 +232,7 @@
       "role": "background"
     }
   ],
-  "defaultTemplateId": "scrapbook-maximal",
+  "defaultTemplateId": "scrapbook-calm",
   "templates": [
     {
       "id": "scrapbook-maximal",
@@ -460,10 +437,10 @@
         },
         {
           "layerId": "banner",
-          "asset": "banner",
-          "x": 264,
-          "y": 198,
-          "width": 546,
+          "asset": "banner-wide",
+          "x": 90,
+          "y": 180,
+          "width": 900,
           "height": 150,
           "z": 16,
           "rotation": -2.5,
@@ -481,7 +458,7 @@
           "layerId": "tapeA",
           "asset": "tape-mustard",
           "x": 54,
-          "y": 162,
+          "y": 120,
           "width": 336,
           "height": 72,
           "z": 17,
@@ -537,8 +514,8 @@
         {
           "layerId": "stamp",
           "asset": "stamp-postmark",
-          "x": 678,
-          "y": 150,
+          "x": 786,
+          "y": 114,
           "width": 240,
           "height": 270,
           "z": 17,
@@ -634,11 +611,16 @@
           "windowIndex": 3
         }
       ],
-      "appRendered": "banner title text is typeset by the app over the banner",
+      "appRendered": "banner title text is typeset by the app in the explicit safe rect over banner-wide",
       "titleStyle": {
         "placement": {
-          "kind": "layer",
-          "layerId": "banner"
+          "kind": "rect",
+          "x": 144,
+          "y": 198,
+          "width": 618,
+          "height": 114,
+          "z": 20,
+          "rotation": -2.5
         },
         "units": "1080x1920 canvas pixels",
         "fontFamily": "Lora",
@@ -670,18 +652,18 @@
       "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
-        "defaultAssetId": "paper-notebook-blush",
+        "defaultAssetId": "paper-cream-fiber",
         "assetIds": [
-          "paper-notebook-blush",
-          "paper-notebook-sage",
+          "paper-washi",
           "paper-cream-fiber",
-          "paper-blush-stripe"
+          "paper-blush-stripe",
+          "paper-sage-stripe"
         ]
       },
       "layers": [
         {
           "layerId": "bg",
-          "asset": "paper-notebook-blush",
+          "asset": "paper-cream-fiber",
           "x": 0,
           "y": 0,
           "width": 1080,
@@ -953,18 +935,18 @@
           "width": 672,
           "height": 180,
           "z": 20,
-          "rotation": -2
+          "rotation": -1.5
         },
         "units": "1080x1920 canvas pixels",
         "fontFamily": "Lora",
-        "fontAsset": "fonts/Lora-Italic.ttf",
+        "fontAsset": "fonts/Lora-SemiBold.ttf",
         "fontWeight": 600,
-        "fontStyle": "italic",
-        "fontSize": 102,
-        "minFontSize": 66,
-        "lineHeight": 1.08,
+        "fontStyle": "normal",
+        "fontSize": 96,
+        "minFontSize": 60,
+        "lineHeight": 1.06,
         "maxLines": 2,
-        "letterSpacing": 0,
+        "letterSpacing": -0.5,
         "color": "#6f5642",
         "textAlign": "left",
         "verticalAlign": "top",
@@ -985,9 +967,9 @@
       "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
-        "defaultAssetId": "editorial-bone",
+        "defaultAssetId": "paper-cream-fiber",
         "assetIds": [
-          "editorial-bone",
+          "paper-cream-fiber",
           "editorial-sand",
           "editorial-sage",
           "editorial-charcoal"
@@ -996,23 +978,62 @@
       "layers": [
         {
           "layerId": "bg",
-          "asset": "editorial-bone",
+          "asset": "paper-cream-fiber",
           "x": 0,
           "y": 0,
           "width": 1080,
           "height": 1920,
           "z": 0,
           "rotation": 0
+        },
+        {
+          "layerId": "grain",
+          "asset": "grain-overlay",
+          "x": 0,
+          "y": 0,
+          "width": 1080,
+          "height": 1920,
+          "z": 38,
+          "rotation": 0,
+          "blendMode": "overlay",
+          "opacity": 0.12,
+          "backgroundAssetIds": [
+            "editorial-sand",
+            "editorial-sage",
+            "editorial-charcoal"
+          ]
         }
       ],
+      "matStyle": {
+        "fill": "#faf6ec",
+        "fillOnDark": "#faf6ec",
+        "border": {
+          "width": 3,
+          "color": "rgba(90,75,55,0.20)"
+        },
+        "shadows": [
+          {
+            "kind": "dropShadow",
+            "dx": 0,
+            "dy": 3,
+            "blur": 9,
+            "color": "rgba(90,70,45,0.12)"
+          }
+        ],
+        "photoInset": 15
+      },
       "rules": [
         {
           "x": 78,
           "y": 288,
           "width": 924,
           "height": 3,
-          "z": 1,
-          "color": "#d9d2c2",
+          "z": 10,
+          "color": "#cfc5ae",
+          "colorsByBackground": {
+            "editorial-sand": "#d8cfbc",
+            "editorial-sage": "#d8cfbc"
+          },
           "colorOnDark": "rgba(244,240,232,0.3)"
         },
         {
@@ -1020,84 +1041,144 @@
           "y": 1842,
           "width": 924,
           "height": 3,
-          "z": 1,
-          "color": "#d9d2c2",
+          "z": 10,
+          "color": "#cfc5ae",
+          "colorsByBackground": {
+            "editorial-sand": "#d8cfbc",
+            "editorial-sage": "#d8cfbc"
+          },
           "colorOnDark": "rgba(244,240,232,0.3)"
         }
       ],
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "rect",
-          "x": 78,
-          "y": 390,
-          "width": 924,
-          "height": 798,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 78,
+            "y": 390,
+            "width": 924,
+            "height": 798
+          },
+          "rect": {
+            "x": 93,
+            "y": 405,
+            "width": 894,
+            "height": 768
+          },
           "z": 4,
           "rotation": 0
         },
         {
           "slot": 1,
-          "kind": "rect",
-          "x": 78,
-          "y": 1212,
-          "width": 450,
-          "height": 318,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 78,
+            "y": 1212,
+            "width": 450,
+            "height": 318
+          },
+          "rect": {
+            "x": 93,
+            "y": 1227,
+            "width": 420,
+            "height": 288
+          },
           "z": 4,
           "rotation": 0
         },
         {
           "slot": 2,
-          "kind": "rect",
-          "x": 552,
-          "y": 1212,
-          "width": 450,
-          "height": 318,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 552,
+            "y": 1212,
+            "width": 450,
+            "height": 318
+          },
+          "rect": {
+            "x": 567,
+            "y": 1227,
+            "width": 420,
+            "height": 288
+          },
           "z": 4,
           "rotation": 0
         },
         {
           "slot": 3,
-          "kind": "rect",
-          "x": 78,
-          "y": 1554,
-          "width": 213,
-          "height": 252,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 78,
+            "y": 1554,
+            "width": 213,
+            "height": 252
+          },
+          "rect": {
+            "x": 93,
+            "y": 1569,
+            "width": 183,
+            "height": 222
+          },
           "z": 4,
           "rotation": 0
         },
         {
           "slot": 4,
-          "kind": "rect",
-          "x": 315,
-          "y": 1554,
-          "width": 213,
-          "height": 252,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 315,
+            "y": 1554,
+            "width": 213,
+            "height": 252
+          },
+          "rect": {
+            "x": 330,
+            "y": 1569,
+            "width": 183,
+            "height": 222
+          },
           "z": 4,
           "rotation": 0
         },
         {
           "slot": 5,
-          "kind": "rect",
-          "x": 552,
-          "y": 1554,
-          "width": 213,
-          "height": 252,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 552,
+            "y": 1554,
+            "width": 213,
+            "height": 252
+          },
+          "rect": {
+            "x": 567,
+            "y": 1569,
+            "width": 183,
+            "height": 222
+          },
           "z": 4,
           "rotation": 0
         },
         {
           "slot": 6,
-          "kind": "rect",
-          "x": 789,
-          "y": 1554,
-          "width": 213,
-          "height": 252,
+          "kind": "mattedRect",
+          "mat": {
+            "x": 789,
+            "y": 1554,
+            "width": 213,
+            "height": 252
+          },
+          "rect": {
+            "x": 804,
+            "y": 1569,
+            "width": 183,
+            "height": 222
+          },
           "z": 4,
           "rotation": 0
         }
       ],
-      "appRendered": "flat background, hairlines, title, and photo tiles are composed by the app",
+      "appRendered": "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -1105,19 +1186,19 @@
           "y": 84,
           "width": 924,
           "height": 186,
-          "z": 2,
+          "z": 20,
           "rotation": 0
         },
         "units": "1080x1920 canvas pixels",
-        "fontFamily": "Lora",
-        "fontAsset": "fonts/Lora-Italic.ttf",
+        "fontFamily": "Inter",
+        "fontAsset": "fonts/Inter-Medium.ttf",
         "fontWeight": 500,
-        "fontStyle": "italic",
-        "fontSize": 132,
-        "minFontSize": 84,
-        "lineHeight": 1.05,
+        "fontStyle": "normal",
+        "fontSize": 102,
+        "minFontSize": 66,
+        "lineHeight": 1.04,
         "maxLines": 2,
-        "letterSpacing": 1.5,
+        "letterSpacing": -1.5,
         "color": "#24201a",
         "colorOnDark": "#f2ede2",
         "textAlign": "left",

@@ -14,7 +14,7 @@
 <meta name="design_doc_mode" content="canvas" data-om-id="dd620bf5:7">
 <style>
 @font-face{font-family:Lora;src:url('../../fonts/Lora-SemiBold.ttf') format('truetype');font-style:normal;font-weight:600;font-display:block}
-@font-face{font-family:Lora;src:url('../../fonts/Lora-Italic.ttf') format('truetype');font-style:italic;font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url('../../fonts/Inter-Medium.ttf') format('truetype');font-style:normal;font-weight:500;font-display:block}
 body{margin:0;background:#cbc3b1;background-image:radial-gradient(1300px 800px at 38% -5%,#dbd3c2,rgba(219,211,194,0)),linear-gradient(180deg,#d2cab8,#c4bba8);color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#8a4a2a}a:hover{color:#68371d}
 </style>
@@ -28,12 +28,12 @@ a{color:#8a4a2a}a:hover{color:#68371d}
  },
  "photoCount": 7,
  "photoPolicy": "seven-photo-only: one seven-photo set fills every template (slot i shows photo i everywhere); memories with fewer than seven eligible photos do not get a collage",
- "defaultTemplateId": "scrapbook-maximal",
+ "defaultTemplateId": "scrapbook-calm",
  "rotationOrigin": "layer center",
  "overflow": "crop to canvas",
- "shadowSchema": "shadows: [{kind:dropShadow, dx, dy, blur, color}] in 1080x1920 px, cast from the layer silhouette after rotation; render under the layer art",
+ "shadowSchema": "shadows: [{kind:dropShadow, dx, dy, blur, color}] in 1080x1920 px, cast from the owning layer or mat silhouette after rotation; render under its art",
  "photoRendering": "draw each photo cover-fit into its window rect (asset px -> canvas via the layer transform), beneath the frame asset; apply the template photoFilter",
- "appRendered": "titles are app-typeset, never baked; all template backgrounds composite ordinary full-canvas PNG assets; minimal-editorial additionally app-draws its hairline rules and direct photo tiles",
+ "appRendered": "titles are app-typeset, never baked; all template backgrounds composite ordinary full-canvas PNG assets; minimal-editorial additionally app-draws its shadowed photo mats and hairline rules, and composites the reused grain-overlay only on its flat editorial backgrounds",
  "assets": [
   {
    "id": "paper-washi",
@@ -123,11 +123,11 @@ a{color:#8a4a2a}a:hover{color:#68371d}
    ]
   },
   {
-   "id": "banner",
-   "width": 546,
+   "id": "banner-wide",
+   "width": 900,
    "height": 150,
    "safetyMarginPx": 18,
-   "note": "no text baked; title is typeset by the app"
+   "note": "wider rust ribbon with no baked text; title is typeset by the app in its asymmetric safe rect"
   },
   {
    "id": "tape-mustard",
@@ -237,31 +237,6 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     }
    ],
    "note": "even-border cream print frame for the calm hero; thin baked alpha seam shadow at the window edge"
-  },
-  {
-   "id": "paper-notebook-blush",
-   "width": 1080,
-   "height": 1920,
-   "opaque": true,
-   "role": "background",
-   "note": "cream fiber sheet with baked blush notebook spine at the left edge"
-  },
-  {
-   "id": "paper-notebook-sage",
-   "width": 1080,
-   "height": 1920,
-   "opaque": true,
-   "role": "background",
-   "note": "cream fiber sheet with baked sage notebook spine at the left edge"
-  },
-  {
-   "id": "editorial-bone",
-   "width": 1080,
-   "height": 1920,
-   "opaque": true,
-   "role": "background",
-   "source": "generatedColor",
-   "color": "#f4f0e8"
   },
   {
    "id": "editorial-sand",
@@ -495,10 +470,10 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     },
     {
      "layerId": "banner",
-     "asset": "banner",
-     "x": 264,
-     "y": 198,
-     "width": 546,
+     "asset": "banner-wide",
+     "x": 90,
+     "y": 180,
+     "width": 900,
      "height": 150,
      "z": 16,
      "rotation": -2.5,
@@ -516,7 +491,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "layerId": "tapeA",
      "asset": "tape-mustard",
      "x": 54,
-     "y": 162,
+     "y": 120,
      "width": 336,
      "height": 72,
      "z": 17,
@@ -572,8 +547,8 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     {
      "layerId": "stamp",
      "asset": "stamp-postmark",
-     "x": 678,
-     "y": 150,
+     "x": 786,
+     "y": 114,
      "width": 240,
      "height": 270,
      "z": 17,
@@ -662,9 +637,15 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "windowIndex": 3
     }
    ],
-   "appRendered": "banner title text is typeset by the app over the banner",
+   "appRendered": "banner title text is typeset by the app in the explicit safe rect over banner-wide",
    "titleStyle": {
-    "layerId": "banner",
+    "box": {
+     "x": 144,
+     "y": 198,
+     "width": 618,
+     "height": 114
+    },
+    "rotation": -2.5,
     "units": "1080x1920 canvas pixels",
     "fontFamily": "Lora",
     "fontAsset": "fonts/Lora-SemiBold.ttf",
@@ -689,11 +670,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
   "scrapbook-calm": {
    "backgrounds": [
     {
-     "id": "paper-notebook-blush",
-     "kind": "asset"
-    },
-    {
-     "id": "paper-notebook-sage",
+     "id": "paper-washi",
      "kind": "asset"
     },
     {
@@ -703,14 +680,18 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     {
      "id": "paper-blush-stripe",
      "kind": "asset"
+    },
+    {
+     "id": "paper-sage-stripe",
+     "kind": "asset"
     }
    ],
-   "defaultBackgroundId": "paper-notebook-blush",
+   "defaultBackgroundId": "paper-cream-fiber",
    "photoFilter": "saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)",
    "layers": [
     {
      "layerId": "bg",
-     "asset": "paper-notebook-blush",
+     "asset": "paper-cream-fiber",
      "x": 0,
      "y": 0,
      "width": 1080,
@@ -976,27 +957,27 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     },
     "align": "left",
     "vAlign": "top",
-    "rotation": -2,
+    "rotation": -1.5,
     "fontFamily": "Lora, Georgia, serif",
+    "fontAsset": "fonts/Lora-SemiBold.ttf",
     "nonLatinFallback": "system serif (ship a Noto Serif family for Indic scripts)",
     "fontWeight": 600,
-    "fontStyle": "italic",
+    "fontStyle": "normal",
     "textTransform": "none",
-    "fontSize": 102,
-    "minFontSize": 66,
-    "letterSpacing": 0,
-    "lineHeight": 1.08,
+    "fontSize": 96,
+    "minFontSize": 60,
+    "letterSpacing": -0.5,
+    "lineHeight": 1.06,
     "maxLines": 2,
     "color": "#6f5642",
-    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; then ellipsis"
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
    }
   },
   "minimal-editorial": {
    "backgrounds": [
     {
-     "id": "editorial-bone",
+     "id": "paper-cream-fiber",
      "kind": "asset",
-     "color": "#f4f0e8",
      "dark": false
     },
     {
@@ -1018,16 +999,40 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "dark": true
     }
    ],
-   "defaultBackgroundId": "editorial-bone",
+   "defaultBackgroundId": "paper-cream-fiber",
    "photoFilter": "none",
-   "layers": [],
+   "drawOrder": "background asset -> mats + photos in slot order -> rules -> title -> grain layer on editorial-sand/editorial-sage/editorial-charcoal only",
+   "matStyle": {
+    "fill": "#faf6ec",
+    "fillOnDark": "#faf6ec",
+    "border": {
+     "width": 3,
+     "color": "rgba(90,75,55,0.20)"
+    },
+    "shadows": [
+     {
+      "kind": "dropShadow",
+      "dx": 0,
+      "dy": 3,
+      "blur": 9,
+      "color": "rgba(90,70,45,0.12)"
+     }
+    ],
+    "photoInset": 15,
+    "note": "app-drawn warm mat with a subtle drop shadow; photo rect = mat rect inset 15px; border drawn inside the mat rect"
+   },
+   "accents": [],
    "rules": [
     {
      "x": 78,
      "y": 288,
      "width": 924,
      "height": 3,
-     "color": "#d9d2c2",
+     "color": "#cfc5ae",
+     "colorsByBackground": {
+      "editorial-sand": "#d8cfbc",
+      "editorial-sage": "#d8cfbc"
+     },
      "colorOnDark": "rgba(244,240,232,0.3)"
     },
     {
@@ -1035,111 +1040,168 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "y": 1842,
      "width": 924,
      "height": 3,
-     "color": "#d9d2c2",
+     "color": "#cfc5ae",
+     "colorsByBackground": {
+      "editorial-sand": "#d8cfbc",
+      "editorial-sage": "#d8cfbc"
+     },
      "colorOnDark": "rgba(244,240,232,0.3)"
+    }
+   ],
+   "layers": [
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.12,
+     "backgroundAssetIds": [
+      "editorial-sand",
+      "editorial-sage",
+      "editorial-charcoal"
+     ]
     }
    ],
    "photoSlots": [
     {
      "slot": 0,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 78,
       "y": 390,
       "width": 924,
       "height": 798
      },
+     "rect": {
+      "x": 93,
+      "y": 405,
+      "width": 894,
+      "height": 768
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     },
     {
      "slot": 1,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 78,
       "y": 1212,
       "width": 450,
       "height": 318
      },
+     "rect": {
+      "x": 93,
+      "y": 1227,
+      "width": 420,
+      "height": 288
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     },
     {
      "slot": 2,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 552,
       "y": 1212,
       "width": 450,
       "height": 318
      },
+     "rect": {
+      "x": 567,
+      "y": 1227,
+      "width": 420,
+      "height": 288
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     },
     {
      "slot": 3,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 78,
       "y": 1554,
       "width": 213,
       "height": 252
      },
+     "rect": {
+      "x": 93,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     },
     {
      "slot": 4,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 315,
       "y": 1554,
       "width": 213,
       "height": 252
      },
+     "rect": {
+      "x": 330,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     },
     {
      "slot": 5,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 552,
       "y": 1554,
       "width": 213,
       "height": 252
      },
+     "rect": {
+      "x": 567,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     },
     {
      "slot": 6,
-     "kind": "canvasRect",
-     "rect": {
+     "kind": "mattedRect",
+     "mat": {
       "x": 789,
       "y": 1554,
       "width": 213,
       "height": 252
      },
+     "rect": {
+      "x": 804,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
      "fit": "cover",
      "cornerRadius": 0,
-     "border": "none",
      "rotation": 0
     }
    ],
-   "overlay": "none",
    "titleStyle": {
     "box": {
      "x": 78,
@@ -1150,19 +1212,20 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     "align": "left",
     "vAlign": "top",
     "rotation": 0,
-    "fontFamily": "Lora, Georgia, serif",
-    "nonLatinFallback": "system serif (ship a Noto Serif family for Indic scripts)",
+    "fontFamily": "Inter, Arial, sans-serif",
+    "fontAsset": "fonts/Inter-Medium.ttf",
+    "nonLatinFallback": "platform font fallback",
     "fontWeight": 500,
-    "fontStyle": "italic",
+    "fontStyle": "normal",
     "textTransform": "none",
-    "fontSize": 132,
-    "minFontSize": 84,
-    "letterSpacing": 1.5,
-    "lineHeight": 1.05,
+    "fontSize": 102,
+    "minFontSize": 66,
+    "letterSpacing": -1.5,
+    "lineHeight": 1.04,
     "maxLines": 2,
     "color": "#24201a",
     "colorOnDark": "#f2ede2",
-    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; then ellipsis"
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
    }
   }
  }
@@ -1178,7 +1241,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
   </defs>
 </svg>
 <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:22">
-  <div style="padding:22px 24px 4px;font-size:13px;color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif" data-om-id="dd620bf5:23">Asset export index — 20 assets. Load with ?exportAsset=&lt;id&gt; for an isolated render at intrinsic pixel size on a transparent page. Manifest: &lt;script id=&quot;asset-manifest&quot;&gt;.</div>
+  <div style="padding:22px 24px 4px;font-size:13px;color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif" data-om-id="dd620bf5:23">Asset export index — 21 raster roots plus 3 generated color assets. Load with ?exportAsset=&lt;id&gt; for an isolated render at intrinsic pixel size on a transparent page. Manifest: &lt;script id=&quot;asset-manifest&quot;&gt;.</div>
 </sc-if>
 <sc-if value="{{ axPaperWashi }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:24">
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start" data-om-id="dd620bf5:25">
@@ -1299,13 +1362,13 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     </div>
   </div>
 </sc-if>
-<sc-if value="{{ axBanner }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:100">
+<sc-if value="{{ axBannerWide }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:100">
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start" data-om-id="dd620bf5:101">
-    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:102"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px" data-om-id="dd620bf5:103">banner · 546×150</div></sc-if>
-    <div data-export-asset="banner" style="position:relative;width:546px;height:150px;overflow:hidden;isolation:isolate" data-om-id="dd620bf5:104">
-      <div style="position:absolute;left:0;top:0;width:182px;height:50px;transform:scale(3);transform-origin:0 0" data-om-id="dd620bf5:105">
-        <div style="position:absolute;left:6px;top:6px;width:170px;height:38px" data-om-id="dd620bf5:106">
-          <div style="position:relative;width:100%;height:100%;clip-path:polygon(0% 0%,100% 0%,94.5% 50%,100% 100%,0% 100%,5.5% 50%);display:flex;align-items:center;justify-content:center;background-image:radial-gradient(90px 30px at 22% 20%,rgba(240,190,150,0.3),rgba(240,190,150,0) 70%),radial-gradient(70px 26px at 80% 85%,rgba(70,25,10,0.3),rgba(70,25,10,0) 70%),linear-gradient(184deg,#b25330,#9c4423 45%,#a84e2c);filter:url(#rough1)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:220px;mix-blend-mode:multiply;opacity:0.35" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.45" data-om-id="dd620bf5:107">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:102"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px" data-om-id="dd620bf5:103">banner-wide · 900×150</div></sc-if>
+    <div data-export-asset="banner-wide" style="position:relative;width:900px;height:150px;overflow:hidden;isolation:isolate" data-om-id="dd620bf5:104">
+      <div style="position:absolute;left:0;top:0;width:300px;height:50px;transform:scale(3);transform-origin:0 0" data-om-id="dd620bf5:105">
+        <div style="position:absolute;left:6px;top:6px;width:288px;height:38px" data-om-id="dd620bf5:106">
+          <div style="position:relative;width:100%;height:100%;clip-path:polygon(0% 0%,100% 0%,96.7% 50%,100% 100%,0% 100%,3.3% 50%);display:flex;align-items:center;justify-content:center;background-image:radial-gradient(150px 40px at 22% 20%,rgba(240,190,150,0.3),rgba(240,190,150,0) 70%),radial-gradient(120px 34px at 80% 85%,rgba(70,25,10,0.3),rgba(70,25,10,0) 70%),linear-gradient(184deg,#b25330,#9c4423 45%,#a84e2c);filter:url(#rough1)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:220px;mix-blend-mode:multiply;opacity:0.35" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.45" data-om-id="dd620bf5:107">
             <div style="position:absolute;inset:4px 12px;border-top:1px dashed rgba(244,228,200,0.35);border-bottom:1px dashed rgba(244,228,200,0.35)" data-om-id="dd620bf5:108"></div>
 
           </div>
@@ -1476,29 +1539,6 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     </div>
   </div>
 </sc-if>
-<sc-if value="{{ axNotebookBlush }}" hint-placeholder-val="{{ false }}">
-  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
-    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">paper-notebook-blush · 1080×1920</div></sc-if>
-    <div data-export-asset="paper-notebook-blush" style="position:relative;width:1080px;height:1920px;overflow:hidden;isolation:isolate">
-      <div style="position:absolute;left:0;top:0;width:360px;height:640px;transform:scale(3);transform-origin:0 0">
-        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
-        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(255,240,232,0.25) 0px,rgba(255,240,232,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(150,76,60,0.3),rgba(255,244,238,0.1) 35%,rgba(255,244,238,0.1) 65%,rgba(150,76,60,0.3)),linear-gradient(180deg,rgba(198,124,108,0.42),rgba(207,143,126,0.36) 50%,rgba(188,116,100,0.42))"></div>
-      </div>
-    </div>
-  </div>
-</sc-if>
-<sc-if value="{{ axNotebookSage }}" hint-placeholder-val="{{ false }}">
-  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
-    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">paper-notebook-sage · 1080×1920</div></sc-if>
-    <div data-export-asset="paper-notebook-sage" style="position:relative;width:1080px;height:1920px;overflow:hidden;isolation:isolate">
-      <div style="position:absolute;left:0;top:0;width:360px;height:640px;transform:scale(3);transform-origin:0 0">
-        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
-        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(248,250,235,0.25) 0px,rgba(248,250,235,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(96,104,70,0.3),rgba(248,250,235,0.1) 35%,rgba(248,250,235,0.1) 65%,rgba(96,104,70,0.3)),linear-gradient(180deg,rgba(146,158,118,0.42),rgba(160,170,130,0.36) 50%,rgba(138,150,110,0.42))"></div>
-      </div>
-    </div>
-  </div>
-</sc-if>
-
 <sc-if value="{{ normalMode }}" hint-placeholder-val="{{ true }}" data-om-id="dd620bf5:183">
 <section style="padding:34px 40px 64px;display:flex;flex-direction:column;gap:24px" data-om-id="dd620bf5:184">
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;max-width:1180px" data-om-id="dd620bf5:185">
@@ -1551,7 +1591,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
           <div style="position:absolute;left:118px;top:86px;width:82px;height:82px;z-index:9;transform:rotate(12deg)" data-om-id="dd620bf5:228">
             <div style="position:relative;width:100%;height:100%;clip-path:polygon(50% 2%,61.8% 36.2%,98% 36.6%,68.9% 58.4%,79.8% 93%,50% 71.6%,20.2% 93%,31.1% 58.4%,2% 36.6%,38.2% 36.2%);background-image:radial-gradient(50px 44px at 32% 26%,rgba(255,230,170,0.42),rgba(255,230,170,0) 70%),radial-gradient(56px 50px at 74% 80%,rgba(120,80,20,0.36),rgba(120,80,20,0) 72%),linear-gradient(150deg,#cfa142,#b8862f 55%,#c99a3a);filter:url(#rough1) drop-shadow(1px 3px 5px rgba(90,55,15,0.35))" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:200px;mix-blend-mode:multiply;opacity:0.3" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.4" data-om-id="dd620bf5:229"></div>
           </div>
-          <div style="position:absolute;left:250px;top:52px;z-index:17;transform:rotate(5deg)" data-om-id="dd620bf5:230">
+          <div style="position:absolute;left:286px;top:40px;z-index:17;transform:rotate(5deg)" data-om-id="dd620bf5:230">
             <div style="position:relative;width:52px;height:62px;filter:drop-shadow(0 2px 4px rgba(90,60,30,0.3));background-image:radial-gradient(circle at 50% 0px,rgba(236,223,196,0) 2.4px,#ecdfc4 2.8px),radial-gradient(circle at 50% 100%,rgba(236,223,196,0) 2.4px,#e8dabc 2.8px),radial-gradient(circle at 0px 50%,rgba(236,223,196,0) 2.4px,#ecdfc4 2.8px),radial-gradient(circle at 100% 50%,rgba(236,223,196,0) 2.4px,#e8dabc 2.8px),linear-gradient(170deg,#eee2c8,#e6d6b4);background-size:8px 4px,8px 4px,4px 8px,4px 8px,calc(100% - 8px) calc(100% - 8px);background-position:0 0,0 100%,0 0,100% 0,4px 4px;background-repeat:repeat-x,repeat-x,repeat-y,repeat-y,no-repeat" data-om-id="dd620bf5:231">
               <div style="position:absolute;inset:5px;border:1px solid rgba(120,80,40,0.35);display:flex;flex-direction:column;justify-content:space-between;background-image:radial-gradient(9px 9px at 70% 24%,#d3a055 0px,#d3a055 4px,rgba(211,160,85,0) 5px),radial-gradient(56px 30px at 15% 102%,#8a8a62 0%,#8a8a62 58%,rgba(138,138,98,0) 62%),radial-gradient(64px 36px at 90% 106%,#767a56 0%,#767a56 56%,rgba(118,122,86,0) 60%),linear-gradient(180deg,#d9c9a0,#cbb586 66%,#bfa876)" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:100px;mix-blend-mode:overlay;opacity:0.4" data-om-id="dd620bf5:232">
 
@@ -1616,13 +1656,13 @@ a{color:#8a4a2a}a:hover{color:#68371d}
             </div>
           </div>
         </div>
-        <div style="position:absolute;left:94px;top:72px;width:170px;height:38px;z-index:16;transform:rotate(-2.5deg)" data-om-id="dd620bf5:266">
-          <div style="position:relative;width:100%;height:100%;clip-path:polygon(0% 0%,100% 0%,94.5% 50%,100% 100%,0% 100%,5.5% 50%);display:flex;align-items:center;justify-content:center;background-image:radial-gradient(90px 30px at 22% 20%,rgba(240,190,150,0.3),rgba(240,190,150,0) 70%),radial-gradient(70px 26px at 80% 85%,rgba(70,25,10,0.3),rgba(70,25,10,0) 70%),linear-gradient(184deg,#b25330,#9c4423 45%,#a84e2c);filter:url(#rough1) drop-shadow(0 3px 6px rgba(80,40,15,0.35))" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:220px;mix-blend-mode:multiply;opacity:0.35" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.45" data-om-id="dd620bf5:267">
+        <div style="position:absolute;left:36px;top:66px;width:288px;height:38px;z-index:16;transform:rotate(-2.5deg)" data-om-id="dd620bf5:266">
+          <div style="position:relative;width:100%;height:100%;clip-path:polygon(0% 0%,100% 0%,96.7% 50%,100% 100%,0% 100%,3.3% 50%);display:flex;align-items:center;justify-content:center;background-image:radial-gradient(150px 40px at 22% 20%,rgba(240,190,150,0.3),rgba(240,190,150,0) 70%),radial-gradient(120px 34px at 80% 85%,rgba(70,25,10,0.3),rgba(70,25,10,0) 70%),linear-gradient(184deg,#b25330,#9c4423 45%,#a84e2c);filter:url(#rough1) drop-shadow(0 3px 6px rgba(80,40,15,0.35))" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:220px;mix-blend-mode:multiply;opacity:0.35" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:110px;mix-blend-mode:overlay;opacity:0.45" data-om-id="dd620bf5:267">
             <div style="position:absolute;inset:4px 12px;border-top:1px dashed rgba(244,228,200,0.35);border-bottom:1px dashed rgba(244,228,200,0.35)" data-om-id="dd620bf5:268"></div>
-            <span style="font-family:Lora,serif;font-size:15px;letter-spacing:4px;color:#f4e7cf;font-weight:600;text-shadow:0 1px 1px rgba(90,40,15,0.5)" data-om-id="dd620bf5:269">DECEMBER</span>
           </div>
+          <span style="position:absolute;left:12px;top:0;width:206px;height:38px;display:flex;align-items:center;justify-content:center;font-family:Lora,serif;font-size:15px;letter-spacing:4px;color:#f4e7cf;font-weight:600;text-shadow:0 1px 1px rgba(90,40,15,0.5)" data-om-id="dd620bf5:269">DECEMBER</span>
         </div>
-        <div style="position:absolute;left:18px;top:54px;width:112px;height:24px;z-index:17;transform:rotate(-4deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(255,246,220,0.25) 0px,rgba(255,246,220,0.25) 1px,rgba(120,80,30,0) 1px,rgba(120,80,30,0) 6px),repeating-linear-gradient(87deg,rgba(120,75,25,0.1) 0px,rgba(120,75,25,0.1) 1px,rgba(120,75,25,0) 1px,rgba(120,75,25,0) 9px),linear-gradient(180deg,rgba(140,95,40,0.3),rgba(255,250,230,0.12) 30%,rgba(255,250,230,0.12) 70%,rgba(140,95,40,0.3)),linear-gradient(90deg,rgba(146,96,42,0.6) 0%,rgba(201,154,71,0.42) 8%,rgba(214,170,88,0.4) 50%,rgba(201,154,71,0.42) 92%,rgba(146,96,42,0.6) 100%);box-shadow:0 2px 4px rgba(90,60,25,0.22)" data-om-id="dd620bf5:270"></div>
+        <div style="position:absolute;left:18px;top:40px;width:112px;height:24px;z-index:17;transform:rotate(-4deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(255,246,220,0.25) 0px,rgba(255,246,220,0.25) 1px,rgba(120,80,30,0) 1px,rgba(120,80,30,0) 6px),repeating-linear-gradient(87deg,rgba(120,75,25,0.1) 0px,rgba(120,75,25,0.1) 1px,rgba(120,75,25,0) 1px,rgba(120,75,25,0) 9px),linear-gradient(180deg,rgba(140,95,40,0.3),rgba(255,250,230,0.12) 30%,rgba(255,250,230,0.12) 70%,rgba(140,95,40,0.3)),linear-gradient(90deg,rgba(146,96,42,0.6) 0%,rgba(201,154,71,0.42) 8%,rgba(214,170,88,0.4) 50%,rgba(201,154,71,0.42) 92%,rgba(146,96,42,0.6) 100%);box-shadow:0 2px 4px rgba(90,60,25,0.22)" data-om-id="dd620bf5:270"></div>
         <div style="position:absolute;left:44px;top:106px;width:76px;height:22px;z-index:15;transform:rotate(2deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(255,240,232,0.28) 0px,rgba(255,240,232,0.28) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 6px),linear-gradient(180deg,rgba(150,76,60,0.32),rgba(255,244,238,0.12) 30%,rgba(255,244,238,0.12) 70%,rgba(150,76,60,0.32)),linear-gradient(90deg,rgba(160,86,70,0.58) 0%,rgba(207,138,120,0.4) 9%,rgba(216,152,134,0.38) 50%,rgba(207,138,120,0.4) 91%,rgba(160,86,70,0.58) 100%);box-shadow:0 2px 4px rgba(110,60,45,0.22)" data-om-id="dd620bf5:271"></div>
         <div style="position:absolute;left:148px;top:288px;width:70px;height:21px;z-index:15;transform:rotate(-36deg);clip-path:polygon(2% 0%,98% 2%,100% 14%,97.5% 32%,100% 52%,97.6% 70%,100% 88%,98% 100%,2.4% 98%,0% 86%,2.2% 66%,0% 46%,2.4% 28%,0% 12%);background-image:repeating-linear-gradient(93deg,rgba(250,252,238,0.26) 0px,rgba(250,252,238,0.26) 1px,rgba(80,90,55,0) 1px,rgba(80,90,55,0) 6px),linear-gradient(180deg,rgba(96,104,70,0.32),rgba(248,250,235,0.12) 30%,rgba(248,250,235,0.12) 70%,rgba(96,104,70,0.32)),linear-gradient(90deg,rgba(104,112,76,0.55) 0%,rgba(152,160,122,0.4) 9%,rgba(163,171,132,0.38) 50%,rgba(152,160,122,0.4) 91%,rgba(104,112,76,0.55) 100%);box-shadow:0 2px 4px rgba(70,80,45,0.22)" data-om-id="dd620bf5:272"></div>
 
@@ -1640,8 +1680,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
       </div>
       <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25);isolation:isolate">
         <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
-        <div style="position:absolute;left:-6px;top:-8px;width:26px;height:664px;z-index:2;transform:rotate(0.6deg);background-image:repeating-linear-gradient(3deg,rgba(255,240,232,0.25) 0px,rgba(255,240,232,0.25) 1px,rgba(140,70,55,0) 1px,rgba(140,70,55,0) 7px),linear-gradient(90deg,rgba(150,76,60,0.3),rgba(255,244,238,0.1) 35%,rgba(255,244,238,0.1) 65%,rgba(150,76,60,0.3)),linear-gradient(180deg,rgba(198,124,108,0.42),rgba(207,143,126,0.36) 50%,rgba(188,116,100,0.42))"></div>
-        <div style="position:absolute;left:38px;top:22px;z-index:5;transform:rotate(-2deg);font-family:'Lora',Georgia,serif;font-style:italic;font-weight:600;font-size:34px;color:#6f5642">december</div>
+        <div style="position:absolute;left:38px;top:22px;z-index:5;transform:rotate(-1.5deg);font-family:'Lora',Georgia,serif;font-style:normal;font-weight:600;font-size:32px;line-height:1.06;letter-spacing:-0.17px;color:#6f5642">december</div>
 
         <div style="position:absolute;left:34px;top:88px;width:292px;z-index:6;transform:rotate(-0.8deg)">
           <div style="position:relative;background-image:radial-gradient(180px 90px at 80% 100%,rgba(150,110,60,0.12),rgba(150,110,60,0) 70%),linear-gradient(170deg,#f6efdf,#efe5cf);padding:7px;border:1px solid rgba(150,115,70,0.12);box-shadow:0 3px 7px rgba(90,60,30,0.2),0 10px 22px rgba(90,60,30,0.22)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.24;pointer-events:none">
@@ -1707,41 +1746,38 @@ a{color:#8a4a2a}a:hover{color:#68371d}
       </div>
     </div>
 
-    <div id="2c" data-screen-label="2c Minimal editorial" style="display:flex;flex-direction:column;gap:10px">
+    <div id="2c" data-screen-label="2c Minimal editorial · Paper ground" style="display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;align-items:baseline;gap:9px">
         <span style="background:#463828;color:#ece2cc;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;font-family:ui-monospace,'SF Mono',Menlo,monospace">2c</span>
         <span style="font-size:13px;font-weight:650">Minimal editorial</span>
-        <span style="font-size:11px;color:#6f6353">flat control</span>
+        <span style="font-size:11px;color:#6f6353">5b paper ground · subtle lift</span>
       </div>
-      <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;background:#f4f0e8;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25)">
-        <div style="position:absolute;left:26px;top:30px;font-family:'Lora',Georgia,serif;font-style:italic;font-weight:500;font-size:44px;letter-spacing:0.2px;color:#24201a">December</div>
-
-        <div style="position:absolute;left:26px;right:26px;top:96px;height:1px;background:#d9d2c2"></div>
-
-        <div style="position:absolute;left:26px;top:130px;width:308px;height:266px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center"></div>
+      <div style="position:relative;width:360px;height:640px;overflow:hidden;border-radius:14px;box-shadow:0 22px 48px rgba(60,45,25,0.38),0 4px 12px rgba(60,45,25,0.25)">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(220px 180px at 82% 12%,rgba(190,150,95,0.1),rgba(190,150,95,0) 70%),radial-gradient(180px 150px at 8% 88%,rgba(160,115,60,0.11),rgba(160,115,60,0) 70%),linear-gradient(170deg,#f2ead8,#ecdfc8 60%,#e7d9bf)" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22300%22%3E%3Cfilter%20id=%22f%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.007%200.18%22%20numOctaves=%222%22%20seed=%2214%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22300%22%20height=%22300%22%20filter=%22url(%23f)%22/%3E%3C/svg%3E');background-size:300px;mix-blend-mode:multiply;opacity:0.15" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:120px;mix-blend-mode:overlay;opacity:0.4"></div>
+        <div style="position:absolute;left:26px;top:28px;width:308px;height:62px;font-family:'Inter',Arial,sans-serif;font-style:normal;font-weight:500;font-size:34px;line-height:1.04;letter-spacing:-0.5px;color:#24201a">December</div>
+        <div style="position:absolute;left:26px;right:26px;top:96px;height:1px;background:#cfc5ae"></div>
+        <div style="position:absolute;left:26px;top:130px;width:308px;height:266px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg0 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:26px;top:404px;width:150px;height:106px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg1 }};background-size:cover;background-position:center"></div>
+        <div style="position:absolute;left:26px;top:404px;width:150px;height:106px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg1 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:184px;top:404px;width:150px;height:106px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center"></div>
+        <div style="position:absolute;left:184px;top:404px;width:150px;height:106px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg2 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:26px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg3 }};background-size:cover;background-position:center"></div>
+        <div style="position:absolute;left:26px;top:518px;width:71px;height:84px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg3 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:105px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg4 }};background-size:cover;background-position:center"></div>
+        <div style="position:absolute;left:105px;top:518px;width:71px;height:84px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg4 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:184px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg5 }};background-size:cover;background-position:center"></div>
+        <div style="position:absolute;left:184px;top:518px;width:71px;height:84px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg5 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:263px;top:518px;width:71px;height:84px;overflow:hidden;background:#e7e1d4">
-          <div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center"></div>
+        <div style="position:absolute;left:263px;top:518px;width:71px;height:84px;background:#faf6ec;border:1px solid rgba(90,75,55,0.20);box-shadow:0 1px 3px rgba(90,70,45,0.12)">
+          <div style="position:absolute;inset:5px;overflow:hidden;background:#e7e1d4"><div style="width:100%;height:100%;background-image: {{ photoBg6 }};background-size:cover;background-position:center"></div></div>
         </div>
-        <div style="position:absolute;left:26px;right:26px;top:614px;height:1px;background:#d9d2c2"></div>
-
-
+        <div style="position:absolute;left:26px;right:26px;top:614px;height:1px;background:#cfc5ae"></div>
       </div>
     </div>
 
@@ -1817,7 +1853,7 @@ class Component extends DCLogic {
       photoFilter: (this.props.filmTint ?? true) ? 'saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)' : 'none',
       showEphemera: this.props.showEphemera ?? true,
       normalMode: !isIndex && !singleAsset, isIndex: isIndex,
-      axPaperWashi: ax('paper-washi'), axPaperCream: ax('paper-cream-fiber'), axPaperBlush: ax('paper-blush-stripe'), axPaperSage: ax('paper-sage-stripe'), axPaperTerracotta: ax('paper-terracotta-mottle'), axPaperTorn: ax('paper-torn'), axPolaroid: ax('polaroid-frame'), axFilmStripFour: ax('film-strip-four'), axFilmStripH: ax('film-strip-four-horizontal'), axPrintHero: ax('print-frame-hero'), axNotebookBlush: ax('paper-notebook-blush'), axNotebookSage: ax('paper-notebook-sage'), axBanner: ax('banner'), axTapeMustard: ax('tape-mustard'), axTapeBlush: ax('tape-blush'), axTapeSage: ax('tape-sage'), axStamp: ax('stamp-postmark'), axStar: ax('star'), axFern: ax('fern'), axCoffeeRing: ax('coffee-ring'), axSunStreak: ax('sun-streak'), axVignette: ax('vignette'), axGrain: ax('grain-overlay')
+      axPaperWashi: ax('paper-washi'), axPaperCream: ax('paper-cream-fiber'), axPaperBlush: ax('paper-blush-stripe'), axPaperSage: ax('paper-sage-stripe'), axPaperTerracotta: ax('paper-terracotta-mottle'), axPaperTorn: ax('paper-torn'), axPolaroid: ax('polaroid-frame'), axFilmStripFour: ax('film-strip-four'), axFilmStripH: ax('film-strip-four-horizontal'), axPrintHero: ax('print-frame-hero'), axBannerWide: ax('banner-wide'), axTapeMustard: ax('tape-mustard'), axTapeBlush: ax('tape-blush'), axTapeSage: ax('tape-sage'), axStamp: ax('stamp-postmark'), axStar: ax('star'), axFern: ax('fern'), axCoffeeRing: ax('coffee-ring'), axSunStreak: ax('sun-streak'), axVignette: ax('vignette'), axGrain: ax('grain-overlay')
     };
   }
 }

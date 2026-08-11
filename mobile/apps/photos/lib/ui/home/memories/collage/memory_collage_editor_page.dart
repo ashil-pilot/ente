@@ -1,23 +1,19 @@
 import "dart:typed_data";
-import "dart:ui" as ui;
 
 import "package:ente_strings/ente_strings.dart";
 import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
 import "package:logging/logging.dart";
-import "package:photo_manager/photo_manager.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/retry_failed_image_load_event.dart";
 import "package:photos/models/file/file.dart";
 import "package:photos/models/memories/memory.dart";
 import "package:photos/models/memories/memory_collage_manifest.dart";
-import "package:photos/services/sync/sync_service.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_controller.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_export.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_export_photo.dart";
 import "package:photos/ui/notification/toast.dart";
-import "package:photos/ui/viewer/file/zoomable_image.dart";
 import "package:photos/utils/share_util.dart";
-import "package:share_plus/share_plus.dart";
 
 class MemoryCollageEditorPage extends StatefulWidget {
   final String title;
@@ -239,39 +235,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     if (!_contentReady) {
       throw StateError("Memory collage is not ready to export");
     }
-    await WidgetsBinding.instance.endOfFrame;
-    RenderRepaintBoundary? boundary;
-    for (var attempt = 0; attempt < 8; attempt++) {
-      final renderObject = _repaintKey.currentContext?.findRenderObject();
-      if (renderObject is RenderRepaintBoundary &&
-          !renderObject.debugNeedsPaint) {
-        boundary = renderObject;
-        break;
-      }
-      await WidgetsBinding.instance.endOfFrame;
-    }
-    if (boundary == null) {
-      throw StateError("Memory collage did not finish painting");
-    }
-
-    final image = await boundary.toImage(
-      pixelRatio: memoryCollageExportPixelRatio,
-    );
-    try {
-      if (image.width != 1080 || image.height != 1920) {
-        throw StateError(
-          "Unexpected memory collage size ${image.width}x${image.height}",
-        );
-      }
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = data?.buffer.asUint8List();
-      if (bytes == null || bytes.isEmpty) {
-        throw StateError("Unable to encode memory collage PNG");
-      }
-      return bytes;
-    } finally {
-      image.dispose();
-    }
+    return MemoryCollageExport.capturePng(_repaintKey);
   }
 
   Future<void> _shareCollage() async {
@@ -280,17 +244,9 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     try {
       final bytes = await _capturePng();
       if (!mounted) return;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [
-            XFile.fromData(
-              bytes,
-              name: "ente_memory_${DateTime.now().millisecondsSinceEpoch}.png",
-              mimeType: "image/png",
-            ),
-          ],
-          sharePositionOrigin: shareButtonRect(context, _shareButtonKey),
-        ),
+      await MemoryCollageExport.sharePng(
+        bytes,
+        sharePositionOrigin: shareButtonRect(context, _shareButtonKey),
       );
     } catch (error, stackTrace) {
       _logger.severe("Failed to share memory collage", error, stackTrace);
@@ -307,18 +263,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     setState(() => _isExporting = true);
     try {
       final bytes = await _capturePng();
-      final filename =
-          "ente_memory_${DateTime.now().millisecondsSinceEpoch}.png";
-      try {
-        await PhotoManager.editor.saveImage(
-          bytes,
-          filename: filename,
-          relativePath: "ente Memories",
-        );
-      } catch (_) {
-        await PhotoManager.editor.saveImage(bytes, filename: filename);
-      }
-      SyncService.instance.sync().ignore();
+      await MemoryCollageExport.savePng(bytes);
       if (mounted) {
         showShortToast(context, context.strings.collageSaved);
       }
@@ -492,27 +437,12 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
 
   Widget _buildExportPhoto(BuildContext context, EnteFile file, int slot) {
     final generation = _photoReadiness.generation;
-    final isLandscape = file.hasDimensions && file.width >= file.height;
-    return ColoredBox(
-      color: Colors.black,
-      child: IgnorePointer(
-        child: ZoomableImage(
-          file,
-          key: ValueKey("$generation:$slot"),
-          tagPrefix: "memory-collage-$generation-$slot-",
-          shouldCover: true,
-          isFromMemories: true,
-          showCaption: false,
-          cacheWidth: isLandscape ? null : (file.hasDimensions ? 720 : 1080),
-          cacheHeight: isLandscape ? 720 : null,
-          backgroundDecoration: const BoxDecoration(color: Colors.black),
-          onFinalImageLoaded: (_) => _onFinalPhotoLoaded(
-            file: file,
-            generation: generation,
-            slot: slot,
-          ),
-        ),
-      ),
+    return MemoryCollageExportPhoto(
+      file: file,
+      key: ValueKey("$generation:$slot"),
+      tagPrefix: "memory-collage-$generation-$slot-",
+      onFinalImageLoaded: () =>
+          _onFinalPhotoLoaded(file: file, generation: generation, slot: slot),
     );
   }
 }

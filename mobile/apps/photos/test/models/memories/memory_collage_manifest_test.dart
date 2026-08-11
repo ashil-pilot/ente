@@ -21,27 +21,27 @@ void main() {
     expect(manifest.version, 2);
     expect(manifest.canvas.width, 1080);
     expect(manifest.canvas.height, 1920);
-    expect(manifest.assets, hasLength(27));
-    expect(manifest.backgroundAssets, hasLength(11));
-    expect(manifest.defaultTemplateID, "scrapbook-maximal");
+    expect(manifest.assets, hasLength(24));
+    expect(manifest.backgroundAssets, hasLength(8));
+    expect(manifest.defaultTemplateID, "scrapbook-calm");
     expect(manifest.templates.map((template) => template.id), [
       "scrapbook-maximal",
       "scrapbook-calm",
       "minimal-editorial",
     ]);
-    expect(manifest.defaultTemplate, same(manifest.templates.first));
     expect(
-      manifest.templateFor("scrapbook-maximal"),
+      manifest.templateFor("scrapbook-calm"),
       same(manifest.defaultTemplate),
     );
-    expect(manifest.defaultTemplate.layers, hasLength(17));
+    expect(manifest.defaultTemplate.layers, hasLength(12));
+    expect(manifest.templateFor("scrapbook-maximal").layers, hasLength(17));
     for (final template in manifest.templates) {
       expect(template.photoSlots, hasLength(7));
     }
   });
 
   test("scopes ordered background choices to the template", () {
-    final background = manifest.defaultTemplate.background;
+    final background = manifest.templateFor("scrapbook-maximal").background;
 
     expect(background.layerID, "bg");
     expect(background.defaultAssetID, "paper-washi");
@@ -61,7 +61,7 @@ void main() {
   });
 
   test("sorts layers by z and preserves source order for ties", () {
-    final layers = manifest.defaultTemplate.layers;
+    final layers = manifest.templateFor("scrapbook-maximal").layers;
 
     for (var index = 1; index < layers.length; index++) {
       expect(layers[index - 1].z, lessThanOrEqualTo(layers[index].z));
@@ -99,7 +99,7 @@ void main() {
 
   test("parses the exact seven-photo layout", () {
     expect(
-      manifest.defaultTemplate.photoSlots.map(_slotContract),
+      manifest.templateFor("scrapbook-maximal").photoSlots.map(_slotContract),
       orderedEquals([
         (0, "strip", 0),
         (1, "strip", 1),
@@ -111,7 +111,7 @@ void main() {
       ]),
     );
     expect(
-      manifest.defaultTemplate.layerFor("strip").assetID,
+      manifest.templateFor("scrapbook-maximal").layerFor("strip").assetID,
       "film-strip-four",
     );
   });
@@ -133,12 +133,44 @@ void main() {
     expect(polaroidWindows.single.height, 420);
   });
 
-  test("parses layer-anchored title typography and overlay blends", () {
-    final template = manifest.defaultTemplate;
+  test("parses the wider maximal banner and explicit title safe rect", () {
+    final template = manifest.templateFor("scrapbook-maximal");
     final title = template.titleStyle;
+    final bannerAsset = manifest.assetFor("banner-wide");
+    final bannerLayer = template.layerFor("banner");
+    final tape = template.layerFor("tapeA");
+    final stamp = template.layerFor("stamp");
 
-    expect(title.placement, isA<MemoryCollageTitleAnchor>());
-    expect((title.placement as MemoryCollageTitleAnchor).layerID, "banner");
+    expect((bannerAsset.width, bannerAsset.height), (900, 150));
+    expect(bannerAsset.safetyMarginPx, 18);
+    expect(() => manifest.assetFor("banner"), throwsFormatException);
+    expect(bannerLayer.assetID, "banner-wide");
+    expect(
+      (
+        bannerLayer.x,
+        bannerLayer.y,
+        bannerLayer.width,
+        bannerLayer.height,
+        bannerLayer.rotation,
+      ),
+      (90, 180, 900, 150, -2.5),
+    );
+    expect((tape.x, tape.y), (54, 120));
+    expect((stamp.x, stamp.y), (786, 114));
+
+    expect(title.placement, isA<MemoryCollageTitleRect>());
+    final titlePlacement = title.placement as MemoryCollageTitleRect;
+    expect(
+      (
+        titlePlacement.rect.x,
+        titlePlacement.rect.y,
+        titlePlacement.rect.width,
+        titlePlacement.rect.height,
+      ),
+      (144, 198, 618, 114),
+    );
+    expect(titlePlacement.z, 20);
+    expect(titlePlacement.rotation, -2.5);
     expect(title.fontFamily, "Lora");
     expect(title.fontWeight, 600);
     expect(title.fontSize, 45);
@@ -152,31 +184,176 @@ void main() {
     expect(template.layerFor("grain").opacity, 0.55);
   });
 
-  test("parses calm and minimal editorial template contracts", () {
+  test("parses calm and richer minimal editorial template contracts", () {
     final calm = manifest.templateFor("scrapbook-calm");
     final minimal = manifest.templateFor("minimal-editorial");
 
-    expect(calm.titleStyle.fontStyle, "italic");
+    expect(calm.titleStyle.fontFamily, "Lora");
+    expect(calm.titleStyle.fontAsset, "fonts/Lora-SemiBold.ttf");
+    expect(calm.titleStyle.fontStyle, "normal");
     expect(calm.titleStyle.fontWeight, 600);
-    expect(calm.titleStyle.minFontSize, 66);
+    expect(calm.titleStyle.fontSize, 96);
+    expect(calm.titleStyle.minFontSize, 60);
     expect(calm.titleStyle.maxLines, 2);
-    expect(calm.titleStyle.lineHeight, 1.08);
-    expect(calm.background.defaultAssetID, "paper-notebook-blush");
+    expect(calm.titleStyle.lineHeight, 1.06);
+    expect(calm.titleStyle.letterSpacing, -0.5);
+    expect(
+      (calm.titleStyle.placement as MemoryCollageTitleRect).rotation,
+      -1.5,
+    );
+    expect(calm.background.defaultAssetID, "paper-cream-fiber");
+    expect(calm.background.assetIDs, [
+      "paper-washi",
+      "paper-cream-fiber",
+      "paper-blush-stripe",
+      "paper-sage-stripe",
+    ]);
+    expect(
+      () => manifest.assetFor("paper-notebook-blush"),
+      throwsFormatException,
+    );
+    expect(
+      () => manifest.assetFor("paper-notebook-sage"),
+      throwsFormatException,
+    );
     expect(
       calm.photoSlots.whereType<MemoryCollageAssetWindowPhotoSlot>(),
       hasLength(7),
     );
 
-    expect(minimal.titleStyle.fontStyle, "italic");
+    expect(minimal.titleStyle.fontFamily, "Inter");
+    expect(minimal.titleStyle.fontAsset, "fonts/Inter-Medium.ttf");
+    expect(minimal.titleStyle.fontStyle, "normal");
     expect(minimal.titleStyle.fontWeight, 500);
-    expect(minimal.titleStyle.minFontSize, 84);
+    expect(minimal.titleStyle.minFontSize, 66);
     expect(minimal.titleStyle.maxLines, 2);
     expect(minimal.titleStyle.colorOnDark, "#f2ede2");
+    expect(minimal.background.defaultAssetID, "paper-cream-fiber");
+    expect(minimal.background.assetIDs, [
+      "paper-cream-fiber",
+      "editorial-sand",
+      "editorial-sage",
+      "editorial-charcoal",
+    ]);
+    expect(() => manifest.assetFor("editorial-bone"), throwsFormatException);
+    expect(() => manifest.assetFor("editorial-paper"), throwsFormatException);
     expect(minimal.rules, hasLength(2));
     expect(
-      minimal.photoSlots.whereType<MemoryCollageRectPhotoSlot>(),
+      minimal.rules.map(
+        (rule) => (
+          rule.rect.x,
+          rule.rect.y,
+          rule.rect.width,
+          rule.rect.height,
+          rule.color,
+          rule.colorOnDark,
+        ),
+      ),
+      orderedEquals([
+        (78, 288, 924, 3, "#cfc5ae", "rgba(244,240,232,0.3)"),
+        (78, 1842, 924, 3, "#cfc5ae", "rgba(244,240,232,0.3)"),
+      ]),
+    );
+    for (final rule in minimal.rules) {
+      expect(rule.colorsByBackground, {
+        "editorial-sand": "#d8cfbc",
+        "editorial-sage": "#d8cfbc",
+      });
+    }
+    expect(
+      minimal.photoSlots.whereType<MemoryCollageMattedRectPhotoSlot>(),
       hasLength(7),
     );
+    expect(
+      minimal.photoSlots.map((slot) {
+        final matted = slot as MemoryCollageMattedRectPhotoSlot;
+        return (
+          matted.matRect.x,
+          matted.matRect.y,
+          matted.matRect.width,
+          matted.matRect.height,
+        );
+      }),
+      orderedEquals([
+        (78, 390, 924, 798),
+        (78, 1212, 450, 318),
+        (552, 1212, 450, 318),
+        (78, 1554, 213, 252),
+        (315, 1554, 213, 252),
+        (552, 1554, 213, 252),
+        (789, 1554, 213, 252),
+      ]),
+    );
+    for (final slot
+        in minimal.photoSlots.whereType<MemoryCollageMattedRectPhotoSlot>()) {
+      expect(slot.photoRect.x, slot.matRect.x + 15);
+      expect(slot.photoRect.y, slot.matRect.y + 15);
+      expect(slot.photoRect.width, slot.matRect.width - 30);
+      expect(slot.photoRect.height, slot.matRect.height - 30);
+      expect(slot.z, 4);
+      expect(slot.rotation, 0);
+      expect(slot.radius ?? 0, 0);
+    }
+    expect(minimal.matStyle, isNotNull);
+    expect(minimal.matStyle!.fill, "#faf6ec");
+    expect(minimal.matStyle!.fillOnDark, "#faf6ec");
+    expect(minimal.matStyle!.photoInset, 15);
+    expect(minimal.matStyle!.border.width, 3);
+    expect(minimal.matStyle!.border.color, "rgba(90,75,55,0.20)");
+    expect(minimal.matStyle!.shadows, hasLength(1));
+    final matShadow = minimal.matStyle!.shadows.single;
+    expect(
+      (
+        matShadow.kind,
+        matShadow.dx,
+        matShadow.dy,
+        matShadow.blur,
+        matShadow.color,
+      ),
+      ("dropShadow", 0, 3, 9, "rgba(90,70,45,0.12)"),
+    );
+    final titlePlacement =
+        minimal.titleStyle.placement as MemoryCollageTitleRect;
+    expect(
+      (
+        titlePlacement.rect.x,
+        titlePlacement.rect.y,
+        titlePlacement.rect.width,
+        titlePlacement.rect.height,
+      ),
+      (78, 84, 924, 186),
+    );
+    expect(minimal.titleStyle.fontSize, 102);
+    expect(minimal.titleStyle.lineHeight, 1.04);
+    expect(minimal.titleStyle.letterSpacing, -1.5);
+    expect(minimal.titleStyle.color, "#24201a");
+    final grain = minimal.layerFor("grain");
+    expect(grain.assetID, "grain-overlay");
+    expect((grain.x, grain.y, grain.width, grain.height), (0, 0, 1080, 1920));
+    expect(grain.blendMode, "overlay");
+    expect(grain.opacity, 0.12);
+    expect(grain.backgroundAssetIDs, [
+      "editorial-sand",
+      "editorial-sage",
+      "editorial-charcoal",
+    ]);
+    expect(grain.appliesToBackground("paper-cream-fiber"), isFalse);
+    expect(grain.appliesToBackground("editorial-sand"), isTrue);
+    expect(
+      minimal.photoSlots.whereType<MemoryCollageMattedRectPhotoSlot>().every(
+        (slot) => slot.z < 10,
+      ),
+      isTrue,
+    );
+    expect(minimal.rules.every((rule) => rule.z == 10), isTrue);
+    expect(titlePlacement.z, 20);
+    expect(grain.z, 38);
+    final minimalJson = _template(sourceJson, "minimal-editorial");
+    for (final slot in minimalJson["photoSlots"]! as List<dynamic>) {
+      final slotJson = slot as Map<String, dynamic>;
+      expect(slotJson["kind"], "mattedRect");
+      expect(slotJson, isNot(contains("shadows")));
+    }
     expect(manifest.assetFor("editorial-charcoal").dark, isTrue);
   });
 
@@ -211,10 +388,11 @@ void main() {
     };
 
     final parsed = MemoryCollageManifest.fromJson(json);
+    final parsedTemplate = parsed.templateFor("scrapbook-maximal");
     final rectSlot =
-        parsed.defaultTemplate.photoSlots.first as MemoryCollageRectPhotoSlot;
+        parsedTemplate.photoSlots.first as MemoryCollageRectPhotoSlot;
     final titleRect =
-        parsed.defaultTemplate.titleStyle.placement as MemoryCollageTitleRect;
+        parsedTemplate.titleStyle.placement as MemoryCollageTitleRect;
 
     expect(rectSlot.rect.width, 300);
     expect(rectSlot.z, 11);
@@ -249,6 +427,19 @@ void main() {
     final minimal = manifest.templateFor("minimal-editorial");
     expect(
       () => minimal.rules.add(minimal.rules.first),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => minimal.matStyle!.shadows.add(minimal.matStyle!.shadows.first),
+      throwsUnsupportedError,
+    );
+    expect(
+      () =>
+          minimal.rules.first.colorsByBackground["editorial-sand"] = "#ffffff",
+      throwsUnsupportedError,
+    );
+    expect(
+      () => minimal.layerFor("grain").backgroundAssetIDs!.add("paper-washi"),
       throwsUnsupportedError,
     );
   });
@@ -324,6 +515,29 @@ void main() {
       (nonBackgroundConfig["assetIds"]! as List<dynamic>).add("paper-torn");
       expect(
         () => MemoryCollageManifest.fromJson(nonBackground),
+        throwsFormatException,
+      );
+
+      final invalidConditionalLayer = _copyJson(sourceJson);
+      final minimal = _template(invalidConditionalLayer, "minimal-editorial");
+      final grain = (minimal["layers"]! as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .singleWhere((layer) => layer["layerId"] == "grain");
+      grain["backgroundAssetIds"] = ["paper-washi"];
+      expect(
+        () => MemoryCollageManifest.fromJson(invalidConditionalLayer),
+        throwsFormatException,
+      );
+
+      final invalidRuleBackground = _copyJson(sourceJson);
+      final rule =
+          (_template(invalidRuleBackground, "minimal-editorial")["rules"]!
+                      as List<dynamic>)
+                  .first
+              as Map<String, dynamic>;
+      rule["colorsByBackground"] = {"paper-washi": "#ffffff"};
+      expect(
+        () => MemoryCollageManifest.fromJson(invalidRuleBackground),
         throwsFormatException,
       );
     });
@@ -408,6 +622,48 @@ void main() {
       );
     });
 
+    test("rejects incomplete or incorrectly inset matted rect contracts", () {
+      final missingStyle = _copyJson(sourceJson);
+      _template(missingStyle, "minimal-editorial").remove("matStyle");
+      expect(
+        () => MemoryCollageManifest.fromJson(missingStyle),
+        throwsFormatException,
+      );
+
+      final incorrectInset = _copyJson(sourceJson);
+      final minimal = _template(incorrectInset, "minimal-editorial");
+      final firstSlot =
+          (minimal["photoSlots"]! as List<dynamic>).first
+              as Map<String, dynamic>;
+      final photoRect = firstSlot["rect"]! as Map<String, dynamic>;
+      photoRect["x"] = (photoRect["x"]! as num) + 1;
+      expect(
+        () => MemoryCollageManifest.fromJson(incorrectInset),
+        throwsFormatException,
+      );
+
+      final invalidMatBorder = _copyJson(sourceJson);
+      final style =
+          _template(invalidMatBorder, "minimal-editorial")["matStyle"]!
+              as Map<String, dynamic>;
+      (style["border"]! as Map<String, dynamic>)["width"] = 0;
+      expect(
+        () => MemoryCollageManifest.fromJson(invalidMatBorder),
+        throwsFormatException,
+      );
+
+      final invalidMatShadow = _copyJson(sourceJson);
+      final shadows =
+          (_template(invalidMatShadow, "minimal-editorial")["matStyle"]!
+                  as Map<String, dynamic>)["shadows"]!
+              as List<dynamic>;
+      (shadows.first as Map<String, dynamic>)["blur"] = -1;
+      expect(
+        () => MemoryCollageManifest.fromJson(invalidMatShadow),
+        throwsFormatException,
+      );
+    });
+
     test("rejects invalid title enumerations and anchors", () {
       final invalidAlign = _copyJson(sourceJson);
       final titleStyle =
@@ -419,11 +675,9 @@ void main() {
       );
 
       final invalidAnchor = _copyJson(sourceJson);
-      final placement =
-          (_firstTemplate(invalidAnchor)["titleStyle"]!
-                  as Map<String, dynamic>)["placement"]!
-              as Map<String, dynamic>;
-      placement["layerId"] = "missing";
+      final invalidAnchorTitle =
+          _firstTemplate(invalidAnchor)["titleStyle"]! as Map<String, dynamic>;
+      invalidAnchorTitle["placement"] = {"kind": "layer", "layerId": "missing"};
       expect(
         () => MemoryCollageManifest.fromJson(invalidAnchor),
         throwsFormatException,
@@ -443,4 +697,10 @@ Map<String, dynamic> _copyJson(Map<String, dynamic> source) {
 
 Map<String, dynamic> _firstTemplate(Map<String, dynamic> json) {
   return (json["templates"]! as List<dynamic>).first as Map<String, dynamic>;
+}
+
+Map<String, dynamic> _template(Map<String, dynamic> json, String id) {
+  return (json["templates"]! as List<dynamic>)
+      .cast<Map<String, dynamic>>()
+      .singleWhere((template) => template["id"] == id);
 }

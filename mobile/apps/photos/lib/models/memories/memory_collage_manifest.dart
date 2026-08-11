@@ -154,6 +154,7 @@ class MemoryCollageManifest {
       template.layers.map((layer) => layer.layerID),
       "layer IDs in template ${template.id}",
     );
+    _validateBackground(template);
 
     for (final layer in template.layers) {
       if (layer.layerID.isEmpty) {
@@ -182,6 +183,33 @@ class MemoryCollageManifest {
           "${template.id}.${layer.layerID}.shadows[$index]",
         );
       }
+      final backgroundAssetIDs = layer.backgroundAssetIDs;
+      if (backgroundAssetIDs != null) {
+        if (layer.layerID == template.background.layerID) {
+          throw FormatException(
+            "Template ${template.id} background layer cannot be conditional",
+          );
+        }
+        if (backgroundAssetIDs.isEmpty) {
+          throw FormatException(
+            "Template ${template.id} layer ${layer.layerID} must declare at "
+            "least one conditional background",
+          );
+        }
+        _validateUnique(
+          backgroundAssetIDs,
+          "conditional background asset IDs on ${template.id}."
+          "${layer.layerID}",
+        );
+        for (final assetID in backgroundAssetIDs) {
+          if (!template.background.assetIDs.contains(assetID)) {
+            throw FormatException(
+              "Template ${template.id} layer ${layer.layerID} references "
+              "unsupported conditional background $assetID",
+            );
+          }
+        }
+      }
     }
 
     for (var index = 0; index < template.rules.length; index++) {
@@ -197,11 +225,60 @@ class MemoryCollageManifest {
           "Template ${template.id} rule $index colorOnDark cannot be empty",
         );
       }
+      for (final entry in rule.colorsByBackground.entries) {
+        if (!template.background.assetIDs.contains(entry.key)) {
+          throw FormatException(
+            "Template ${template.id} rule $index references unsupported "
+            "background ${entry.key}",
+          );
+        }
+        if (entry.value.isEmpty) {
+          throw FormatException(
+            "Template ${template.id} rule $index background color cannot be "
+            "empty",
+          );
+        }
+      }
     }
 
-    _validateBackground(template);
+    _validateMatStyle(template);
     _validatePhotoSlots(template);
     _validateTitleStyle(template);
+  }
+
+  void _validateMatStyle(MemoryCollageTemplate template) {
+    final hasMattedSlots = template.photoSlots.any(
+      (slot) => slot is MemoryCollageMattedRectPhotoSlot,
+    );
+    final style = template.matStyle;
+    if (hasMattedSlots != (style != null)) {
+      throw FormatException(
+        "Template ${template.id} must declare matStyle exactly when it uses "
+        "mattedRect photo slots",
+      );
+    }
+    if (style == null) return;
+    if (style.fill.isEmpty || (style.fillOnDark?.isEmpty ?? false)) {
+      throw FormatException(
+        "Template ${template.id} matStyle must declare valid fill colors",
+      );
+    }
+    if (style.border.width <= 0 || style.border.color.isEmpty) {
+      throw FormatException(
+        "Template ${template.id} matStyle must declare a valid border",
+      );
+    }
+    if (!style.photoInset.isFinite || style.photoInset <= 0) {
+      throw FormatException(
+        "Template ${template.id} matStyle photoInset must be positive",
+      );
+    }
+    for (var index = 0; index < style.shadows.length; index++) {
+      _validateShadow(
+        style.shadows[index],
+        "${template.id}.matStyle.shadows[$index]",
+      );
+    }
   }
 
   void _validateBackground(MemoryCollageTemplate template) {
@@ -294,6 +371,12 @@ class MemoryCollageManifest {
               "unknown layer ${slot.layerID}",
             );
           }
+          if (layer.backgroundAssetIDs != null) {
+            throw FormatException(
+              "Photo slot ${slot.slot} in template ${template.id} cannot "
+              "reference a background-conditional layer",
+            );
+          }
           final asset = _assetsByID[layer.assetID]!;
           if (slot.windowIndex < 0 ||
               slot.windowIndex >= asset.photoWindows.length) {
@@ -329,6 +412,27 @@ class MemoryCollageManifest {
             _validateShadow(
               slot.shadows[index],
               "${template.id}.photoSlots[${slot.slot}].shadows[$index]",
+            );
+          }
+        case MemoryCollageMattedRectPhotoSlot():
+          final path = "${template.id}.photoSlots[${slot.slot}]";
+          _validateCanvasRect(slot.matRect, "$path.mat");
+          _validateCanvasRect(slot.photoRect, "$path.rect");
+          _validateFinite(slot.rotation, "$path.rotation");
+          if (slot.radius != null && slot.radius! < 0) {
+            throw FormatException(
+              "Photo slot ${slot.slot} in template ${template.id} must have "
+              "a non-negative radius",
+            );
+          }
+          final inset = template.matStyle!.photoInset;
+          if (slot.photoRect.x != slot.matRect.x + inset ||
+              slot.photoRect.y != slot.matRect.y + inset ||
+              slot.photoRect.width != slot.matRect.width - inset * 2 ||
+              slot.photoRect.height != slot.matRect.height - inset * 2) {
+            throw FormatException(
+              "Photo slot ${slot.slot} in template ${template.id} must inset "
+              "its photo rect by $inset on every side",
             );
           }
       }
@@ -394,10 +498,17 @@ class MemoryCollageManifest {
     final placement = style.placement;
     switch (placement) {
       case MemoryCollageTitleAnchor():
-        if (_layerOrNull(template, placement.layerID) == null) {
+        final layer = _layerOrNull(template, placement.layerID);
+        if (layer == null) {
           throw FormatException(
             "Template ${template.id} title references unknown layer "
             "${placement.layerID}",
+          );
+        }
+        if (layer.backgroundAssetIDs != null) {
+          throw FormatException(
+            "Template ${template.id} title cannot reference a "
+            "background-conditional layer",
           );
         }
       case MemoryCollageTitleRect():
@@ -575,13 +686,15 @@ class MemoryCollageRule {
   final int z;
   final String color;
   final String? colorOnDark;
+  final Map<String, String> colorsByBackground;
 
-  const MemoryCollageRule({
+  MemoryCollageRule({
     required this.rect,
     required this.z,
     required this.color,
     required this.colorOnDark,
-  });
+    required Map<String, String> colorsByBackground,
+  }) : colorsByBackground = Map.unmodifiable(colorsByBackground);
 
   factory MemoryCollageRule.fromJson(Map<String, dynamic> json) {
     return MemoryCollageRule(
@@ -589,8 +702,13 @@ class MemoryCollageRule {
       z: _jsonInt(json, "z"),
       color: _jsonString(json, "color"),
       colorOnDark: _optionalString(json, "colorOnDark"),
+      colorsByBackground: _optionalStringMap(json, "colorsByBackground"),
     );
   }
+
+  String colorFor(String backgroundAssetID, {required bool isDark}) =>
+      colorsByBackground[backgroundAssetID] ??
+      (isDark ? colorOnDark ?? color : color);
 }
 
 class MemoryCollageTemplate {
@@ -601,6 +719,7 @@ class MemoryCollageTemplate {
   final List<MemoryCollageLayer> layers;
   final List<MemoryCollagePhotoSlot> photoSlots;
   final List<MemoryCollageRule> rules;
+  final MemoryCollageMatStyle? matStyle;
   final String? appRendered;
   final MemoryCollageTitleStyle titleStyle;
 
@@ -612,6 +731,7 @@ class MemoryCollageTemplate {
     required List<MemoryCollageLayer> layers,
     required List<MemoryCollagePhotoSlot> photoSlots,
     required List<MemoryCollageRule> rules,
+    required this.matStyle,
     required this.appRendered,
     required this.titleStyle,
   }) : layers = List.unmodifiable(layers),
@@ -654,6 +774,9 @@ class MemoryCollageTemplate {
         json,
         "rules",
       ).map(MemoryCollageRule.fromJson).toList(growable: false),
+      matStyle: json["matStyle"] == null
+          ? null
+          : MemoryCollageMatStyle.fromJson(_jsonMap(json, "matStyle")),
       appRendered: _optionalString(json, "appRendered"),
       titleStyle: MemoryCollageTitleStyle.fromJson(
         _jsonMap(json, "titleStyle"),
@@ -681,6 +804,7 @@ class MemoryCollageLayer {
   final int z;
   final double rotation;
   final List<MemoryCollageShadow> shadows;
+  final List<String>? backgroundAssetIDs;
   final String? blendMode;
   final double opacity;
 
@@ -698,10 +822,14 @@ class MemoryCollageLayer {
     required this.z,
     required this.rotation,
     required List<MemoryCollageShadow> shadows,
+    required List<String>? backgroundAssetIDs,
     required this.blendMode,
     required this.opacity,
     required this.sourceIndex,
-  }) : shadows = List.unmodifiable(shadows);
+  }) : shadows = List.unmodifiable(shadows),
+       backgroundAssetIDs = backgroundAssetIDs == null
+           ? null
+           : List.unmodifiable(backgroundAssetIDs);
 
   MemoryCollageRect get rect =>
       MemoryCollageRect(x: x, y: y, width: width, height: height);
@@ -723,11 +851,17 @@ class MemoryCollageLayer {
         json,
         "shadows",
       ).map(MemoryCollageShadow.fromJson).toList(growable: false),
+      backgroundAssetIDs: json["backgroundAssetIds"] == null
+          ? null
+          : _jsonStringList(json, "backgroundAssetIds"),
       blendMode: _optionalString(json, "blendMode"),
       opacity: _optionalDouble(json, "opacity") ?? 1,
       sourceIndex: sourceIndex,
     );
   }
+
+  bool appliesToBackground(String backgroundAssetID) =>
+      backgroundAssetIDs?.contains(backgroundAssetID) ?? true;
 }
 
 class MemoryCollageShadow {
@@ -756,6 +890,35 @@ class MemoryCollageShadow {
   }
 }
 
+class MemoryCollageMatStyle {
+  final String fill;
+  final String? fillOnDark;
+  final MemoryCollageBorder border;
+  final double photoInset;
+  final List<MemoryCollageShadow> shadows;
+
+  MemoryCollageMatStyle({
+    required this.fill,
+    required this.fillOnDark,
+    required this.border,
+    required this.photoInset,
+    required List<MemoryCollageShadow> shadows,
+  }) : shadows = List.unmodifiable(shadows);
+
+  factory MemoryCollageMatStyle.fromJson(Map<String, dynamic> json) {
+    return MemoryCollageMatStyle(
+      fill: _jsonString(json, "fill"),
+      fillOnDark: _optionalString(json, "fillOnDark"),
+      border: MemoryCollageBorder.fromJson(_jsonMap(json, "border")),
+      photoInset: _jsonDouble(json, "photoInset"),
+      shadows: _optionalJsonList(
+        json,
+        "shadows",
+      ).map(MemoryCollageShadow.fromJson).toList(growable: false),
+    );
+  }
+}
+
 sealed class MemoryCollagePhotoSlot {
   final int slot;
 
@@ -765,6 +928,7 @@ sealed class MemoryCollagePhotoSlot {
     return switch (_jsonString(json, "kind")) {
       "assetWindow" => MemoryCollageAssetWindowPhotoSlot.fromJson(json),
       "rect" => MemoryCollageRectPhotoSlot.fromJson(json),
+      "mattedRect" => MemoryCollageMattedRectPhotoSlot.fromJson(json),
       final kind => throw FormatException(
         "Unknown memory collage photo slot kind: $kind",
       ),
@@ -825,6 +989,34 @@ class MemoryCollageRectPhotoSlot extends MemoryCollagePhotoSlot {
         json,
         "shadows",
       ).map(MemoryCollageShadow.fromJson).toList(growable: false),
+    );
+  }
+}
+
+class MemoryCollageMattedRectPhotoSlot extends MemoryCollagePhotoSlot {
+  final MemoryCollageRect matRect;
+  final MemoryCollageRect photoRect;
+  final int z;
+  final double rotation;
+  final double? radius;
+
+  const MemoryCollageMattedRectPhotoSlot({
+    required super.slot,
+    required this.matRect,
+    required this.photoRect,
+    required this.z,
+    required this.rotation,
+    required this.radius,
+  });
+
+  factory MemoryCollageMattedRectPhotoSlot.fromJson(Map<String, dynamic> json) {
+    return MemoryCollageMattedRectPhotoSlot(
+      slot: _jsonInt(json, "slot"),
+      matRect: MemoryCollageRect.fromJson(_jsonMap(json, "mat")),
+      photoRect: MemoryCollageRect.fromJson(_jsonMap(json, "rect")),
+      z: _jsonInt(json, "z"),
+      rotation: _optionalDouble(json, "rotation") ?? 0,
+      radius: _optionalDouble(json, "radius"),
     );
   }
 }
@@ -1055,6 +1247,20 @@ List<String> _jsonStringList(Map<String, dynamic> json, String key) {
         throw FormatException("$key entries must be strings");
       }
       return item;
+    }),
+  );
+}
+
+Map<String, String> _optionalStringMap(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value == null) return const {};
+  if (value is! Map) throw FormatException("$key must be an object");
+  return Map.unmodifiable(
+    value.map<String, String>((entryKey, entryValue) {
+      if (entryKey is! String || entryValue is! String) {
+        throw FormatException("$key entries must map strings to strings");
+      }
+      return MapEntry(entryKey, entryValue);
     }),
   );
 }

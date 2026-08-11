@@ -24,7 +24,7 @@ const isRealOutput = outputDirectory === realOutputDirectory;
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "80934d55081fc9983f2187d0721fb21b9d1bb8478614aaec4f4abc42305a2d4c",
+    "7712f0e13d1759ef6e70f5c23f773b49c57c1fb0958639c67c00fe1a0415d806",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
@@ -36,6 +36,10 @@ const fontSpecs = [
   {
     file: "Lora-Italic.ttf",
     hash: "22d8d8854b53807aa664ca34f2031a9ed57a1d0dea296b8b96cdd3aad937a2b3",
+  },
+  {
+    file: "Inter-Medium.ttf",
+    hash: "6df88fcb83ac96582350f801355c6eff55f15710093e9627fb431caa40521151",
   },
   {
     file: "Lora-OFL.txt",
@@ -52,7 +56,6 @@ const retainedAssetIds = [
   "paper-torn",
   "polaroid-frame",
   "film-strip-four",
-  "banner",
   "tape-mustard",
   "tape-blush",
   "tape-sage",
@@ -64,25 +67,37 @@ const retainedAssetIds = [
   "vignette",
   "grain-overlay",
 ];
+const maximalRasterAssetIds = ["banner-wide"];
 const designRasterAssetIds = [
   "film-strip-four-horizontal",
   "print-frame-hero",
-  "paper-notebook-blush",
-  "paper-notebook-sage",
 ];
 const generatedColors = new Map([
-  ["editorial-bone", "#f4f0e8"],
   ["editorial-sand", "#e8dfcc"],
   ["editorial-sage", "#dde0d6"],
   ["editorial-charcoal", "#2b2723"],
 ]);
 const generatedColorAssetIds = [...generatedColors.keys()];
-const newAssetIds = [...designRasterAssetIds, ...generatedColorAssetIds];
-const requiredAssetIds = [...retainedAssetIds, ...newAssetIds];
+const newAssetIds = [
+  ...maximalRasterAssetIds,
+  ...designRasterAssetIds,
+  ...generatedColorAssetIds,
+];
+const requiredAssetIds = [
+  ...retainedAssetIds.slice(0, 8),
+  ...maximalRasterAssetIds,
+  ...retainedAssetIds.slice(8),
+  ...designRasterAssetIds,
+  ...generatedColorAssetIds,
+];
 const retainedAssetIdSet = new Set(retainedAssetIds);
 const generatedColorAssetIdSet = new Set(generatedColorAssetIds);
 const expectedRetainedInventoryDigest =
-  "422d287821ede0238ccc03c9692115e7d8c592797f86237970d03edca037cc08";
+  "b71bdd5fba23b3be64a5c3523b4e58d68ec29133f93f6419b978795f392acfc7";
+const expectedMaximalInventoryDigest =
+  "cf69c941c126da1c0333f3ac663951372c9745d14316068f35486a5c2d6af052";
+const expectedCalmInventoryDigest =
+  "9a2c7a78411cb8fd469c85fc688fcac82d31a1d245eb6313ed30e93cec04f49d";
 
 const dimensions = new Map([
   ["paper-washi", [1080, 1920]],
@@ -93,7 +108,7 @@ const dimensions = new Map([
   ["paper-torn", [1098, 1734]],
   ["polaroid-frame", [462, 534]],
   ["film-strip-four", [390, 1800]],
-  ["banner", [546, 150]],
+  ["banner-wide", [900, 150]],
   ["tape-mustard", [336, 72]],
   ["tape-blush", [228, 66]],
   ["tape-sage", [210, 63]],
@@ -106,9 +121,6 @@ const dimensions = new Map([
   ["grain-overlay", [1080, 1920]],
   ["film-strip-four-horizontal", [972, 252]],
   ["print-frame-hero", [876, 594]],
-  ["paper-notebook-blush", [1080, 1920]],
-  ["paper-notebook-sage", [1080, 1920]],
-  ["editorial-bone", [1080, 1920]],
   ["editorial-sand", [1080, 1920]],
   ["editorial-sage", [1080, 1920]],
   ["editorial-charcoal", [1080, 1920]],
@@ -136,13 +148,20 @@ const expectedTemplateIds = [
   "scrapbook-calm",
   "minimal-editorial",
 ];
-// JSON.stringify(template) pins every approved 2a coordinate and shadow.
-const expectedMaximalTemplateDigest =
-  "6817de9b4f5cf2c017264aa575d9c2e35f763eab7177bb59af7c7da4fab590d9";
-// Projection: JSON.stringify({ assets: the final eight source asset records,
-// templates: { scrapbook-calm, minimal-editorial } }).
-const expectedNewDesignContractDigest =
-  "bc3af973973d9eab10d605e5c5c8776ea514dd67ae37b12610e6b2449995076f";
+// 2a projection: JSON.stringify({ assets: its new raster asset record,
+// template: scrapbook-maximal }).
+const expectedMaximalDesignContractDigest =
+  "9a9246ff8988d8741f86c0ea2f71df22dba594b762d3939abce2a20cc4cc94da";
+// Each later direction is pinned separately so a change in one cannot be
+// hidden by simultaneously changing the other projection.
+// 2b projection: JSON.stringify({ assets: its two raster asset records,
+// template: scrapbook-calm }).
+const expectedCalmDesignContractDigest =
+  "c5ef278d78d7ef74904028c775aa15b37ed0217e3f512a0b1fc893fdd4ac8ac2";
+// 3b/4a/5b projection: JSON.stringify({ assets: its three retained generated
+// color records, template: minimal-editorial }).
+const expectedMinimalDesignContractDigest =
+  "ebdadd0b3afa05ba8491a57477df6b75754b848044a4164f67412f5b464c43d6";
 
 const paletteTextureIds = new Set([
   "paper-washi",
@@ -151,8 +170,6 @@ const paletteTextureIds = new Set([
   "paper-sage-stripe",
   "paper-terracotta-mottle",
   "paper-torn",
-  "paper-notebook-blush",
-  "paper-notebook-sage",
   "grain-overlay",
 ]);
 const losslessOverlayPaletteIds = new Set(["sun-streak", "vignette"]);
@@ -183,6 +200,21 @@ function fail(message) {
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function validateShadow(shadow, path) {
+  if (
+    !shadow ||
+    shadow.kind !== "dropShadow" ||
+    !Number.isFinite(shadow.dx) ||
+    !Number.isFinite(shadow.dy) ||
+    !Number.isFinite(shadow.blur) ||
+    shadow.blur < 0 ||
+    typeof shadow.color !== "string" ||
+    shadow.color.length === 0
+  ) {
+    fail(`${path} is not a valid drop shadow.`);
+  }
 }
 
 async function verifySource(path, expectedHash, { allowDrift = false } = {}) {
@@ -275,7 +307,7 @@ function readManifest(source) {
     manifest.canvas?.width !== 1080 ||
     manifest.canvas?.height !== 1920 ||
     manifest.photoCount !== 7 ||
-    manifest.defaultTemplateId !== "scrapbook-maximal"
+    manifest.defaultTemplateId !== "scrapbook-calm"
   ) {
     fail("The source must preserve the v2 1080x1920 seven-photo contract.");
   }
@@ -347,6 +379,7 @@ function readManifest(source) {
       fail(`${templateId} must declare asset-backed backgrounds.`);
     }
     const backgroundIds = template.backgrounds.map((background) => background.id);
+    const backgroundIdSet = new Set(backgroundIds);
     if (!backgroundIds.includes(template.defaultBackgroundId)) {
       fail(`${templateId} default background is not in its background palette.`);
     }
@@ -366,6 +399,54 @@ function readManifest(source) {
       if (!assetsById.has(layer.asset)) {
         fail(`${templateId}.${layer.layerId} references unknown asset ${layer.asset}.`);
       }
+      for (const [index, shadow] of (layer.shadows ?? []).entries()) {
+        validateShadow(shadow, `${templateId}.${layer.layerId}.shadows[${index}]`);
+      }
+      if (layer.backgroundAssetIds !== undefined) {
+        if (
+          !Array.isArray(layer.backgroundAssetIds) ||
+          layer.backgroundAssetIds.length === 0 ||
+          new Set(layer.backgroundAssetIds).size !== layer.backgroundAssetIds.length ||
+          layer.backgroundAssetIds.some((id) => !backgroundIdSet.has(id))
+        ) {
+          fail(
+            `${templateId}.${layer.layerId}.backgroundAssetIds must be a ` +
+              "non-empty unique subset of the template backgrounds.",
+          );
+        }
+      }
+    }
+    for (const [index, rule] of (template.rules ?? []).entries()) {
+      if (rule.colorsByBackground !== undefined) {
+        if (
+          rule.colorsByBackground === null ||
+          typeof rule.colorsByBackground !== "object" ||
+          Array.isArray(rule.colorsByBackground)
+        ) {
+          fail(
+            `${templateId}.rules[${index}].colorsByBackground must be an ` +
+              "object.",
+          );
+        }
+        const entries = Object.entries(rule.colorsByBackground);
+        if (
+          entries.length === 0 ||
+          entries.some(
+            ([id, color]) =>
+              !backgroundIdSet.has(id) ||
+              typeof color !== "string" ||
+              color.length === 0,
+          )
+        ) {
+          fail(
+            `${templateId}.rules[${index}].colorsByBackground must map ` +
+              "template background IDs to non-empty colors.",
+          );
+        }
+      }
+    }
+    for (const [index, shadow] of (template.matStyle?.shadows ?? []).entries()) {
+      validateShadow(shadow, `${templateId}.matStyle.shadows[${index}]`);
     }
 
     if (
@@ -392,6 +473,36 @@ function readManifest(source) {
         }
         continue;
       }
+      if (slot.kind === "mattedRect") {
+        for (const [name, rect] of [["mat", slot.mat], ["rect", slot.rect]]) {
+          if (
+            !rect ||
+            rect.x < 0 ||
+            rect.y < 0 ||
+            rect.width <= 0 ||
+            rect.height <= 0 ||
+            rect.x + rect.width > manifest.canvas.width ||
+            rect.y + rect.height > manifest.canvas.height
+          ) {
+            fail(`${templateId} slot ${slot.slot} has an invalid ${name} rect.`);
+          }
+        }
+        const inset = template.matStyle?.photoInset;
+        if (
+          !Number.isFinite(inset) ||
+          inset <= 0 ||
+          slot.rect.x !== slot.mat.x + inset ||
+          slot.rect.y !== slot.mat.y + inset ||
+          slot.rect.width !== slot.mat.width - inset * 2 ||
+          slot.rect.height !== slot.mat.height - inset * 2
+        ) {
+          fail(`${templateId} slot ${slot.slot} does not honor its mat inset.`);
+        }
+        continue;
+      }
+      if (slot.kind !== undefined && slot.kind !== "assetWindow") {
+        fail(`${templateId} slot ${slot.slot} has unknown kind ${slot.kind}.`);
+      }
       const layer = layersById.get(slot.layerId);
       const asset = layer && assetsById.get(layer.asset);
       if (!asset?.photoWindows?.[slot.windowIndex]) {
@@ -403,20 +514,29 @@ function readManifest(source) {
     }
   }
 
-  const maximalDigest = sha256(JSON.stringify(manifest.templates["scrapbook-maximal"]));
-  if (maximalDigest !== expectedMaximalTemplateDigest) {
-    fail(`The approved 2a template contract changed: ${maximalDigest}.`);
-  }
-  const newDesignProjection = {
-    assets: manifest.assets.slice(retainedAssetIds.length),
-    templates: {
-      "scrapbook-calm": manifest.templates["scrapbook-calm"],
-      "minimal-editorial": manifest.templates["minimal-editorial"],
-    },
+  const maximalProjection = {
+    assets: maximalRasterAssetIds.map((id) => assetsById.get(id)),
+    template: manifest.templates["scrapbook-maximal"],
   };
-  const newDesignDigest = sha256(JSON.stringify(newDesignProjection));
-  if (newDesignDigest !== expectedNewDesignContractDigest) {
-    fail(`The approved 2b/2c source contract changed: ${newDesignDigest}.`);
+  const maximalDigest = sha256(JSON.stringify(maximalProjection));
+  if (maximalDigest !== expectedMaximalDesignContractDigest) {
+    fail(`The approved 2a source contract changed: ${maximalDigest}.`);
+  }
+  const calmProjection = {
+    assets: designRasterAssetIds.map((id) => assetsById.get(id)),
+    template: manifest.templates["scrapbook-calm"],
+  };
+  const calmDigest = sha256(JSON.stringify(calmProjection));
+  if (calmDigest !== expectedCalmDesignContractDigest) {
+    fail(`The approved 2b source contract changed: ${calmDigest}.`);
+  }
+  const minimalProjection = {
+    assets: generatedColorAssetIds.map((id) => assetsById.get(id)),
+    template: manifest.templates["minimal-editorial"],
+  };
+  const minimalDigest = sha256(JSON.stringify(minimalProjection));
+  if (minimalDigest !== expectedMinimalDesignContractDigest) {
+    fail(`The approved 3b source contract changed: ${minimalDigest}.`);
   }
   return manifest;
 }
@@ -436,8 +556,6 @@ function cleanAsset(asset) {
     "film-strip-four-horizontal":
       "calm umber film stock with four live horizontal windows",
     "print-frame-hero": "even-border cream print frame with a baked alpha seam",
-    "paper-notebook-blush": "cream fiber sheet with a blush notebook spine",
-    "paper-notebook-sage": "cream fiber sheet with a sage notebook spine",
   };
   return noteOverrides[asset.id]
     ? { ...asset, note: noteOverrides[asset.id] }
@@ -466,13 +584,33 @@ function runtimeTitleStyle(source, { z, layerId } = {}) {
         z,
         rotation: source.rotation,
       };
+  const fontFamily = source.fontFamily
+    .split(",")[0]
+    .trim()
+    .replace(/^['"]|['"]$/g, "");
+  const fontKey = `${fontFamily}|${source.fontWeight}|${source.fontStyle}`;
+  const approvedFontAssets = new Map([
+    ["Lora|600|normal", "fonts/Lora-SemiBold.ttf"],
+    ["Lora|500|italic", "fonts/Lora-Italic.ttf"],
+    ["Lora|600|italic", "fonts/Lora-Italic.ttf"],
+    ["Inter|500|normal", "fonts/Inter-Medium.ttf"],
+  ]);
+  const expectedFontAsset = approvedFontAssets.get(fontKey);
+  if (!expectedFontAsset) {
+    fail(`Unsupported title font contract: ${fontKey}`);
+  }
+  const fontAsset = source.fontAsset ?? expectedFontAsset;
+  if (fontAsset !== expectedFontAsset) {
+    fail(
+      `Title font asset ${fontAsset} does not match ${fontKey}; expected ` +
+        expectedFontAsset,
+    );
+  }
   return {
     placement,
     units: "1080x1920 canvas pixels",
-    fontFamily: "Lora",
-    fontAsset: source.fontStyle === "italic"
-      ? "fonts/Lora-Italic.ttf"
-      : "fonts/Lora-SemiBold.ttf",
+    fontFamily,
+    fontAsset,
     fontWeight: source.fontWeight,
     fontStyle: source.fontStyle,
     fontSize: source.fontSize,
@@ -534,9 +672,7 @@ function normalizeRuntimeManifest(source) {
         layers: cleanLayers(maximal.layers),
         photoSlots: assetWindowSlots(maximal.photoSlots),
         appRendered: maximal.appRendered,
-        titleStyle: runtimeTitleStyle(maximal.titleStyle, {
-          layerId: maximal.titleStyle.layerId,
-        }),
+        titleStyle: runtimeTitleStyle(maximal.titleStyle, { z: 20 }),
       },
       {
         id: "scrapbook-calm",
@@ -562,26 +698,38 @@ function normalizeRuntimeManifest(source) {
             z: 0,
             rotation: 0,
           },
+          ...cleanLayers(minimal.layers),
         ],
-        rules: minimal.rules.map((rule) => ({
+        matStyle: {
+          fill: minimal.matStyle.fill,
+          fillOnDark: minimal.matStyle.fillOnDark,
+          border: minimal.matStyle.border,
+          shadows: minimal.matStyle.shadows,
+          photoInset: minimal.matStyle.photoInset,
+        },
+        rules: [...minimal.accents, ...minimal.rules].map((rule) => ({
           x: rule.x,
           y: rule.y,
           width: rule.width,
           height: rule.height,
-          z: 1,
+          z: 10,
           color: rule.color,
+          ...(rule.colorsByBackground
+            ? { colorsByBackground: rule.colorsByBackground }
+            : {}),
           colorOnDark: rule.colorOnDark,
         })),
         photoSlots: minimal.photoSlots.map((slot) => ({
           slot: slot.slot,
-          kind: "rect",
-          ...slot.rect,
+          kind: "mattedRect",
+          mat: slot.mat,
+          rect: slot.rect,
           z: 4,
           rotation: slot.rotation,
         })),
         appRendered:
-          "flat background, hairlines, title, and photo tiles are composed by the app",
-        titleStyle: runtimeTitleStyle(minimal.titleStyle, { z: 2 }),
+          "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
+        titleStyle: runtimeTitleStyle(minimal.titleStyle, { z: 20 }),
       },
     ],
   };
@@ -633,6 +781,31 @@ async function assertRealRetainedInventory() {
     fail(
       `Retained real asset inventory changed: ${digest}; expected ` +
         `${expectedRetainedInventoryDigest}.`,
+    );
+  }
+  return digest;
+}
+
+async function assertRealMaximalInventory() {
+  const digest = await inventoryDigest(
+    realOutputDirectory,
+    maximalRasterAssetIds,
+  );
+  if (digest !== expectedMaximalInventoryDigest) {
+    fail(
+      `Approved wide 2a banner inventory changed: ${digest}; expected ` +
+        `${expectedMaximalInventoryDigest}.`,
+    );
+  }
+  return digest;
+}
+
+async function assertRealCalmInventory() {
+  const digest = await inventoryDigest(realOutputDirectory, designRasterAssetIds);
+  if (digest !== expectedCalmInventoryDigest) {
+    fail(
+      `Approved 2b real asset inventory changed: ${digest}; expected ` +
+        `${expectedCalmInventoryDigest}.`,
     );
   }
   return digest;
@@ -835,7 +1008,7 @@ async function renderAsset(page, asset) {
       requestAnimationFrame(() => requestAnimationFrame(resolveFrame)),
     );
   });
-  if (asset.id === "banner") {
+  if (asset.id === "banner-wide") {
     const loaded = await page.evaluate(async () => {
       const faces = await document.fonts.load("600 45px Lora", "DECEMBER");
       return faces.some((face) => face.status === "loaded");
@@ -910,6 +1083,8 @@ async function main() {
     );
   }
   const retainedBefore = await assertRealRetainedInventory();
+  const maximalBefore = await assertRealMaximalInventory();
+  const calmBefore = await assertRealCalmInventory();
   const source = await verifySource(
     sourcePath,
     expectedSourceHashes["Memory Collage.dc.html"],
@@ -1008,16 +1183,39 @@ async function main() {
 
   await validateNoStalePngs(manifest);
   const retainedAfter = await assertRealRetainedInventory();
+  const maximalAfter = await assertRealMaximalInventory();
+  const calmAfter = await assertRealCalmInventory();
   let stagedRetainedDigest;
+  let stagedMaximalDigest;
+  let stagedCalmDigest;
   if (
     !isRealOutput &&
     retainedAssetIds.every((id) => selectedIds.includes(id))
   ) {
-    stagedRetainedDigest = await inventoryDigest(outputDirectory, retainedAssetIds);
+    stagedRetainedDigest = await inventoryDigest(
+      outputDirectory,
+      retainedAssetIds,
+    );
     if (stagedRetainedDigest !== expectedRetainedInventoryDigest) {
       fail(
         `Staged retained assets are not byte-identical: ${stagedRetainedDigest}.`,
       );
+    }
+    stagedMaximalDigest = await inventoryDigest(
+      outputDirectory,
+      maximalRasterAssetIds,
+    );
+    if (stagedMaximalDigest !== expectedMaximalInventoryDigest) {
+      fail(
+        `Staged wide 2a banner is not byte-identical: ${stagedMaximalDigest}.`,
+      );
+    }
+    stagedCalmDigest = await inventoryDigest(
+      outputDirectory,
+      designRasterAssetIds,
+    );
+    if (stagedCalmDigest !== expectedCalmInventoryDigest) {
+      fail(`Staged 2b assets are not byte-identical: ${stagedCalmDigest}.`);
     }
   }
 
@@ -1031,8 +1229,18 @@ async function main() {
     supportSha256: support.actualHash,
     retainedRealSha256Before: retainedBefore,
     retainedRealSha256After: retainedAfter,
+    maximalRealSha256Before: maximalBefore,
+    maximalRealSha256After: maximalAfter,
+    calmRealSha256Before: calmBefore,
+    calmRealSha256After: calmAfter,
     ...(stagedRetainedDigest
       ? { stagedRetainedSha256: stagedRetainedDigest }
+      : {}),
+    ...(stagedMaximalDigest
+      ? { stagedMaximalSha256: stagedMaximalDigest }
+      : {}),
+    ...(stagedCalmDigest
+      ? { stagedCalmSha256: stagedCalmDigest }
       : {}),
     files: results,
   }, null, 2));
