@@ -24,7 +24,7 @@ const isRealOutput = outputDirectory === realOutputDirectory;
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "7712f0e13d1759ef6e70f5c23f773b49c57c1fb0958639c67c00fe1a0415d806",
+    "f619a9caebb242cfcbd67c5fb6c429e98f403ac686fe0173a93922d7f3b44668",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
@@ -157,11 +157,11 @@ const expectedMaximalDesignContractDigest =
 // 2b projection: JSON.stringify({ assets: its two raster asset records,
 // template: scrapbook-calm }).
 const expectedCalmDesignContractDigest =
-  "c5ef278d78d7ef74904028c775aa15b37ed0217e3f512a0b1fc893fdd4ac8ac2";
+  "2aa194fe85f3a66443c573cc4918c64ed6cbf81786aa539fbd7f1f135856b1d2";
 // 3b/4a/5b projection: JSON.stringify({ assets: its three retained generated
 // color records, template: minimal-editorial }).
 const expectedMinimalDesignContractDigest =
-  "ebdadd0b3afa05ba8491a57477df6b75754b848044a4164f67412f5b464c43d6";
+  "2fd7f1656224932cc74a4dcc966ce08fdeff9aac0ff1dfcf1fc5ff59fbc4c593";
 
 const paletteTextureIds = new Set([
   "paper-washi",
@@ -348,6 +348,9 @@ function readManifest(source) {
       ) {
         fail(`${asset.id} contains an invalid photo window.`);
       }
+    }
+    if ((asset.photoWindows?.length ?? 0) > 0 && !asset.emptyWindowColor) {
+      fail(`${asset.id} must declare an emptyWindowColor.`);
     }
   }
   for (const [assetId, windows] of expectedPhotoWindows) {
@@ -703,6 +706,7 @@ function normalizeRuntimeManifest(source) {
         matStyle: {
           fill: minimal.matStyle.fill,
           fillOnDark: minimal.matStyle.fillOnDark,
+          photoFill: minimal.matStyle.photoFill,
           border: minimal.matStyle.border,
           shadows: minimal.matStyle.shadows,
           photoInset: minimal.matStyle.photoInset,

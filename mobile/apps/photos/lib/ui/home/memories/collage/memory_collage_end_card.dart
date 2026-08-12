@@ -353,7 +353,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     }
     final manifest = snapshot.data;
     if (manifest == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const SizedBox.expand();
     }
     final defaultTemplate = manifest.defaultTemplate;
     return Padding(

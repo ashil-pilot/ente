@@ -43,6 +43,7 @@ class ZoomableImage extends StatefulWidget {
   final bool showCaption;
   final int? cacheWidth;
   final int? cacheHeight;
+  final bool showLoadingIndicator;
   final Function({required int memoryDuration})? onFinalFileLoad;
   final ValueChanged<File>? onFinalImageLoaded;
 
@@ -58,6 +59,7 @@ class ZoomableImage extends StatefulWidget {
     this.showCaption = true,
     this.cacheWidth,
     this.cacheHeight,
+    this.showLoadingIndicator = true,
     this.onFinalFileLoad,
     this.onFinalImageLoaded,
   });
@@ -268,9 +270,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
               child: SizedBox(
                 width: screenRelativeImageWidth,
                 height: screenRelativeImageHeight,
-                child: widget.isFromMemories
-                    ? const _DelayedLoadingIndicator()
-                    : const EnteLoadingWidget(color: Colors.white),
+                child: _buildLoadingIndicator(),
               ),
             );
           },
@@ -286,9 +286,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
         ),
       );
     } else {
-      content = widget.isFromMemories
-          ? const _DelayedLoadingIndicator()
-          : const EnteLoadingWidget(color: Colors.white);
+      content = _buildLoadingIndicator();
     }
 
     final GestureDragUpdateCallback? verticalDragCallback =
@@ -371,6 +369,13 @@ class _ZoomableImageState extends State<ZoomableImage> {
             )
           : content,
     );
+  }
+
+  Widget _buildLoadingIndicator() {
+    if (!widget.showLoadingIndicator) return const SizedBox.expand();
+    return widget.isFromMemories
+        ? const _DelayedLoadingIndicator()
+        : const EnteLoadingWidget(color: Colors.white);
   }
 
   // Deferred via microtask so synchronous callers inside build() (the

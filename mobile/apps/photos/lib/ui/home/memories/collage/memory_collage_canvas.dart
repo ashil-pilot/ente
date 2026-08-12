@@ -7,6 +7,7 @@ import "package:photos/models/memories/memory_collage_manifest.dart";
 
 const memoryCollageLogicalSize = Size(360, 640);
 const memoryCollageExportPixelRatio = 3.0;
+const _memoryCollageDefaultPhotoFill = Color(0xFFE7E1D4);
 
 typedef MemoryCollagePhotoBuilder =
     Widget Function(BuildContext context, EnteFile file, int slot);
@@ -269,7 +270,13 @@ class MemoryCollageCanvasView extends StatelessWidget {
           top: window.y / asset.height * height,
           width: window.width / asset.width * width,
           height: window.height / asset.height * height,
-          child: ClipRect(child: photoBuilder(context, files[slot], slot)),
+          child: ClipRect(
+            child: ColoredBox(
+              key: ValueKey("memory-collage-photo-backing-$slot"),
+              color: parseMemoryCollageColor(asset.emptyWindowColor!),
+              child: photoBuilder(context, files[slot], slot),
+            ),
+          ),
         ),
       );
     }
@@ -363,7 +370,11 @@ class MemoryCollageCanvasView extends StatelessWidget {
     );
     Widget photo = ClipRRect(
       borderRadius: radius,
-      child: photoBuilder(context, files[slot.slot], slot.slot),
+      child: ColoredBox(
+        key: ValueKey("memory-collage-photo-backing-${slot.slot}"),
+        color: _memoryCollageDefaultPhotoFill,
+        child: photoBuilder(context, files[slot.slot], slot.slot),
+      ),
     );
     final border = slot.border;
     if (border != null) {
@@ -453,7 +464,11 @@ class MemoryCollageCanvasView extends StatelessWidget {
               child: ClipRRect(
                 key: ValueKey("memory-collage-matted-photo-${slot.slot}"),
                 borderRadius: radius,
-                child: photoBuilder(context, files[slot.slot], slot.slot),
+                child: ColoredBox(
+                  key: ValueKey("memory-collage-photo-backing-${slot.slot}"),
+                  color: parseMemoryCollageColor(style.photoFill),
+                  child: photoBuilder(context, files[slot.slot], slot.slot),
+                ),
               ),
             ),
           ],

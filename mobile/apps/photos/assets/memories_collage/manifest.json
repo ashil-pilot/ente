@@ -52,6 +52,7 @@
       "id": "polaroid-frame",
       "width": 462,
       "height": 534,
+      "emptyWindowColor": "#2e2318",
       "photoWindows": [
         {
           "x": 27,
@@ -66,6 +67,7 @@
       "id": "film-strip-four",
       "width": 390,
       "height": 1800,
+      "emptyWindowColor": "#3a2a1c",
       "photoWindows": [
         {
           "x": 57,
@@ -167,6 +169,7 @@
       "id": "film-strip-four-horizontal",
       "width": 972,
       "height": 252,
+      "emptyWindowColor": "#33241a",
       "photoWindows": [
         {
           "x": 30,
@@ -199,6 +202,7 @@
       "id": "print-frame-hero",
       "width": 876,
       "height": 594,
+      "emptyWindowColor": "#2e2318",
       "photoWindows": [
         {
           "x": 24,
@@ -1007,6 +1011,7 @@
       "matStyle": {
         "fill": "#faf6ec",
         "fillOnDark": "#faf6ec",
+        "photoFill": "#e7e1d4",
         "border": {
           "width": 3,
           "color": "rgba(90,75,55,0.20)"

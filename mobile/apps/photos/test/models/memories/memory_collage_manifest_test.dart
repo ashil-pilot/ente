@@ -89,6 +89,7 @@ void main() {
         if (slot is! MemoryCollageAssetWindowPhotoSlot) continue;
         final layer = template.layerFor(slot.layerID);
         final asset = manifest.assetFor(layer.assetID);
+        expect(asset.emptyWindowColor, isNotEmpty);
         expect(
           slot.windowIndex,
           inInclusiveRange(0, asset.photoWindows.length - 1),
@@ -297,6 +298,7 @@ void main() {
     expect(minimal.matStyle, isNotNull);
     expect(minimal.matStyle!.fill, "#faf6ec");
     expect(minimal.matStyle!.fillOnDark, "#faf6ec");
+    expect(minimal.matStyle!.photoFill, "#e7e1d4");
     expect(minimal.matStyle!.photoInset, 15);
     expect(minimal.matStyle!.border.width, 3);
     expect(minimal.matStyle!.border.color, "rgba(90,75,55,0.20)");

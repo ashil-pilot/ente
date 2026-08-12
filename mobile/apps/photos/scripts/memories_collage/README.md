@@ -6,6 +6,10 @@ Flutter PNG assets. The generated files live in
 `../../assets/memories_collage/`; rotation, layer and mat shadows, titles, mats,
 rules, and photo placement remain compositor-owned.
 
+Empty photo windows use the material colors authored into the source contract:
+warm emulsion browns for instant prints and film, and a pale warm aperture for
+the minimal mats. These fills remain visible only until each photo fades in.
+
 Every template is seven-photo-only:
 
 - `scrapbook-maximal` (2a) uses four vertical film windows, three polaroids,
@@ -58,9 +62,9 @@ The two approved 2b frame assets are pinned independently at inventory digest
 Run it twice and compare sorted file SHA-256 inventories before accepting a
 source or toolchain change. The 72 PNG variants combined with the 5b manifest
 form a 73-file inventory with digest
-`75d2b66343b0488f1df3ae470adf7288b93dd7fd58dc4bb4d1258cea6880a096`.
+`e939057ba3f768e2dcab8cbbdbb7d0c3a1d233d98d6fb6286b3630fd1875960e`.
 The normalized staging manifest is byte-identical to the runtime manifest,
-SHA-256 `c473198bd51c56108be696566affb94d03ae16aec2677a8f904fe8c4507dbb8e`.
+SHA-256 `8ddf3b36702e0385abd1e91ccc13793fae2001284e0cde6e7fc72d3c49c502f7`.
 
 When packages are not installed in the active Node environment, point at
 existing package directories explicitly:
@@ -117,7 +121,7 @@ local probe; structural and contract checks still run.
   `/Users/ashilmacmini/Downloads/Memory Collage 3b.dc.html` has SHA-256
   `cdd9c2855bd8fe035d84a1eb0217cdbc6d9ddb162e46cc46227772c3636536b6`.
 - The canonical integrated `Memory Collage.dc.html` has SHA-256
-  `7712f0e13d1759ef6e70f5c23f773b49c57c1fb0958639c67c00fe1a0415d806`.
+  `f619a9caebb242cfcbd67c5fb6c429e98f403ac686fe0173a93922d7f3b44668`.
   It preserves every 2a photo coordinate, including vertical film-window y
   values 69/453/837/1221, while integrating the approved 900x150 title ribbon,
   its exact fresh export recipe, and the repositioned tape/stamp. It also
@@ -126,9 +130,9 @@ local probe; structural and contract checks still run.
   approved 5b paper-ground material treatment.
 - The source contract digests are 2a
   `9a9246ff8988d8741f86c0ea2f71df22dba594b762d3939abce2a20cc4cc94da`,
-  2b/6a `c5ef278d78d7ef74904028c775aa15b37ed0217e3f512a0b1fc893fdd4ac8ac2`,
+  2b/6a `2aa194fe85f3a66443c573cc4918c64ed6cbf81786aa539fbd7f1f135856b1d2`,
   and 3b/4a/5b/6a
-  `ebdadd0b3afa05ba8491a57477df6b75754b848044a4164f67412f5b464c43d6`.
+  `2fd7f1656224932cc74a4dcc966ce08fdeff9aac0ff1dfcf1fc5ff59fbc4c593`.
 - `support.js` is the matching generated Design document runtime, SHA-256
   `8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe`.
 - `fonts/Lora-SemiBold.ttf` has SHA-256

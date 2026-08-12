@@ -67,6 +67,56 @@ void main() {
     }
   });
 
+  testWidgets("uses material-aware empty photo colors", (tester) async {
+    final expectedColorsByTemplate = {
+      "scrapbook-maximal": [
+        const Color(0xFF3A2A1C),
+        const Color(0xFF3A2A1C),
+        const Color(0xFF3A2A1C),
+        const Color(0xFF2E2318),
+        const Color(0xFF2E2318),
+        const Color(0xFF2E2318),
+        const Color(0xFF3A2A1C),
+      ],
+      "scrapbook-calm": [
+        const Color(0xFF2E2318),
+        const Color(0xFF2E2318),
+        const Color(0xFF2E2318),
+        const Color(0xFF33241A),
+        const Color(0xFF33241A),
+        const Color(0xFF33241A),
+        const Color(0xFF33241A),
+      ],
+      "minimal-editorial": List.filled(7, const Color(0xFFE7E1D4)),
+    };
+
+    for (final templateID in _runtimeTemplateIDs) {
+      final template = manifest.templateFor(templateID);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MemoryCollageCanvasView(
+            manifest: manifest,
+            files: List.generate(7, (_) => EnteFile()),
+            title: "AUGUST 2026",
+            backgroundAssetID: template.background.defaultAssetID,
+            templateID: templateID,
+            photoBuilder: (_, _, _) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+
+      final colors = <Color>[
+        for (var slot = 0; slot < 7; slot++)
+          tester
+              .widget<ColoredBox>(
+                find.byKey(ValueKey("memory-collage-photo-backing-$slot")),
+              )
+              .color,
+      ];
+      expect(colors, expectedColorsByTemplate[templateID]);
+    }
+  });
+
   for (final templateID in _runtimeTemplateIDs) {
     testWidgets(
       "$templateID renders its seven-photo runtime contract",

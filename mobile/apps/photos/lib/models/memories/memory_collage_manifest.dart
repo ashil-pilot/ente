@@ -258,9 +258,12 @@ class MemoryCollageManifest {
       );
     }
     if (style == null) return;
-    if (style.fill.isEmpty || (style.fillOnDark?.isEmpty ?? false)) {
+    if (style.fill.isEmpty ||
+        (style.fillOnDark?.isEmpty ?? false) ||
+        style.photoFill.isEmpty) {
       throw FormatException(
-        "Template ${template.id} matStyle must declare valid fill colors",
+        "Template ${template.id} matStyle must declare valid mat and photo "
+        "fill colors",
       );
     }
     if (style.border.width <= 0 || style.border.color.isEmpty) {
@@ -378,6 +381,12 @@ class MemoryCollageManifest {
             );
           }
           final asset = _assetsByID[layer.assetID]!;
+          if (asset.emptyWindowColor?.isEmpty ?? true) {
+            throw FormatException(
+              "Photo asset ${asset.id} in template ${template.id} must "
+              "declare an emptyWindowColor",
+            );
+          }
           if (slot.windowIndex < 0 ||
               slot.windowIndex >= asset.photoWindows.length) {
             throw FormatException(
@@ -566,6 +575,7 @@ class MemoryCollageAsset {
   final MemoryCollageAssetRole? role;
   final int? safetyMarginPx;
   final String? note;
+  final String? emptyWindowColor;
   final List<MemoryCollagePhotoWindow> photoWindows;
   final double? bakedOpacity;
   final String? recommendedBlendMode;
@@ -580,6 +590,7 @@ class MemoryCollageAsset {
     required this.role,
     required this.safetyMarginPx,
     required this.note,
+    required this.emptyWindowColor,
     required List<MemoryCollagePhotoWindow> photoWindows,
     required this.bakedOpacity,
     required this.recommendedBlendMode,
@@ -601,6 +612,7 @@ class MemoryCollageAsset {
       },
       safetyMarginPx: _optionalInt(json, "safetyMarginPx"),
       note: _optionalString(json, "note"),
+      emptyWindowColor: _optionalString(json, "emptyWindowColor"),
       photoWindows: _optionalJsonList(
         json,
         "photoWindows",
@@ -893,6 +905,7 @@ class MemoryCollageShadow {
 class MemoryCollageMatStyle {
   final String fill;
   final String? fillOnDark;
+  final String photoFill;
   final MemoryCollageBorder border;
   final double photoInset;
   final List<MemoryCollageShadow> shadows;
@@ -900,6 +913,7 @@ class MemoryCollageMatStyle {
   MemoryCollageMatStyle({
     required this.fill,
     required this.fillOnDark,
+    required this.photoFill,
     required this.border,
     required this.photoInset,
     required List<MemoryCollageShadow> shadows,
@@ -909,6 +923,7 @@ class MemoryCollageMatStyle {
     return MemoryCollageMatStyle(
       fill: _jsonString(json, "fill"),
       fillOnDark: _optionalString(json, "fillOnDark"),
+      photoFill: _jsonString(json, "photoFill"),
       border: MemoryCollageBorder.fromJson(_jsonMap(json, "border")),
       photoInset: _jsonDouble(json, "photoInset"),
       shadows: _optionalJsonList(

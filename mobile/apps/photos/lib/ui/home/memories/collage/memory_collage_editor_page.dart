@@ -372,7 +372,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
               );
             }
             if (manifest == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const SizedBox.expand();
             }
             return _buildEditor(context, manifest);
           },
@@ -384,7 +384,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   Widget _buildEditor(BuildContext context, MemoryCollageManifest manifest) {
     final controller = _controller;
     if (controller == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const SizedBox.expand();
     }
     final canCustomize = _contentReady;
     return Stack(
@@ -435,9 +435,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
                       ),
                     ),
                   ),
-                  if (!_isReadyToExport &&
-                      !_isExporting &&
-                      (!_isControlActionPending || _showPhotoRetry))
+                  if (_showPhotoRetry && !_photosReady && !_isExporting)
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Padding(
@@ -452,33 +450,11 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
                               horizontal: 14,
                               vertical: 8,
                             ),
-                            child: _showPhotoRetry && !_photosReady
-                                ? TextButton.icon(
-                                    onPressed: _retryPhotoLoading,
-                                    icon: const Icon(Icons.refresh, size: 18),
-                                    label: Text(context.strings.tryAgain),
-                                  )
-                                : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox.square(
-                                        dimension: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        context.strings.gettingReady,
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.72,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            child: TextButton.icon(
+                              onPressed: _retryPhotoLoading,
+                              icon: const Icon(Icons.refresh, size: 18),
+                              label: Text(context.strings.tryAgain),
+                            ),
                           ),
                         ),
                       ),
