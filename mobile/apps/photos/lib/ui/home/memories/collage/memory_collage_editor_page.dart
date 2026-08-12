@@ -560,9 +560,13 @@ class MemoryCollageEditorTopBar extends StatelessWidget
           key: shareButtonKey,
           tooltip: isSharing ? context.strings.sharing : context.strings.share,
           isLoading: isSharing,
-          dimWhenDisabled: !isExporting,
+          dimWhenDisabled: false,
           showTapEffect: false,
-          onPressed: canExport && !isExporting ? onShare : null,
+          onPressed: isExporting
+              ? null
+              : () {
+                  if (canExport) onShare();
+                },
           icon: const HugeIcon(
             icon: HugeIcons.strokeRoundedShare08,
             color: Colors.white,
@@ -572,9 +576,13 @@ class MemoryCollageEditorTopBar extends StatelessWidget
         MemoryViewerActionButton(
           tooltip: isSaving ? context.strings.saving : context.strings.save,
           isLoading: isSaving,
-          dimWhenDisabled: !isExporting,
+          dimWhenDisabled: false,
           showTapEffect: false,
-          onPressed: canExport && !isExporting ? onSave : null,
+          onPressed: isExporting
+              ? null
+              : () {
+                  if (canExport) onSave();
+                },
           icon: const HugeIcon(
             icon: HugeIcons.strokeRoundedDownload01,
             color: Colors.white,

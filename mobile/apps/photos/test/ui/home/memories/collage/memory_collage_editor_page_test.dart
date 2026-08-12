@@ -120,6 +120,36 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsNothing);
   });
 
+  testWidgets("export actions look active but no-op while getting ready", (
+    tester,
+  ) async {
+    await _setSurfaceSize(tester, const Size(320, 640));
+    var shareTaps = 0;
+    var saveTaps = 0;
+
+    await tester.pumpWidget(
+      _TestApp(
+        width: 320,
+        child: Scaffold(
+          appBar: MemoryCollageEditorTopBar(
+            canExport: false,
+            onBack: () {},
+            onShare: () => shareTaps++,
+            onSave: () => saveTaps++,
+          ),
+        ),
+      ),
+    );
+
+    expect(_actionIconOpacity(tester, "Share"), 1);
+    expect(_actionIconOpacity(tester, "Save"), 1);
+    expect(_actionOnPressed(tester, "Share"), isNotNull);
+    expect(_actionOnPressed(tester, "Save"), isNotNull);
+    await tester.tap(find.byTooltip("Share"));
+    await tester.tap(find.byTooltip("Save"));
+    expect((shareTaps, saveTaps), (0, 0));
+  });
+
   testWidgets("compact controls dispatch one tap each", (tester) async {
     final semantics = tester.ensureSemantics();
     var styleTaps = 0;

@@ -51,7 +51,7 @@ void main() {
     _expectTapEffect(tester, memoryCollageSaveActionKey, isVisible: false);
   });
 
-  testWidgets("keeps edit available while collage export is getting ready", (
+  testWidgets("export actions look active but no-op while getting ready", (
     tester,
   ) async {
     await _setSurfaceSize(tester, const Size(240, 480));
@@ -77,15 +77,11 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(
-      _actionIconOpacity(tester, memoryCollageShareActionKey),
-      memoryViewerDisabledActionOpacity,
-    );
+    expect(_actionIconOpacity(tester, memoryCollageShareActionKey), 1);
     expect(_actionIconOpacity(tester, memoryCollageEditActionKey), 1);
-    expect(
-      _actionIconOpacity(tester, memoryCollageSaveActionKey),
-      memoryViewerDisabledActionOpacity,
-    );
+    expect(_actionIconOpacity(tester, memoryCollageSaveActionKey), 1);
+    expect(_actionOnPressed(tester, memoryCollageShareActionKey), isNotNull);
+    expect(_actionOnPressed(tester, memoryCollageSaveActionKey), isNotNull);
     await tester.tap(find.byKey(memoryCollageShareActionKey));
     await tester.tap(find.byKey(memoryCollageEditActionKey));
     await tester.tap(find.byKey(memoryCollageSaveActionKey));
