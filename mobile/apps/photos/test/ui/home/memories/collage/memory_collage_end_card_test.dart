@@ -46,6 +46,9 @@ void main() {
     await tester.tap(find.byKey(memoryCollageEditActionKey));
     await tester.tap(find.byKey(memoryCollageSaveActionKey));
     expect((shareTaps, editTaps, saveTaps), (1, 1, 1));
+    _expectTapEffect(tester, memoryCollageShareActionKey, isVisible: false);
+    _expectTapEffect(tester, memoryCollageEditActionKey, isVisible: true);
+    _expectTapEffect(tester, memoryCollageSaveActionKey, isVisible: false);
   });
 
   testWidgets("keeps edit available while collage export is getting ready", (
@@ -88,16 +91,96 @@ void main() {
     await tester.tap(find.byKey(memoryCollageSaveActionKey));
     expect((shareTaps, editTaps, saveTaps), (0, 1, 0));
   });
+
+  testWidgets("replaces only the active export action with a spinner", (
+    tester,
+  ) async {
+    await _setSurfaceSize(tester, const Size(320, 640));
+
+    Future<void> pumpActions({bool isSharing = false, bool isSaving = false}) {
+      return tester.pumpWidget(
+        _testApp(
+          MemoryCollageEndCardActions(
+            canExport: true,
+            isSharing: isSharing,
+            isSaving: isSaving,
+            onShare: () {},
+            onEdit: () {},
+            onSave: () {},
+          ),
+        ),
+      );
+    }
+
+    await pumpActions(isSharing: true);
+    _expectOnlyActionLoading(tester, loadingKey: memoryCollageShareActionKey);
+    expect(find.byTooltip("Sharing..."), findsOneWidget);
+    expect(_actionOnPressed(tester, memoryCollageShareActionKey), isNull);
+    expect(_actionOnPressed(tester, memoryCollageSaveActionKey), isNull);
+    expect(_actionIconOpacity(tester, memoryCollageShareActionKey), 1);
+    expect(_actionIconOpacity(tester, memoryCollageEditActionKey), 1);
+    expect(_actionIconOpacity(tester, memoryCollageSaveActionKey), 1);
+
+    await pumpActions(isSaving: true);
+    _expectOnlyActionLoading(tester, loadingKey: memoryCollageSaveActionKey);
+    expect(find.byTooltip("Saving..."), findsOneWidget);
+    expect(_actionOnPressed(tester, memoryCollageShareActionKey), isNull);
+    expect(_actionOnPressed(tester, memoryCollageSaveActionKey), isNull);
+    expect(_actionIconOpacity(tester, memoryCollageShareActionKey), 1);
+    expect(_actionIconOpacity(tester, memoryCollageEditActionKey), 1);
+    expect(_actionIconOpacity(tester, memoryCollageSaveActionKey), 1);
+  });
+}
+
+void _expectOnlyActionLoading(WidgetTester tester, {required Key loadingKey}) {
+  expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  for (final key in [
+    memoryCollageShareActionKey,
+    memoryCollageEditActionKey,
+    memoryCollageSaveActionKey,
+  ]) {
+    expect(
+      find.descendant(
+        of: find.byKey(key),
+        matching: find.byType(CircularProgressIndicator),
+      ),
+      key == loadingKey ? findsOneWidget : findsNothing,
+    );
+  }
 }
 
 double _actionIconOpacity(WidgetTester tester, Key actionKey) {
-  final button = tester.widget<IconButton>(
+  final button = _actionIconButton(tester, actionKey);
+  return (button.icon as Opacity).opacity;
+}
+
+VoidCallback? _actionOnPressed(WidgetTester tester, Key actionKey) {
+  return _actionIconButton(tester, actionKey).onPressed;
+}
+
+IconButton _actionIconButton(WidgetTester tester, Key actionKey) {
+  return tester.widget<IconButton>(
     find.descendant(
       of: find.byKey(actionKey),
       matching: find.byType(IconButton),
     ),
   );
-  return (button.icon as Opacity).opacity;
+}
+
+void _expectTapEffect(
+  WidgetTester tester,
+  Key actionKey, {
+  required bool isVisible,
+}) {
+  final button = _actionIconButton(tester, actionKey);
+  expect(
+    button.style?.splashFactory,
+    isVisible ? isNull : NoSplash.splashFactory,
+  );
+  expect(
+    button.style?.overlayColor?.resolve({WidgetState.pressed}),
+    isVisible ? isNot(Colors.transparent) : Colors.transparent,
+  );
 }
 
 Widget _testApp(Widget child) {

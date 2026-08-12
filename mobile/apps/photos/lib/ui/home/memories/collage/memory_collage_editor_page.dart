@@ -1,7 +1,9 @@
-import "dart:typed_data";
+import "dart:async";
 
 import "package:ente_strings/ente_strings.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/retry_failed_image_load_event.dart";
@@ -12,7 +14,9 @@ import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_controller.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export_photo.dart";
+import "package:photos/ui/home/memories/memory_viewer_chrome.dart";
 import "package:photos/ui/notification/toast.dart";
+import "package:photos/utils/dialog_util.dart";
 import "package:photos/utils/share_util.dart";
 
 class MemoryCollageEditorPage extends StatefulWidget {
@@ -42,8 +46,9 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   Future<MemoryCollageManifest>? _manifestFuture;
   bool _assetsReady = false;
   bool _backgroundReady = true;
-  bool _isExporting = false;
+  MemoryCollageExportAction? _exportAction;
   bool _showPhotoRetry = false;
+  bool _isControlActionPending = false;
   int _photoLoadTimeoutToken = 0;
 
   bool get _photosReady {
@@ -55,6 +60,8 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   bool get _contentReady {
     return _assetsReady && _backgroundReady && _photosReady;
   }
+
+  bool get _isExporting => _exportAction != null;
 
   bool get _isReadyToExport => _contentReady && !_isExporting;
 
@@ -142,6 +149,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
       if (_photosReady) {
         _photoLoadTimeoutToken++;
         _showPhotoRetry = false;
+        _isControlActionPending = false;
       }
     });
   }
@@ -165,15 +173,27 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   }
 
   Future<void> _nextBackground() async {
-    if (_isExporting || !_backgroundReady) return;
+    if (!_isReadyToExport) return;
     final controller = _controller;
-    if (controller == null) return;
+    if (controller == null || controller.backgroundIDs.length < 2) return;
     final nextIndex =
         (controller.backgroundIndex + 1) % controller.backgroundIDs.length;
     final nextBackgroundID = controller.backgroundIDs[nextIndex];
-    setState(() => _backgroundReady = false);
+    unawaited(HapticFeedback.selectionClick());
+    setState(() {
+      _backgroundReady = false;
+      _isControlActionPending = true;
+    });
     try {
-      await precacheMemoryCollageAsset(context, nextBackgroundID);
+      await MemoryCollageCanvasView.precacheAssets(
+        context,
+        controller.manifest,
+        assetIDs: memoryCollageRequiredAssetIDs(
+          controller.manifest,
+          nextBackgroundID,
+          templateID: controller.templateID,
+        ),
+      );
       if (!mounted) return;
       controller.nextBackground();
       await WidgetsBinding.instance.endOfFrame;
@@ -187,8 +207,22 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
         showShortToast(context, context.strings.somethingWentWrong);
       }
     } finally {
-      if (mounted) setState(() => _backgroundReady = true);
+      if (mounted) {
+        setState(() {
+          _backgroundReady = true;
+          _isControlActionPending = false;
+        });
+      }
     }
+  }
+
+  Future<void> _nextTemplate() async {
+    if (!_isReadyToExport) return;
+    final controller = _controller;
+    if (controller == null || controller.manifest.templates.length < 2) return;
+    unawaited(HapticFeedback.selectionClick());
+    setState(() => _isControlActionPending = true);
+    await _selectTemplate(controller.nextTemplateID);
   }
 
   Future<void> _selectTemplate(String templateID) async {
@@ -196,6 +230,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     final controller = _controller;
     if (controller == null || controller.templateID == templateID) return;
 
+    var didFail = false;
     setState(() => _backgroundReady = false);
     try {
       final destinationBackground = controller.backgroundAssetIDForTemplate(
@@ -218,6 +253,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
       controller.selectTemplate(templateID);
       await WidgetsBinding.instance.endOfFrame;
     } catch (error, stackTrace) {
+      didFail = true;
       _logger.warning(
         "Failed to load memory collage template",
         error,
@@ -227,8 +263,22 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
         showShortToast(context, context.strings.somethingWentWrong);
       }
     } finally {
-      if (mounted) setState(() => _backgroundReady = true);
+      if (mounted) {
+        setState(() {
+          _backgroundReady = true;
+          if (didFail || _photosReady) _isControlActionPending = false;
+        });
+      }
     }
+  }
+
+  void _shuffle() {
+    if (!_isReadyToExport) return;
+    final controller = _controller;
+    if (controller == null) return;
+    unawaited(HapticFeedback.selectionClick());
+    setState(() => _isControlActionPending = true);
+    controller.shuffle();
   }
 
   Future<Uint8List> _capturePng() async {
@@ -240,7 +290,8 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
 
   Future<void> _shareCollage() async {
     if (!_isReadyToExport) return;
-    setState(() => _isExporting = true);
+    Object? failure;
+    setState(() => _exportAction = MemoryCollageExportAction.share);
     try {
       final bytes = await _capturePng();
       if (!mounted) return;
@@ -250,17 +301,19 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
       );
     } catch (error, stackTrace) {
       _logger.severe("Failed to share memory collage", error, stackTrace);
-      if (mounted) {
-        showShortToast(context, context.strings.somethingWentWrong);
-      }
+      failure = error;
     } finally {
-      if (mounted) setState(() => _isExporting = false);
+      if (mounted) setState(() => _exportAction = null);
+    }
+    if (failure != null && mounted) {
+      await showGenericErrorDialog(context: context, error: failure);
     }
   }
 
   Future<void> _saveCollage() async {
     if (!_isReadyToExport) return;
-    setState(() => _isExporting = true);
+    Object? failure;
+    setState(() => _exportAction = MemoryCollageExportAction.save);
     try {
       final bytes = await _capturePng();
       await MemoryCollageExport.savePng(bytes);
@@ -269,65 +322,61 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
       }
     } catch (error, stackTrace) {
       _logger.severe("Failed to save memory collage", error, stackTrace);
-      if (mounted) {
-        showShortToast(context, context.strings.somethingWentWrong);
-      }
+      failure = error;
     } finally {
-      if (mounted) setState(() => _isExporting = false);
+      if (mounted) setState(() => _exportAction = null);
+    }
+    if (failure != null && mounted) {
+      await showGenericErrorDialog(context: context, error: failure);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF161412),
-      appBar: AppBar(
+    return Semantics(
+      container: true,
+      namesRoute: true,
+      label: context.strings.memoryCollageCustomize,
+      child: Scaffold(
         backgroundColor: const Color(0xFF161412),
-        foregroundColor: Colors.white,
-        title: Text(context.strings.createCollage),
-        actions: [
-          IconButton(
-            key: _shareButtonKey,
-            tooltip: context.strings.share,
-            onPressed: _isReadyToExport ? _shareCollage : null,
-            icon: const Icon(Icons.ios_share_outlined),
-          ),
-          IconButton(
-            tooltip: context.strings.save,
-            onPressed: _isReadyToExport ? _saveCollage : null,
-            icon: const Icon(Icons.download_outlined),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: FutureBuilder<MemoryCollageManifest>(
-        future: _manifestFuture,
-        builder: (context, snapshot) {
-          final manifest = snapshot.data;
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.strings.somethingWentWrong,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: _retryManifest,
-                    icon: const Icon(Icons.refresh),
-                    label: Text(context.strings.tryAgain),
-                  ),
-                ],
-              ),
-            );
-          }
-          if (manifest == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return _buildEditor(context, manifest);
-        },
+        appBar: MemoryCollageEditorTopBar(
+          canExport: _contentReady,
+          isSharing: _exportAction == MemoryCollageExportAction.share,
+          isSaving: _exportAction == MemoryCollageExportAction.save,
+          shareButtonKey: _shareButtonKey,
+          onBack: () => Navigator.maybePop(context),
+          onShare: _shareCollage,
+          onSave: _saveCollage,
+        ),
+        body: FutureBuilder<MemoryCollageManifest>(
+          future: _manifestFuture,
+          builder: (context, snapshot) {
+            final manifest = snapshot.data;
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      context.strings.somethingWentWrong,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _retryManifest,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(context.strings.tryAgain),
+                    ),
+                  ],
+                ),
+              );
+            }
+            if (manifest == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return _buildEditor(context, manifest);
+          },
+        ),
       ),
     );
   }
@@ -337,101 +386,130 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     if (controller == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final stackCustomizationActions =
-        MediaQuery.sizeOf(context).width < 360 ||
-        MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final shuffleButton = FilledButton.tonalIcon(
-      onPressed: _isExporting || !_backgroundReady ? null : controller.shuffle,
-      icon: const Icon(Icons.shuffle),
-      label: Text(context.strings.shuffle),
-    );
-    final backgroundButton = FilledButton.tonalIcon(
-      onPressed: _isExporting || !_backgroundReady ? null : _nextBackground,
-      icon: const Icon(Icons.palette_outlined),
-      label: Text(context.strings.background),
-    );
-    return SafeArea(
-      top: false,
-      child: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 9 / 16,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: RepaintBoundary(
-                      key: _repaintKey,
-                      child: MemoryCollageCanvasView(
-                        key: ValueKey(controller.shuffleRevision),
-                        manifest: manifest,
-                        files: controller.selectedFiles,
-                        title: widget.title,
-                        backgroundAssetID: controller.backgroundAssetID,
-                        templateID: controller.templateID,
-                        photoBuilder: _buildExportPhoto,
+    final canCustomize = _contentReady;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Column(
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(21, 12, 21, 8),
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x8C000000),
+                                blurRadius: 30,
+                                offset: Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: RepaintBoundary(
+                                key: _repaintKey,
+                                child: MemoryCollageCanvasView(
+                                  key: ValueKey(controller.shuffleRevision),
+                                  manifest: manifest,
+                                  files: controller.selectedFiles,
+                                  title: widget.title,
+                                  backgroundAssetID:
+                                      controller.backgroundAssetID,
+                                  templateID: controller.templateID,
+                                  photoBuilder: _buildExportPhoto,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          if (!_isReadyToExport && !_isExporting)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.strings.gettingReady,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.65),
-                    ),
-                  ),
-                  if (_showPhotoRetry && !_photosReady)
-                    TextButton.icon(
-                      onPressed: _retryPhotoLoading,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(context.strings.tryAgain),
+                  if (!_isReadyToExport &&
+                      !_isExporting &&
+                      (!_isControlActionPending || _showPhotoRetry))
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 18),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: const Color(0xE61D1A17),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            child: _showPhotoRetry && !_photosReady
+                                ? TextButton.icon(
+                                    onPressed: _retryPhotoLoading,
+                                    icon: const Icon(Icons.refresh, size: 18),
+                                    label: Text(context.strings.tryAgain),
+                                  )
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox.square(
+                                        dimension: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        context.strings.gettingReady,
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.72,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                MemoryCollageTemplateSelector(
-                  availableTemplateIDs: manifest.templates.map(
-                    (template) => template.id,
-                  ),
-                  selectedTemplateID: controller.templateID,
-                  enabled: !_isExporting && _backgroundReady,
-                  onSelected: _selectTemplate,
-                ),
-                const SizedBox(height: 8),
-                if (stackCustomizationActions) ...[
-                  shuffleButton,
-                  const SizedBox(height: 8),
-                  backgroundButton,
-                ] else
-                  Row(
-                    children: [
-                      Expanded(child: shuffleButton),
-                      const SizedBox(width: 12),
-                      Expanded(child: backgroundButton),
-                    ],
-                  ),
-              ],
+            MemoryCollageEditorControlDock(
+              styleLabel: context.strings.memoryCollageStyle,
+              styleValue: _memoryCollageTemplateLabel(
+                context,
+                controller.templateID,
+              ),
+              shuffleLabel: context.strings.shuffle,
+              backgroundLabel: context.strings.background,
+              backgroundValue: context.strings.memoryCollageBackgroundPosition(
+                current: controller.backgroundIndex + 1,
+                total: controller.backgroundIDs.length,
+              ),
+              interactionLocked: _isControlActionPending,
+              onStyle: canCustomize && manifest.templates.length > 1
+                  ? _nextTemplate
+                  : null,
+              onShuffle: canCustomize ? _shuffle : null,
+              onBackground: canCustomize && controller.backgroundIDs.length > 1
+                  ? _nextBackground
+                  : null,
             ),
-          ),
-          if (_isExporting) const LinearProgressIndicator(minHeight: 2),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -443,6 +521,244 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
       tagPrefix: "memory-collage-$generation-$slot-",
       onFinalImageLoaded: () =>
           _onFinalPhotoLoaded(file: file, generation: generation, slot: slot),
+    );
+  }
+}
+
+class MemoryCollageEditorTopBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  static const toolbarHeight = 48.0;
+
+  final bool canExport;
+  final bool isSharing;
+  final bool isSaving;
+  final Key? shareButtonKey;
+  final VoidCallback onBack;
+  final VoidCallback onShare;
+  final VoidCallback onSave;
+
+  const MemoryCollageEditorTopBar({
+    required this.canExport,
+    required this.onBack,
+    required this.onShare,
+    required this.onSave,
+    this.isSharing = false,
+    this.isSaving = false,
+    this.shareButtonKey,
+    super.key,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(toolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    final isExporting = isSharing || isSaving;
+    return AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: toolbarHeight,
+      leadingWidth: 52,
+      backgroundColor: const Color(0xFF161412),
+      foregroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: MemoryViewerActionButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: onBack,
+          icon: Transform.flip(
+            flipX: Directionality.of(context) == TextDirection.rtl,
+            child: const HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowLeft01,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        MemoryViewerActionButton(
+          key: shareButtonKey,
+          tooltip: isSharing ? context.strings.sharing : context.strings.share,
+          isLoading: isSharing,
+          dimWhenDisabled: !isExporting,
+          showTapEffect: false,
+          onPressed: canExport && !isExporting ? onShare : null,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedShare08,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        MemoryViewerActionButton(
+          tooltip: isSaving ? context.strings.saving : context.strings.save,
+          isLoading: isSaving,
+          dimWhenDisabled: !isExporting,
+          showTapEffect: false,
+          onPressed: canExport && !isExporting ? onSave : null,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedDownload01,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 4),
+      ],
+    );
+  }
+}
+
+class MemoryCollageEditorControlDock extends StatelessWidget {
+  final String styleLabel;
+  final String styleValue;
+  final String shuffleLabel;
+  final String backgroundLabel;
+  final String backgroundValue;
+  final bool interactionLocked;
+  final VoidCallback? onStyle;
+  final VoidCallback? onShuffle;
+  final VoidCallback? onBackground;
+
+  const MemoryCollageEditorControlDock({
+    required this.styleLabel,
+    required this.styleValue,
+    required this.shuffleLabel,
+    required this.backgroundLabel,
+    required this.backgroundValue,
+    required this.onStyle,
+    required this.onShuffle,
+    required this.onBackground,
+    this.interactionLocked = false,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dockHeight = MediaQuery.textScalerOf(context).scale(1) >= 1.3
+        ? 76.0
+        : 68.0;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: dockHeight,
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.3,
+            child: Row(
+              children: [
+                Expanded(
+                  child: _MemoryCollageEditorControlButton(
+                    label: styleLabel,
+                    semanticValue: styleValue,
+                    icon: HugeIcons.strokeRoundedLayers01,
+                    dimWhenDisabled: !interactionLocked,
+                    onPressed: interactionLocked ? null : onStyle,
+                  ),
+                ),
+                Expanded(
+                  child: _MemoryCollageEditorControlButton(
+                    label: shuffleLabel,
+                    icon: HugeIcons.strokeRoundedShuffle,
+                    dimWhenDisabled: !interactionLocked,
+                    onPressed: interactionLocked ? null : onShuffle,
+                  ),
+                ),
+                Expanded(
+                  child: _MemoryCollageEditorControlButton(
+                    label: backgroundLabel,
+                    semanticValue: backgroundValue,
+                    icon: HugeIcons.strokeRoundedColors,
+                    dimWhenDisabled: !interactionLocked,
+                    onPressed: interactionLocked ? null : onBackground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MemoryCollageEditorControlButton extends StatelessWidget {
+  final String label;
+  final String? semanticValue;
+  final List<List<dynamic>> icon;
+  final bool dimWhenDisabled;
+  final VoidCallback? onPressed;
+
+  const _MemoryCollageEditorControlButton({
+    required this.label,
+    required this.icon,
+    required this.dimWhenDisabled,
+    required this.onPressed,
+    this.semanticValue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      value: semanticValue,
+      onTap: onPressed,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(12),
+              overlayColor: WidgetStatePropertyAll(
+                Colors.white.withValues(alpha: 0.12),
+              ),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 120),
+                opacity: enabled || !dimWhenDisabled ? 1 : 0.35,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      HugeIcon(
+                        icon: icon,
+                        color: Colors.white.withValues(alpha: 0.92),
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          fontSize: 11,
+                          height: 13 / 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -497,80 +813,11 @@ class MemoryCollageRendererReadiness {
   }
 }
 
-class MemoryCollageTemplateSelector extends StatelessWidget {
-  static const templateIDs = [
-    "scrapbook-maximal",
-    "scrapbook-calm",
-    "minimal-editorial",
-  ];
-
-  final Iterable<String> availableTemplateIDs;
-  final String selectedTemplateID;
-  final bool enabled;
-  final ValueChanged<String> onSelected;
-
-  const MemoryCollageTemplateSelector({
-    required this.availableTemplateIDs,
-    required this.selectedTemplateID,
-    required this.enabled,
-    required this.onSelected,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final available = availableTemplateIDs.toSet();
-    final visibleTemplateIDs = templateIDs
-        .where(available.contains)
-        .toList(growable: false);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var index = 0; index < visibleTemplateIDs.length; index++)
-                  Padding(
-                    padding: EdgeInsetsDirectional.only(
-                      end: index == visibleTemplateIDs.length - 1 ? 0 : 8,
-                    ),
-                    child: _buildChip(context, visibleTemplateIDs[index]),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildChip(BuildContext context, String templateID) {
-    final isSelected = selectedTemplateID == templateID;
-    return Semantics(
-      selected: isSelected,
-      child: ChoiceChip(
-        key: ValueKey("memory-collage-template-$templateID"),
-        label: Text(_label(context, templateID)),
-        selected: isSelected,
-        onSelected: enabled
-            ? (selected) {
-                if (selected) onSelected(templateID);
-              }
-            : null,
-      ),
-    );
-  }
-
-  String _label(BuildContext context, String templateID) {
-    return switch (templateID) {
-      "scrapbook-maximal" => context.strings.memoryCollageTemplateScrapbook,
-      "scrapbook-calm" => context.strings.memoryCollageTemplateCalm,
-      "minimal-editorial" => context.strings.memoryCollageTemplateMinimal,
-      _ => throw ArgumentError.value(templateID, "templateID"),
-    };
-  }
+String _memoryCollageTemplateLabel(BuildContext context, String templateID) {
+  return switch (templateID) {
+    "scrapbook-maximal" => context.strings.memoryCollageTemplateScrapbook,
+    "scrapbook-calm" => context.strings.memoryCollageTemplateCalm,
+    "minimal-editorial" => context.strings.memoryCollageTemplateMinimal,
+    _ => throw ArgumentError.value(templateID, "templateID"),
+  };
 }

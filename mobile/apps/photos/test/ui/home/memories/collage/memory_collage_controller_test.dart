@@ -118,12 +118,11 @@ void main() {
     expect(identical(controller.selectedFiles, initialSelection), isTrue);
   });
 
-  test("template switches preserve the exact seven selected files", () {
+  test("next template follows manifest order, wraps, and preserves photos", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
-      templateID: "scrapbook-maximal",
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
               files.take(7).toList(),
@@ -132,13 +131,19 @@ void main() {
     var notifications = 0;
     controller.addListener(() => notifications++);
 
-    controller.selectTemplate("scrapbook-calm");
-    controller.selectTemplate("minimal-editorial");
+    expect(controller.templateID, "scrapbook-calm");
+    expect(controller.nextTemplateID, "minimal-editorial");
+    controller.selectTemplate(controller.nextTemplateID);
+    expect(controller.nextTemplateID, "scrapbook-maximal");
+    controller.selectTemplate(controller.nextTemplateID);
+    expect(controller.nextTemplateID, "scrapbook-calm");
+    controller.selectTemplate(controller.nextTemplateID);
 
     expect(controller.selectedFiles, hasLength(7));
     expect(identical(controller.selectedFiles, initialSelection), isTrue);
     expect(controller.shuffleRevision, 0);
-    expect(notifications, 2);
+    expect(controller.templateID, "scrapbook-calm");
+    expect(notifications, 3);
   });
 
   test("selecting the active template is a no-op", () {

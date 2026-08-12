@@ -8,6 +8,8 @@ import "package:photos/services/sync/sync_service.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:share_plus/share_plus.dart";
 
+enum MemoryCollageExportAction { share, save }
+
 class MemoryCollageExport {
   static const _expectedWidth = 1080;
   static const _expectedHeight = 1920;

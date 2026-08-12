@@ -21,6 +21,7 @@ import "package:photos/ui/home/memories/memory_progress_indicator.dart";
 import "package:photos/ui/home/memories/memory_viewer_chrome.dart";
 import "package:photos/ui/notification/toast.dart";
 import "package:photos/ui/viewer/file/thumbnail_widget.dart";
+import "package:photos/utils/dialog_util.dart";
 import "package:photos/utils/share_util.dart";
 
 const memoryCollageShareActionKey = ValueKey<String>(
@@ -67,14 +68,18 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   Future<MemoryCollageManifest>? _manifestFuture;
   int _selectionGeneration = 0;
   bool _assetsReady = false;
-  bool _isExporting = false;
+  MemoryCollageExportAction? _exportAction;
   bool _ineligibleContinueScheduled = false;
 
   List<EnteFile> get _files => _selectedFiles;
 
   bool get _photosReady => _loadedSlots.length == _files.length;
 
-  bool get _isReadyToExport => _assetsReady && _photosReady && !_isExporting;
+  bool get _contentReady => _assetsReady && _photosReady;
+
+  bool get _isExporting => _exportAction != null;
+
+  bool get _isReadyToExport => _contentReady && !_isExporting;
 
   @override
   void initState() {
@@ -195,7 +200,8 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
 
   Future<void> _shareCollage() async {
     if (!_isReadyToExport) return;
-    setState(() => _isExporting = true);
+    Object? failure;
+    setState(() => _exportAction = MemoryCollageExportAction.share);
     try {
       final bytes = await MemoryCollageExport.capturePng(_repaintKey);
       if (!mounted) return;
@@ -205,17 +211,19 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       );
     } catch (error, stackTrace) {
       _logger.severe("Failed to share memory collage", error, stackTrace);
-      if (mounted) {
-        showShortToast(context, context.strings.somethingWentWrong);
-      }
+      failure = error;
     } finally {
-      if (mounted) setState(() => _isExporting = false);
+      if (mounted) setState(() => _exportAction = null);
+    }
+    if (failure != null && mounted) {
+      await showGenericErrorDialog(context: context, error: failure);
     }
   }
 
   Future<void> _saveCollage() async {
     if (!_isReadyToExport) return;
-    setState(() => _isExporting = true);
+    Object? failure;
+    setState(() => _exportAction = MemoryCollageExportAction.save);
     try {
       final bytes = await MemoryCollageExport.capturePng(_repaintKey);
       await MemoryCollageExport.savePng(bytes);
@@ -224,11 +232,12 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       }
     } catch (error, stackTrace) {
       _logger.severe("Failed to save memory collage", error, stackTrace);
-      if (mounted) {
-        showShortToast(context, context.strings.somethingWentWrong);
-      }
+      failure = error;
     } finally {
-      if (mounted) setState(() => _isExporting = false);
+      if (mounted) setState(() => _exportAction = null);
+    }
+    if (failure != null && mounted) {
+      await showGenericErrorDialog(context: context, error: failure);
     }
   }
 
@@ -268,8 +277,9 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
               ),
               const MemoryViewerScrims(),
               MemoryCollageEndCardActions(
-                canExport: _isReadyToExport,
-                canEdit: !_isExporting,
+                canExport: _contentReady,
+                isSharing: _exportAction == MemoryCollageExportAction.share,
+                isSaving: _exportAction == MemoryCollageExportAction.save,
                 shareButtonKey: _shareButtonKey,
                 onShare: _shareCollage,
                 onEdit: _editCollage,
@@ -393,6 +403,8 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
 class MemoryCollageEndCardActions extends StatelessWidget {
   final bool canExport;
   final bool canEdit;
+  final bool isSharing;
+  final bool isSaving;
   final Key shareButtonKey;
   final VoidCallback onShare;
   final VoidCallback onEdit;
@@ -404,23 +416,29 @@ class MemoryCollageEndCardActions extends StatelessWidget {
     required this.onEdit,
     required this.onSave,
     this.canEdit = true,
+    this.isSharing = false,
+    this.isSaving = false,
     this.shareButtonKey = memoryCollageShareActionKey,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isExporting = isSharing || isSaving;
     return MemoryViewerActionBar(
       actions: [
         MemoryViewerActionButton(
           key: shareButtonKey,
-          tooltip: context.strings.share,
+          tooltip: isSharing ? context.strings.sharing : context.strings.share,
+          isLoading: isSharing,
+          dimWhenDisabled: !isExporting,
+          showTapEffect: false,
           icon: const HugeIcon(
             icon: HugeIcons.strokeRoundedShare08,
             color: Colors.white,
             size: 24,
           ),
-          onPressed: canExport ? onShare : null,
+          onPressed: canExport && !isExporting ? onShare : null,
         ),
         MemoryViewerActionButton(
           key: memoryCollageEditActionKey,
@@ -434,13 +452,16 @@ class MemoryCollageEndCardActions extends StatelessWidget {
         ),
         MemoryViewerActionButton(
           key: memoryCollageSaveActionKey,
-          tooltip: context.strings.save,
+          tooltip: isSaving ? context.strings.saving : context.strings.save,
+          isLoading: isSaving,
+          dimWhenDisabled: !isExporting,
+          showTapEffect: false,
           icon: const HugeIcon(
             icon: HugeIcons.strokeRoundedDownload01,
             color: Colors.white,
             size: 24,
           ),
-          onPressed: canExport ? onSave : null,
+          onPressed: canExport && !isExporting ? onSave : null,
         ),
       ],
     );

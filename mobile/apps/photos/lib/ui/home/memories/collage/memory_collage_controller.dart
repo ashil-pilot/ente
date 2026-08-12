@@ -43,6 +43,18 @@ class MemoryCollageController extends ChangeNotifier {
 
   String get templateID => _templateID;
 
+  String get nextTemplateID {
+    final templates = manifest.templates;
+    if (templates.length == 1) return _templateID;
+    final currentIndex = templates.indexWhere(
+      (template) => template.id == _templateID,
+    );
+    if (currentIndex < 0) {
+      throw StateError("Active template is missing from the manifest");
+    }
+    return templates[(currentIndex + 1) % templates.length].id;
+  }
+
   MemoryCollageTemplate get template => manifest.templateFor(_templateID);
 
   List<String> get backgroundIDs => template.background.assetIDs;

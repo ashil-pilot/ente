@@ -155,11 +155,17 @@ class MemoryViewerActionButton extends StatelessWidget {
   final String tooltip;
   final Widget icon;
   final VoidCallback? onPressed;
+  final bool isLoading;
+  final bool dimWhenDisabled;
+  final bool showTapEffect;
 
   const MemoryViewerActionButton({
     required this.tooltip,
     required this.icon,
     required this.onPressed,
+    this.isLoading = false,
+    this.dimWhenDisabled = true,
+    this.showTapEffect = true,
     super.key,
   });
 
@@ -174,12 +180,28 @@ class MemoryViewerActionButton extends StatelessWidget {
           minimumSize: const Size.square(48),
           maximumSize: const Size.square(48),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          overlayColor: Colors.white.withValues(alpha: 0.08),
+          overlayColor: showTapEffect
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.transparent,
+          splashFactory: showTapEffect ? null : NoSplash.splashFactory,
         ),
         onPressed: onPressed,
         icon: Opacity(
-          opacity: onPressed == null ? memoryViewerDisabledActionOpacity : 1,
-          child: icon,
+          opacity: onPressed == null && dimWhenDisabled
+              ? memoryViewerDisabledActionOpacity
+              : 1,
+          child: isLoading
+              ? const SizedBox.square(
+                  dimension: 24,
+                  child: Padding(
+                    padding: EdgeInsets.all(3),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : icon,
         ),
       ),
     );

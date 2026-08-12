@@ -2316,6 +2316,22 @@
   },
   "memories": "Memories",
   "memoriesWidgetDesc": "Select the kinds of memories you want to see on your home screen.",
+  "memoryCollageBackgroundPosition": "{current} of {total}",
+  "@memoryCollageBackgroundPosition": {
+    "description": "The current background's position in the collage background cycle, announced for accessibility.",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "2"
+      },
+      "total": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "memoryCollageCustomize": "Customize collage",
+  "memoryCollageStyle": "Style",
   "memoryCollageTemplateCalm": "Calm",
   "memoryCollageTemplateMinimal": "Minimal",
   "memoryCollageTemplateScrapbook": "Scrapbook",
