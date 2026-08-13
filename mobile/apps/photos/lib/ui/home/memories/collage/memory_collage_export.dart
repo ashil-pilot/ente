@@ -22,7 +22,8 @@ class MemoryCollageExport {
     for (var attempt = 0; attempt < 8; attempt++) {
       final renderObject = repaintKey.currentContext?.findRenderObject();
       if (renderObject is RenderRepaintBoundary &&
-          !renderObject.debugNeedsPaint) {
+          !renderObject.size.isEmpty &&
+          !_needsPaint(renderObject)) {
         boundary = renderObject;
         break;
       }
@@ -50,6 +51,15 @@ class MemoryCollageExport {
     } finally {
       image.dispose();
     }
+  }
+
+  static bool _needsPaint(RenderRepaintBoundary boundary) {
+    var needsPaint = false;
+    assert(() {
+      needsPaint = boundary.debugNeedsPaint;
+      return true;
+    }());
+    return needsPaint;
   }
 
   static Future<void> sharePng(

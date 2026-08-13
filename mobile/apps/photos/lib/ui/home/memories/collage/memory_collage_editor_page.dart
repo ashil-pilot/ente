@@ -5,15 +5,14 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
-import "package:photos/core/event_bus.dart";
-import "package:photos/events/retry_failed_image_load_event.dart";
 import "package:photos/models/file/file.dart";
 import "package:photos/models/memories/memory.dart";
 import "package:photos/models/memories/memory_collage_manifest.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_controller.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export.dart";
-import "package:photos/ui/home/memories/collage/memory_collage_export_photo.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_export_surface.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_preview_photo.dart";
 import "package:photos/ui/home/memories/memory_viewer_chrome.dart";
 import "package:photos/ui/notification/toast.dart";
 import "package:photos/utils/dialog_util.dart";
@@ -38,7 +37,6 @@ class MemoryCollageEditorPage extends StatefulWidget {
 
 class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   final _logger = Logger("MemoryCollageEditorPage");
-  final _repaintKey = GlobalKey();
   final _shareButtonKey = GlobalKey();
   final _photoReadiness = MemoryCollageRendererReadiness();
 
@@ -47,6 +45,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   bool _assetsReady = false;
   bool _backgroundReady = true;
   MemoryCollageExportAction? _exportAction;
+  MemoryCollageExportSnapshot? _exportSnapshot;
   bool _showPhotoRetry = false;
   bool _isControlActionPending = false;
   int _photoLoadTimeoutToken = 0;
@@ -73,6 +72,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
 
   @override
   void dispose() {
+    _exportSnapshot?.cancel();
     _controller
       ?..removeListener(_onControllerChanged)
       ..dispose();
@@ -164,7 +164,6 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
 
   void _retryPhotoLoading() {
     if (_isExporting) return;
-    Bus.instance.fire(RetryFailedImageLoadEvent());
     setState(() {
       _photoReadiness.invalidate();
       _showPhotoRetry = false;
@@ -285,7 +284,30 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     if (!_contentReady) {
       throw StateError("Memory collage is not ready to export");
     }
-    return MemoryCollageExport.capturePng(_repaintKey);
+    final controller = _controller;
+    if (controller == null || _exportSnapshot != null) {
+      throw StateError("Memory collage export is already in progress");
+    }
+    final snapshot = MemoryCollageExportSnapshot(
+      files: controller.selectedFiles,
+      title: widget.title,
+      templateID: controller.templateID,
+      backgroundAssetID: controller.backgroundAssetID,
+    );
+    setState(() => _exportSnapshot = snapshot);
+    try {
+      await snapshot.waitUntilReady();
+      if (!mounted || !identical(_exportSnapshot, snapshot)) {
+        throw const MemoryCollageExportCancelledException();
+      }
+      await WidgetsBinding.instance.endOfFrame;
+      return await MemoryCollageExport.capturePng(snapshot.repaintKey);
+    } finally {
+      snapshot.cancel();
+      if (mounted && identical(_exportSnapshot, snapshot)) {
+        setState(() => _exportSnapshot = null);
+      }
+    }
   }
 
   Future<void> _shareCollage() async {
@@ -416,17 +438,31 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
                             borderRadius: BorderRadius.circular(12),
                             child: FittedBox(
                               fit: BoxFit.contain,
-                              child: RepaintBoundary(
-                                key: _repaintKey,
-                                child: MemoryCollageCanvasView(
-                                  key: ValueKey(controller.shuffleRevision),
-                                  manifest: manifest,
-                                  files: controller.selectedFiles,
-                                  title: widget.title,
-                                  backgroundAssetID:
-                                      controller.backgroundAssetID,
-                                  templateID: controller.templateID,
-                                  photoBuilder: _buildExportPhoto,
+                              child: SizedBox.fromSize(
+                                size: memoryCollageLogicalSize,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    if (_exportSnapshot case final snapshot?)
+                                      MemoryCollageExportSurface(
+                                        manifest: manifest,
+                                        snapshot: snapshot,
+                                      ),
+                                    RepaintBoundary(
+                                      child: MemoryCollageCanvasView(
+                                        key: ValueKey(
+                                          controller.shuffleRevision,
+                                        ),
+                                        manifest: manifest,
+                                        files: controller.selectedFiles,
+                                        title: widget.title,
+                                        backgroundAssetID:
+                                            controller.backgroundAssetID,
+                                        templateID: controller.templateID,
+                                        photoBuilder: _buildPreviewPhoto,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -489,13 +525,12 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     );
   }
 
-  Widget _buildExportPhoto(BuildContext context, EnteFile file, int slot) {
+  Widget _buildPreviewPhoto(BuildContext context, EnteFile file, int slot) {
     final generation = _photoReadiness.generation;
-    return MemoryCollageExportPhoto(
+    return MemoryCollagePreviewPhoto(
       file: file,
       key: ValueKey("$generation:$slot"),
-      tagPrefix: "memory-collage-$generation-$slot-",
-      onFinalImageLoaded: () =>
+      onReady: () =>
           _onFinalPhotoLoaded(file: file, generation: generation, slot: slot),
     );
   }

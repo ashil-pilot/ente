@@ -15,7 +15,8 @@ import "package:photos/services/memories/memory_collage_selector.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_editor_page.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export.dart";
-import "package:photos/ui/home/memories/collage/memory_collage_export_photo.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_export_surface.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_preview_photo.dart";
 import "package:photos/ui/home/memories/custom_listener.dart";
 import "package:photos/ui/home/memories/memory_progress_indicator.dart";
 import "package:photos/ui/home/memories/memory_viewer_chrome.dart";
@@ -56,7 +57,6 @@ class MemoryCollageEndCard extends StatefulWidget {
 
 class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   final _logger = Logger("MemoryCollageEndCard");
-  final _repaintKey = GlobalKey();
   final _shareButtonKey = GlobalKey();
   final _loadedSlots = <int>{};
 
@@ -65,6 +65,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   int _selectionGeneration = 0;
   bool _assetsReady = false;
   MemoryCollageExportAction? _exportAction;
+  MemoryCollageExportSnapshot? _exportSnapshot;
   bool _ineligibleContinueScheduled = false;
 
   List<EnteFile> get _files => _selectedFiles;
@@ -91,6 +92,8 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     _selectedFiles = nextFiles;
     _selectionGeneration++;
     _loadedSlots.clear();
+    _exportSnapshot?.cancel();
+    _exportSnapshot = null;
     _ineligibleContinueScheduled = false;
   }
 
@@ -98,6 +101,12 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _manifestFuture ??= _loadManifestAndAssets();
+  }
+
+  @override
+  void dispose() {
+    _exportSnapshot?.cancel();
+    super.dispose();
   }
 
   List<EnteFile> _selectFiles() => MemoryCollageSelector.select(
@@ -199,7 +208,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     Object? failure;
     setState(() => _exportAction = MemoryCollageExportAction.share);
     try {
-      final bytes = await MemoryCollageExport.capturePng(_repaintKey);
+      final bytes = await _capturePng();
       if (!mounted) return;
       await MemoryCollageExport.sharePng(
         bytes,
@@ -221,7 +230,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     Object? failure;
     setState(() => _exportAction = MemoryCollageExportAction.save);
     try {
-      final bytes = await MemoryCollageExport.capturePng(_repaintKey);
+      final bytes = await _capturePng();
       await MemoryCollageExport.savePng(bytes);
       if (mounted) {
         showShortToast(context, context.strings.collageSaved);
@@ -234,6 +243,37 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     }
     if (failure != null && mounted) {
       await showGenericErrorDialog(context: context, error: failure);
+    }
+  }
+
+  Future<Uint8List> _capturePng() async {
+    final manifest = await _manifestFuture;
+    if (!mounted || !_contentReady || manifest == null) {
+      throw StateError("Memory collage is not ready to export");
+    }
+    if (_exportSnapshot != null) {
+      throw StateError("Memory collage export is already in progress");
+    }
+    final template = manifest.defaultTemplate;
+    final snapshot = MemoryCollageExportSnapshot(
+      files: _files,
+      title: widget.title,
+      templateID: template.id,
+      backgroundAssetID: template.background.defaultAssetID,
+    );
+    setState(() => _exportSnapshot = snapshot);
+    try {
+      await snapshot.waitUntilReady();
+      if (!mounted || !identical(_exportSnapshot, snapshot)) {
+        throw const MemoryCollageExportCancelledException();
+      }
+      await WidgetsBinding.instance.endOfFrame;
+      return await MemoryCollageExport.capturePng(snapshot.repaintKey);
+    } finally {
+      snapshot.cancel();
+      if (mounted && identical(_exportSnapshot, snapshot)) {
+        setState(() => _exportSnapshot = null);
+      }
     }
   }
 
@@ -353,15 +393,27 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     }
     final defaultTemplate = manifest.defaultTemplate;
     return MemoryCollageEndCardCanvasLayout(
-      child: RepaintBoundary(
-        key: _repaintKey,
-        child: MemoryCollageCanvasView(
-          manifest: manifest,
-          files: files,
-          title: widget.title,
-          backgroundAssetID: defaultTemplate.background.defaultAssetID,
-          templateID: defaultTemplate.id,
-          photoBuilder: _buildExportPhoto,
+      child: SizedBox.fromSize(
+        size: memoryCollageLogicalSize,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_exportSnapshot case final exportSnapshot?)
+              MemoryCollageExportSurface(
+                manifest: manifest,
+                snapshot: exportSnapshot,
+              ),
+            RepaintBoundary(
+              child: MemoryCollageCanvasView(
+                manifest: manifest,
+                files: files,
+                title: widget.title,
+                backgroundAssetID: defaultTemplate.background.defaultAssetID,
+                templateID: defaultTemplate.id,
+                photoBuilder: _buildPreviewPhoto,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -373,7 +425,11 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       key: ValueKey("memory-collage-backdrop-$_selectionGeneration-$slot"),
       fit: BoxFit.cover,
       rawThumbnail: true,
-      thumbnailSize: thumbnailLargeSize,
+      // The backdrop is blurred at sigma 100, so the small thumbnail is
+      // visually equivalent here and avoids duplicating the foreground's
+      // large-thumbnail request in the local thumbnail queue.
+      thumbnailSize: thumbnailSmallSize,
+      useRequestedThumbnailSizeForLocalCache: true,
       shouldShowSyncStatus: false,
       shouldShowFavoriteIcon: false,
       shouldShowLivePhotoOverlay: false,
@@ -381,13 +437,12 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     );
   }
 
-  Widget _buildExportPhoto(BuildContext context, EnteFile file, int slot) {
+  Widget _buildPreviewPhoto(BuildContext context, EnteFile file, int slot) {
     final generation = _selectionGeneration;
-    return MemoryCollageExportPhoto(
+    return MemoryCollagePreviewPhoto(
       file: file,
       key: ValueKey("memory-collage-end-$generation-$slot"),
-      tagPrefix: "memory-collage-end-$generation-$slot-",
-      onFinalImageLoaded: () => _onFinalPhotoLoaded(file, generation, slot),
+      onReady: () => _onFinalPhotoLoaded(file, generation, slot),
     );
   }
 }

@@ -49,6 +49,12 @@ class ThumbnailWidget extends StatefulWidget {
   final bool shouldShowFavoriteIcon;
   final Color? placeholderColor;
 
+  /// Called once after the thumbnail's first frame has been decoded.
+  ///
+  /// The callback is reset when this widget starts displaying a different
+  /// file. It is not called when thumbnail decoding fails.
+  final VoidCallback? onThumbnailLoaded;
+
   ///On video thumbnails, shows the video duration if true. If false,
   ///shows a centered play icon.
   final bool shouldShowVideoDuration;
@@ -70,6 +76,7 @@ class ThumbnailWidget extends StatefulWidget {
     this.useRequestedThumbnailSizeForLocalCache = false,
     this.shouldShowFavoriteIcon = true,
     this.placeholderColor,
+    this.onThumbnailLoaded,
     this.shouldShowVideoDuration = false,
     this.shouldShowVideoOverlayIcon = true,
   }) : super(key: key ?? Key(file.tag));
@@ -89,6 +96,7 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
   int? optimizedImageHeight;
   int? optimizedImageWidth;
   String? _localThumbnailQueueTaskId;
+  bool _didNotifyThumbnailLoaded = false;
   static const _maxLocalThumbnailRetries = 8;
 
   int get _localCacheThumbnailSize {
@@ -126,7 +134,11 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
   void didUpdateWidget(ThumbnailWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.file.generatedID != oldWidget.file.generatedID) {
+      _didNotifyThumbnailLoaded = false;
       _reset();
+    } else if (oldWidget.onThumbnailLoaded == null &&
+        widget.onThumbnailLoaded != null) {
+      _notifyThumbnailLoadedOnce();
     }
   }
 
@@ -190,7 +202,18 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
     final galleryContext = GalleryContextState.of(context);
     Widget? image;
     if (_imageProvider != null) {
-      image = Image(image: _imageProvider!, fit: widget.fit);
+      image = Image(
+        image: _imageProvider!,
+        fit: widget.fit,
+        frameBuilder: widget.onThumbnailLoaded == null
+            ? null
+            : (context, child, frame, wasSynchronouslyLoaded) {
+                if (frame != null) {
+                  scheduleMicrotask(_notifyThumbnailLoadedOnce);
+                }
+                return child;
+              },
+      );
     }
     // todo: [2ndJuly22] pref-review if the content Widget which depends on
     // thumbnail fetch logic should be part of separate stateFull widget.
@@ -525,13 +548,23 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
   }
 
   void _cacheAndRender(ImageProvider<Object> imageProvider) {
-    if (mounted) {
-      setState(() {
-        _imageProvider = imageProvider;
-        _hasLoadedThumbnail = true;
-      });
-      precacheImage(imageProvider, context);
+    if (!mounted) return;
+    setState(() {
+      _imageProvider = imageProvider;
+      _hasLoadedThumbnail = true;
+    });
+    precacheImage(imageProvider, context);
+  }
+
+  void _notifyThumbnailLoadedOnce() {
+    if (!mounted ||
+        _didNotifyThumbnailLoaded ||
+        !_hasLoadedThumbnail ||
+        widget.onThumbnailLoaded == null) {
+      return;
     }
+    _didNotifyThumbnailLoaded = true;
+    widget.onThumbnailLoaded!();
   }
 
   void _reset() {
