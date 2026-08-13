@@ -474,31 +474,19 @@ const _requiredAssetIDsByTemplate = <String, Set<String>>{
   "minimal-grid": {"paper-cream-fiber"},
 };
 
+const _sharedBackgroundAssetIDs = [
+  "paper-washi",
+  "paper-cream-fiber",
+  "paper-blush-stripe",
+  "paper-sage-stripe",
+  "paper-terracotta-mottle",
+  "editorial-sand",
+  "editorial-sage",
+];
+
 final _backgroundAssetIDsByTemplate = <String, List<String>>{
-  "scrapbook-maximal": [
-    "paper-washi",
-    "paper-cream-fiber",
-    "paper-blush-stripe",
-    "paper-sage-stripe",
-    "paper-terracotta-mottle",
-  ],
-  for (final templateID in const [
-    "calm-classic",
-    "calm-film-trio",
-    "calm-accent-print",
-  ])
-    templateID: [
-      "paper-washi",
-      "paper-cream-fiber",
-      "paper-blush-stripe",
-      "paper-sage-stripe",
-    ],
-  for (final templateID in const [
-    "minimal-classic",
-    "minimal-rows",
-    "minimal-grid",
-  ])
-    templateID: ["paper-cream-fiber", "editorial-sand", "editorial-sage"],
+  for (final templateID in _runtimeTemplateIDs)
+    templateID: _sharedBackgroundAssetIDs,
 };
 
 Future<void> _verifyTitleLayout(

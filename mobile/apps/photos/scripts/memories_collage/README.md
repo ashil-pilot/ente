@@ -29,9 +29,10 @@ Every template is seven-photo-only:
 
 All Minimal styles keep the title treatment to full-width hairline rules,
 default to the cream-fiber paper, and reuse the grain overlay only on flat
-backgrounds. `calm-film-trio` remains the authoritative default so the app's
-existing default visual does not change. Template order is Scrapbook, C0, C1,
-C2, D0, D1, then D2.
+backgrounds. Every style offers the same seven backgrounds, and the selected
+background remains unchanged while cycling styles. `calm-film-trio` remains
+the authoritative default so the app's existing default visual does not
+change. Template order is Scrapbook, C0, C1, C2, D0, D1, then D2.
 
 Memories with fewer than seven eligible photos do not get a collage end card.
 There is no six-photo layout or fallback in the source contract.
@@ -73,7 +74,7 @@ Run it twice and compare sorted file SHA-256 inventories before accepting a
 source or toolchain change. The 72 PNG variants combined with the seven-style
 manifest form a 73-file inventory.
 The normalized staging manifest is byte-identical to the runtime manifest,
-SHA-256 `f1513f81b94af0be1b6df9a76fd3e1c53ddfd4cb656860fca9d2faececfb805e`.
+SHA-256 `ab64d0ee418b2082070c60ab65ecde9335d323def8b1d3893c530b271a7bc3b7`.
 
 When packages are not installed in the active Node environment, point at
 existing package directories explicitly:
@@ -131,19 +132,19 @@ local probe; structural and contract checks still run.
   `/Users/ashilmacmini/Downloads/Memory Collage 3b.dc.html` has SHA-256
   `cdd9c2855bd8fe035d84a1eb0217cdbc6d9ddb162e46cc46227772c3636536b6`.
 - The canonical integrated `Memory Collage.dc.html` has SHA-256
-  `46513de3b0fe41a9921812b101f302a75115a7972e9fbf4c0032bfb065a0abff`.
+  `54a02ed673afbc920f37bde50fb9d391c0cdeab144d44c1283c93710b4b1623f`.
   It preserves the 2a vertical film-window geometry at y
   69/453/837/1221 while integrating B2's 42px upward foreground rebalance,
   24px rightward polaroid shift, approved 900x150 title ribbon, and exact
   fresh export recipe. It also
   integrates the approved C0/C1/C2 Calm and D0/D1/D2 Minimal contracts while
-  sharing Calm's non-terracotta papers and the Minimal paper-ground material
-  treatment.
+  sharing all seven backgrounds across every style and preserving the Minimal
+  paper-ground material treatment.
 - The source contract digests are 2a/B2
-  `ec31b48701b048d324d17b05a589f88287328386f9c60cb2fe5cac086b4319bb`,
-  C0/C1/C2 `556c43f9bd742071e74c379ff751db74aca7ee7d0829b733b50f206f3cf8e87b`,
+  `679ad2a2f9d4f46c2b0ac245e193f680f18722fe8db7fb1bcbe542c8b30481dc`,
+  C0/C1/C2 `12627ad08a7328c3978fe9aefd744224e4f2ed94980841cde7ba7dcf08aa0cfc`,
   and D0/D1/D2
-  `1cc8225129d857e1c2adba32a9bb1af6a739c22eb621de8bc42b2bdeb5e11d23`.
+  `7675498d53189ddbb64083cf8008071744f0d0c4c69b3a3d02df9abfdd6a6266`.
 - `support.js` is the matching generated Design document runtime, SHA-256
   `8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe`.
 - `fonts/Lora-SemiBold.ttf` has SHA-256
@@ -169,11 +170,11 @@ local probe; structural and contract checks still run.
 - `polaroid-frame` and `print-frame-hero` intentionally retain soft inset seams
   over the edge of their declared photo rectangles. Place photos behind the
   full manifest rect; the exporter verifies that the inset core is alpha-zero.
-- Background swapping is template-local. Maximal uses its five paper assets;
-  calm uses Maximal's washi, cream-fiber, blush-stripe, and sage-stripe papers
-  with cream fiber as its default; minimal defaults to the retained cream-fiber
-  paper and also offers exact generated sand `#e8dfcc` and sage `#dde0d6`
-  PNGs.
+- Every template exposes the same ordered palette: washi, cream-fiber,
+  blush-stripe, sage-stripe, terracotta-mottle, generated sand `#e8dfcc`, and
+  generated sage `#dde0d6`. Scrapbook defaults to washi; Calm and Minimal
+  default to cream-fiber. The app preserves the selected background by asset ID
+  when the style changes.
 - Minimal renders each photo inside its declared `mat` rectangle with a 15px
   inset to the nested photo `rect`, a 3px `rgba(90,75,55,0.20)` inside border,
   and the recorded `0/3/9 rgba(90,70,45,0.12)` mat shadow. Render mats/photos

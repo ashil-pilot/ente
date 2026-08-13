@@ -269,7 +269,9 @@
           "paper-cream-fiber",
           "paper-blush-stripe",
           "paper-sage-stripe",
-          "paper-terracotta-mottle"
+          "paper-terracotta-mottle",
+          "editorial-sand",
+          "editorial-sage"
         ]
       },
       "shadowSchema": {
@@ -681,7 +683,10 @@
           "paper-washi",
           "paper-cream-fiber",
           "paper-blush-stripe",
-          "paper-sage-stripe"
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
+          "editorial-sand",
+          "editorial-sage"
         ]
       },
       "layers": [
@@ -996,7 +1001,10 @@
           "paper-washi",
           "paper-cream-fiber",
           "paper-blush-stripe",
-          "paper-sage-stripe"
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
+          "editorial-sand",
+          "editorial-sage"
         ]
       },
       "layers": [
@@ -1337,7 +1345,10 @@
           "paper-washi",
           "paper-cream-fiber",
           "paper-blush-stripe",
-          "paper-sage-stripe"
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
+          "editorial-sand",
+          "editorial-sage"
         ]
       },
       "layers": [
@@ -1657,7 +1668,11 @@
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
         "assetIds": [
+          "paper-washi",
           "paper-cream-fiber",
+          "paper-blush-stripe",
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
           "editorial-sand",
           "editorial-sage"
         ]
@@ -1905,7 +1920,11 @@
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
         "assetIds": [
+          "paper-washi",
           "paper-cream-fiber",
+          "paper-blush-stripe",
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
           "editorial-sand",
           "editorial-sage"
         ]
@@ -2153,7 +2172,11 @@
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
         "assetIds": [
+          "paper-washi",
           "paper-cream-fiber",
+          "paper-blush-stripe",
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
           "editorial-sand",
           "editorial-sage"
         ]

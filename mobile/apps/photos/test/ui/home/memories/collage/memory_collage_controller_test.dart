@@ -11,15 +11,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late List<EnteFile> files;
+  late Map<String, dynamic> sourceManifest;
   late MemoryCollageManifest manifest;
   late MemoryCollageManifest productionManifest;
 
   setUpAll(() async {
-    final source =
+    sourceManifest =
         jsonDecode(await rootBundle.loadString(memoryCollageManifestAsset))
             as Map<String, dynamic>;
-    productionManifest = MemoryCollageManifest.fromJson(source);
-    manifest = _threeTemplateManifest(source);
+    productionManifest = MemoryCollageManifest.fromJson(sourceManifest);
+    manifest = _threeTemplateManifest(sourceManifest);
   });
 
   setUp(() {
@@ -86,11 +87,12 @@ void main() {
     expect(notifications, 1);
   });
 
-  test("remembers a separate background for every template", () {
+  test("keeps the selected background when the next template supports it", () {
+    final sharedManifest = _sharedBackgroundManifest(sourceManifest);
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
-      manifest: manifest,
+      manifest: sharedManifest,
       templateID: "scrapbook-maximal",
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
@@ -102,22 +104,41 @@ void main() {
     expect(controller.backgroundAssetID, "paper-cream-fiber");
 
     controller.selectTemplate("scrapbook-calm");
-    expect(controller.backgroundAssetID, "paper-blush-stripe");
-    controller.nextBackground();
-    expect(controller.backgroundAssetID, "paper-sage-stripe");
-
-    controller.selectTemplate("minimal-editorial");
-    expect(controller.backgroundAssetID, "paper-terracotta-mottle");
-    controller.nextBackground();
-    expect(controller.backgroundAssetID, "paper-terracotta-mottle");
-
-    controller.selectTemplate("scrapbook-maximal");
     expect(controller.backgroundAssetID, "paper-cream-fiber");
-    controller.selectTemplate("scrapbook-calm");
-    expect(controller.backgroundAssetID, "paper-sage-stripe");
+    expect(
+      controller.backgroundAssetIDForTemplate("minimal-editorial"),
+      "paper-cream-fiber",
+    );
+    controller.selectTemplate("minimal-editorial");
+    expect(controller.backgroundAssetID, "paper-cream-fiber");
 
     expect(controller.shuffleRevision, 0);
     expect(identical(controller.selectedFiles, initialSelection), isTrue);
+  });
+
+  test("falls back to the target default when a background is unsupported", () {
+    final controller = MemoryCollageController(
+      memoryID: "memory-1",
+      files: files,
+      manifest: manifest,
+      templateID: "scrapbook-maximal",
+    );
+    var notifications = 0;
+    controller.addListener(() => notifications++);
+
+    controller.nextBackground();
+    expect(controller.backgroundAssetID, "paper-cream-fiber");
+    expect(
+      controller.backgroundAssetIDForTemplate("scrapbook-calm"),
+      "paper-blush-stripe",
+    );
+    expect(controller.backgroundAssetID, "paper-cream-fiber");
+
+    controller.selectTemplate("scrapbook-calm");
+
+    expect(controller.backgroundAssetID, "paper-blush-stripe");
+    expect(controller.backgroundIndex, 0);
+    expect(notifications, 2);
   });
 
   test("next template follows manifest order, wraps, and preserves photos", () {
@@ -254,32 +275,13 @@ void main() {
     expect(notifications, 0);
   });
 
-  test("minimal cycles only through its three light backgrounds", () {
-    for (final templateID in const [
-      "minimal-classic",
-      "minimal-rows",
-      "minimal-grid",
-    ]) {
-      final controller = MemoryCollageController(
-        memoryID: "memory-1",
-        files: files,
-        manifest: productionManifest,
-        templateID: templateID,
-      );
+  test("production styles share all backgrounds", () {
+    final expectedBackgroundIDs =
+        productionManifest.templates.first.background.assetIDs;
 
-      expect(controller.backgroundIDs, [
-        "paper-cream-fiber",
-        "editorial-sand",
-        "editorial-sage",
-      ]);
-      expect(controller.backgroundAssetID, "paper-cream-fiber");
-
-      controller.nextBackground();
-      expect(controller.backgroundAssetID, "editorial-sand");
-      controller.nextBackground();
-      expect(controller.backgroundAssetID, "editorial-sage");
-      controller.nextBackground();
-      expect(controller.backgroundAssetID, "paper-cream-fiber");
+    expect(expectedBackgroundIDs, hasLength(7));
+    for (final template in productionManifest.templates) {
+      expect(template.background.assetIDs, expectedBackgroundIDs);
     }
   });
 
@@ -335,6 +337,36 @@ MemoryCollageManifest _threeTemplateManifest(Map<String, dynamic> source) {
       id: "minimal-editorial",
       backgroundIDs: const ["paper-terracotta-mottle"],
       defaultBackgroundID: "paper-terracotta-mottle",
+    ),
+  ];
+  return MemoryCollageManifest.fromJson(json);
+}
+
+MemoryCollageManifest _sharedBackgroundManifest(Map<String, dynamic> source) {
+  final json = _copyJson(source);
+  final sourceTemplate = (json["templates"]! as List<dynamic>)
+      .cast<Map<String, dynamic>>()
+      .singleWhere((template) => template["id"] == "scrapbook-maximal");
+  const backgroundIDs = ["paper-washi", "paper-cream-fiber"];
+  json["defaultTemplateId"] = "scrapbook-calm";
+  json["templates"] = [
+    _template(
+      sourceTemplate,
+      id: "scrapbook-maximal",
+      backgroundIDs: backgroundIDs,
+      defaultBackgroundID: "paper-washi",
+    ),
+    _template(
+      sourceTemplate,
+      id: "scrapbook-calm",
+      backgroundIDs: backgroundIDs,
+      defaultBackgroundID: "paper-washi",
+    ),
+    _template(
+      sourceTemplate,
+      id: "minimal-editorial",
+      backgroundIDs: backgroundIDs,
+      defaultBackgroundID: "paper-washi",
     ),
   ];
   return MemoryCollageManifest.fromJson(json);

@@ -24,7 +24,7 @@ const isRealOutput = outputDirectory === realOutputDirectory;
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "46513de3b0fe41a9921812b101f302a75115a7972e9fbf4c0032bfb065a0abff",
+    "54a02ed673afbc920f37bde50fb9d391c0cdeab144d44c1283c93710b4b1623f",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
@@ -160,17 +160,17 @@ const expectedTemplateIds = [
 // 2a/B2 projection: JSON.stringify({ assets: its new raster asset record,
 // template: scrapbook-maximal }).
 const expectedMaximalDesignContractDigest =
-  "ec31b48701b048d324d17b05a589f88287328386f9c60cb2fe5cac086b4319bb";
+  "679ad2a2f9d4f46c2b0ac245e193f680f18722fe8db7fb1bcbe542c8b30481dc";
 // Each later direction is pinned separately so a change in one cannot be
 // hidden by simultaneously changing the other projection.
 // C0/C1/C2 projection: JSON.stringify({ assets: the Calm raster asset
 // records, templates: the three approved Calm variants }).
 const expectedCalmDesignContractDigest =
-  "556c43f9bd742071e74c379ff751db74aca7ee7d0829b733b50f206f3cf8e87b";
+  "12627ad08a7328c3978fe9aefd744224e4f2ed94980841cde7ba7dcf08aa0cfc";
 // D0/D1/D2 projection: JSON.stringify({ assets: the two retained generated
 // color records, templates: the three approved Minimal variants }).
 const expectedMinimalDesignContractDigest =
-  "1cc8225129d857e1c2adba32a9bb1af6a739c22eb621de8bc42b2bdeb5e11d23";
+  "7675498d53189ddbb64083cf8008071744f0d0c4c69b3a3d02df9abfdd6a6266";
 
 const paletteTextureIds = new Set([
   "paper-washi",

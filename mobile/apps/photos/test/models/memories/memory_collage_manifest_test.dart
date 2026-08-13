@@ -49,19 +49,22 @@ void main() {
     }
   });
 
-  test("scopes ordered background choices to the template", () {
-    final background = manifest.templateFor("scrapbook-maximal").background;
-
-    expect(background.layerID, "bg");
-    expect(background.defaultAssetID, "paper-washi");
-    expect(background.assetIDs, [
+  test("shares every ordered background choice across all templates", () {
+    const backgroundIDs = [
       "paper-washi",
       "paper-cream-fiber",
       "paper-blush-stripe",
       "paper-sage-stripe",
       "paper-terracotta-mottle",
-    ]);
-    for (final assetID in background.assetIDs) {
+      "editorial-sand",
+      "editorial-sage",
+    ];
+
+    for (final template in manifest.templates) {
+      expect(template.background.layerID, "bg", reason: template.id);
+      expect(template.background.assetIDs, backgroundIDs, reason: template.id);
+    }
+    for (final assetID in backgroundIDs) {
       expect(
         manifest.assetFor(assetID).role,
         MemoryCollageAssetRole.background,
@@ -393,6 +396,9 @@ void main() {
         "paper-cream-fiber",
         "paper-blush-stripe",
         "paper-sage-stripe",
+        "paper-terracotta-mottle",
+        "editorial-sand",
+        "editorial-sage",
       ], reason: id);
       expect(
         calm.photoSlots.whereType<MemoryCollageAssetWindowPhotoSlot>(),
@@ -453,7 +459,11 @@ void main() {
           reason: id,
         );
         expect(minimal.background.assetIDs, [
+          "paper-washi",
           "paper-cream-fiber",
+          "paper-blush-stripe",
+          "paper-sage-stripe",
+          "paper-terracotta-mottle",
           "editorial-sand",
           "editorial-sage",
         ], reason: id);
@@ -785,7 +795,7 @@ void main() {
       final grain = (minimal["layers"]! as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .singleWhere((layer) => layer["layerId"] == "grain");
-      grain["backgroundAssetIds"] = ["paper-washi"];
+      grain["backgroundAssetIds"] = ["missing"];
       expect(
         () => MemoryCollageManifest.fromJson(invalidConditionalLayer),
         throwsFormatException,
@@ -797,7 +807,7 @@ void main() {
                       as List<dynamic>)
                   .first
               as Map<String, dynamic>;
-      rule["colorsByBackground"] = {"paper-washi": "#ffffff"};
+      rule["colorsByBackground"] = {"missing": "#ffffff"};
       expect(
         () => MemoryCollageManifest.fromJson(invalidRuleBackground),
         throwsFormatException,

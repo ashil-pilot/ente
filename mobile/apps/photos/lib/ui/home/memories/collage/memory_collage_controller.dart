@@ -20,10 +20,10 @@ class MemoryCollageController extends ChangeNotifier {
   final MemoryCollageManifest manifest;
   final MemoryCollageSelection _selector;
   final List<EnteFile> _sourceFiles;
-  final Map<String, int> _backgroundIndexByTemplate = {};
 
   late List<EnteFile> _selectedFiles;
   late String _templateID;
+  late String _backgroundAssetID;
   int _shuffleRevision = 0;
 
   MemoryCollageController({
@@ -35,7 +35,10 @@ class MemoryCollageController extends ChangeNotifier {
   }) : _sourceFiles = List<EnteFile>.unmodifiable(files),
        _selector = selector ?? MemoryCollageSelector.select {
     _templateID = templateID ?? manifest.defaultTemplateID;
-    _ensureBackgroundIndex(_templateID);
+    _backgroundAssetID = manifest
+        .templateFor(_templateID)
+        .background
+        .defaultAssetID;
     _selectedFiles = _selectFiles();
   }
 
@@ -64,13 +67,15 @@ class MemoryCollageController extends ChangeNotifier {
 
   int get shuffleRevision => _shuffleRevision;
 
-  int get backgroundIndex => _ensureBackgroundIndex(_templateID);
+  int get backgroundIndex => backgroundIDs.indexOf(_backgroundAssetID);
 
-  String get backgroundAssetID => backgroundAssetIDForTemplate(_templateID);
+  String get backgroundAssetID => _backgroundAssetID;
 
   String backgroundAssetIDForTemplate(String templateID) {
-    final template = manifest.templateFor(templateID);
-    return template.background.assetIDs[_ensureBackgroundIndex(templateID)];
+    final background = manifest.templateFor(templateID).background;
+    return background.assetIDs.contains(_backgroundAssetID)
+        ? _backgroundAssetID
+        : background.defaultAssetID;
   }
 
   void shuffle() {
@@ -82,32 +87,18 @@ class MemoryCollageController extends ChangeNotifier {
   void nextBackground() {
     final backgrounds = backgroundIDs;
     if (backgrounds.length == 1) return;
-    _backgroundIndexByTemplate[_templateID] =
-        (backgroundIndex + 1) % backgrounds.length;
+    _backgroundAssetID =
+        backgrounds[(backgroundIndex + 1) % backgrounds.length];
     notifyListeners();
   }
 
   void selectTemplate(String templateID) {
     manifest.templateFor(templateID);
     if (_templateID == templateID) return;
-    _ensureBackgroundIndex(templateID);
+    final backgroundAssetID = backgroundAssetIDForTemplate(templateID);
     _templateID = templateID;
+    _backgroundAssetID = backgroundAssetID;
     notifyListeners();
-  }
-
-  int _ensureBackgroundIndex(String templateID) {
-    return _backgroundIndexByTemplate.putIfAbsent(templateID, () {
-      final background = manifest.templateFor(templateID).background;
-      final defaultIndex = background.assetIDs.indexOf(
-        background.defaultAssetID,
-      );
-      if (defaultIndex < 0) {
-        throw StateError(
-          "Template $templateID does not contain its default background",
-        );
-      }
-      return defaultIndex;
-    });
   }
 
   List<EnteFile> _selectFiles() {
