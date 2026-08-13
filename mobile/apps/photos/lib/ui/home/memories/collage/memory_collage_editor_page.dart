@@ -707,9 +707,8 @@ class _MemoryCollageEditorControlButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               borderRadius: BorderRadius.circular(12),
-              overlayColor: WidgetStatePropertyAll(
-                Colors.white.withValues(alpha: 0.12),
-              ),
+              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+              splashFactory: NoSplash.splashFactory,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 120),
                 opacity: enabled || !dimWhenDisabled ? 1 : 0.35,

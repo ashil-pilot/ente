@@ -173,6 +173,17 @@ void main() {
 
     for (final label in ["Style", "Shuffle", "Background"]) {
       expect(find.bySemanticsLabel(label), findsOneWidget);
+      final control = tester.widget<InkWell>(
+        find.descendant(
+          of: find.byTooltip(label),
+          matching: find.byType(InkWell),
+        ),
+      );
+      expect(control.splashFactory, NoSplash.splashFactory);
+      expect(
+        control.overlayColor?.resolve({WidgetState.pressed}),
+        Colors.transparent,
+      );
       expect(
         tester
             .getSemantics(find.bySemanticsLabel(label))
