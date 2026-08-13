@@ -19,7 +19,7 @@ void main() {
     }
     expect(readiness.areAllSlotsLoaded(7), isTrue);
 
-    expect(readiness.prepareTemplate("scrapbook-calm"), isTrue);
+    expect(readiness.prepareTemplate("calm-film-trio"), isTrue);
 
     final secondGeneration = readiness.generation;
     expect(secondGeneration, firstGeneration + 1);
@@ -33,7 +33,7 @@ void main() {
     }
     expect(readiness.areAllSlotsLoaded(7), isTrue);
     expect(
-      readiness.synchronize(shuffleRevision: 0, templateID: "scrapbook-calm"),
+      readiness.synchronize(shuffleRevision: 0, templateID: "calm-film-trio"),
       isFalse,
     );
     expect(readiness.generation, secondGeneration);

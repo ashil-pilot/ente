@@ -12,11 +12,13 @@ void main() {
 
   late List<EnteFile> files;
   late MemoryCollageManifest manifest;
+  late MemoryCollageManifest productionManifest;
 
   setUpAll(() async {
     final source =
         jsonDecode(await rootBundle.loadString(memoryCollageManifestAsset))
             as Map<String, dynamic>;
+    productionManifest = MemoryCollageManifest.fromJson(source);
     manifest = _threeTemplateManifest(source);
   });
 
@@ -250,6 +252,62 @@ void main() {
 
     expect(controller.backgroundAssetID, "paper-terracotta-mottle");
     expect(notifications, 0);
+  });
+
+  test("minimal cycles only through its three light backgrounds", () {
+    for (final templateID in const [
+      "minimal-classic",
+      "minimal-rows",
+      "minimal-grid",
+    ]) {
+      final controller = MemoryCollageController(
+        memoryID: "memory-1",
+        files: files,
+        manifest: productionManifest,
+        templateID: templateID,
+      );
+
+      expect(controller.backgroundIDs, [
+        "paper-cream-fiber",
+        "editorial-sand",
+        "editorial-sage",
+      ]);
+      expect(controller.backgroundAssetID, "paper-cream-fiber");
+
+      controller.nextBackground();
+      expect(controller.backgroundAssetID, "editorial-sand");
+      controller.nextBackground();
+      expect(controller.backgroundAssetID, "editorial-sage");
+      controller.nextBackground();
+      expect(controller.backgroundAssetID, "paper-cream-fiber");
+    }
+  });
+
+  test("production style cycling follows all seven authored templates", () {
+    final controller = MemoryCollageController(
+      memoryID: "memory-1",
+      files: files,
+      manifest: productionManifest,
+    );
+    const order = [
+      "scrapbook-maximal",
+      "calm-classic",
+      "calm-film-trio",
+      "calm-accent-print",
+      "minimal-classic",
+      "minimal-rows",
+      "minimal-grid",
+    ];
+
+    expect(controller.templateID, "calm-film-trio");
+    expect(
+      order[(order.indexOf(controller.templateID) + 1) % order.length],
+      controller.nextTemplateID,
+    );
+    for (var count = 0; count < order.length; count++) {
+      controller.selectTemplate(controller.nextTemplateID);
+    }
+    expect(controller.templateID, "calm-film-trio");
   });
 }
 

@@ -800,8 +800,12 @@ class MemoryCollageRendererReadiness {
 String _memoryCollageTemplateLabel(BuildContext context, String templateID) {
   return switch (templateID) {
     "scrapbook-maximal" => context.strings.memoryCollageTemplateScrapbook,
-    "scrapbook-calm" => context.strings.memoryCollageTemplateCalm,
-    "minimal-editorial" => context.strings.memoryCollageTemplateMinimal,
+    "calm-classic" => context.strings.memoryCollageTemplateCalm,
+    "calm-film-trio" => context.strings.memoryCollageTemplateCalmFilmTrio,
+    "calm-accent-print" => context.strings.memoryCollageTemplateCalmAccentPrint,
+    "minimal-classic" => context.strings.memoryCollageTemplateMinimal,
+    "minimal-rows" => context.strings.memoryCollageTemplateMinimalRows,
+    "minimal-grid" => context.strings.memoryCollageTemplateMinimalGrid,
     _ => throw ArgumentError.value(templateID, "templateID"),
   };
 }

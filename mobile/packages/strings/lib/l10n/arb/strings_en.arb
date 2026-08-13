@@ -2333,7 +2333,11 @@
   "memoryCollageCustomize": "Customize collage",
   "memoryCollageStyle": "Style",
   "memoryCollageTemplateCalm": "Calm",
+  "memoryCollageTemplateCalmAccentPrint": "Calm · Accent Print",
+  "memoryCollageTemplateCalmFilmTrio": "Calm · Film Trio",
   "memoryCollageTemplateMinimal": "Minimal",
+  "memoryCollageTemplateMinimalGrid": "Minimal · Grid",
+  "memoryCollageTemplateMinimalRows": "Minimal · Rows",
   "memoryCollageTemplateScrapbook": "Scrapbook",
   "memoryCount": "{count, plural, =0{no memories} one{{formattedCount} memory} other{{formattedCount} memories}}",
   "@memoryCount": {

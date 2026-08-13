@@ -24,7 +24,7 @@ const isRealOutput = outputDirectory === realOutputDirectory;
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "6b27e83c89b66bf95187774bb242ac7b78f56d5c3868f4185eb411c4bbb433ca",
+    "46513de3b0fe41a9921812b101f302a75115a7972e9fbf4c0032bfb065a0abff",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
@@ -69,13 +69,13 @@ const retainedAssetIds = [
 ];
 const maximalRasterAssetIds = ["banner-wide"];
 const designRasterAssetIds = [
+  "film-strip-four-horizontal",
   "film-strip-three-horizontal",
   "print-frame-hero",
 ];
 const generatedColors = new Map([
   ["editorial-sand", "#e8dfcc"],
   ["editorial-sage", "#dde0d6"],
-  ["editorial-charcoal", "#2b2723"],
 ]);
 const generatedColorAssetIds = [...generatedColors.keys()];
 const newAssetIds = [
@@ -97,7 +97,7 @@ const expectedRetainedInventoryDigest =
 const expectedMaximalInventoryDigest =
   "cf69c941c126da1c0333f3ac663951372c9745d14316068f35486a5c2d6af052";
 const expectedCalmInventoryDigest =
-  "d08156d88c492d89bf9a9e4e3eeed74d83b564cce355c7bab8d4b254e51abcde";
+  "34f5c6196244bad68a7bc147ab41e0b83655ad0b66c1714958c3b902f9959170";
 
 const dimensions = new Map([
   ["paper-washi", [1080, 1920]],
@@ -119,11 +119,11 @@ const dimensions = new Map([
   ["sun-streak", [1080, 1920]],
   ["vignette", [1080, 1920]],
   ["grain-overlay", [1080, 1920]],
+  ["film-strip-four-horizontal", [972, 252]],
   ["film-strip-three-horizontal", [972, 348]],
   ["print-frame-hero", [876, 594]],
   ["editorial-sand", [1080, 1920]],
   ["editorial-sage", [1080, 1920]],
-  ["editorial-charcoal", [1080, 1920]],
 ]);
 const expectedPhotoWindows = new Map([
   ["polaroid-frame", [{ x: 27, y: 27, width: 414, height: 420 }]],
@@ -132,6 +132,12 @@ const expectedPhotoWindows = new Map([
     { x: 57, y: 453, width: 276, height: 318 },
     { x: 57, y: 837, width: 276, height: 318 },
     { x: 57, y: 1221, width: 276, height: 318 },
+  ]],
+  ["film-strip-four-horizontal", [
+    { x: 30, y: 39, width: 210, height: 174 },
+    { x: 264, y: 39, width: 210, height: 174 },
+    { x: 498, y: 39, width: 210, height: 174 },
+    { x: 732, y: 39, width: 210, height: 174 },
   ]],
   ["film-strip-three-horizontal", [
     { x: 30, y: 39, width: 288, height: 270 },
@@ -144,8 +150,12 @@ const expectedPhotoWindows = new Map([
 ]);
 const expectedTemplateIds = [
   "scrapbook-maximal",
-  "scrapbook-calm",
-  "minimal-editorial",
+  "calm-classic",
+  "calm-film-trio",
+  "calm-accent-print",
+  "minimal-classic",
+  "minimal-rows",
+  "minimal-grid",
 ];
 // 2a/B2 projection: JSON.stringify({ assets: its new raster asset record,
 // template: scrapbook-maximal }).
@@ -153,14 +163,14 @@ const expectedMaximalDesignContractDigest =
   "ec31b48701b048d324d17b05a589f88287328386f9c60cb2fe5cac086b4319bb";
 // Each later direction is pinned separately so a change in one cannot be
 // hidden by simultaneously changing the other projection.
-// 2b projection: JSON.stringify({ assets: its two raster asset records,
-// template: scrapbook-calm }).
+// C0/C1/C2 projection: JSON.stringify({ assets: the Calm raster asset
+// records, templates: the three approved Calm variants }).
 const expectedCalmDesignContractDigest =
-  "121d10ca64825d4790c4830f22088cc068569a5f74b1806729d8a6965ae22d62";
-// 3b/4a/5b/D1 projection: JSON.stringify({ assets: its three retained
-// generated color records, template: minimal-editorial }).
+  "556c43f9bd742071e74c379ff751db74aca7ee7d0829b733b50f206f3cf8e87b";
+// D0/D1/D2 projection: JSON.stringify({ assets: the two retained generated
+// color records, templates: the three approved Minimal variants }).
 const expectedMinimalDesignContractDigest =
-  "fec40d41802d26aa6fd06f012be72bc758caaf9c1cb97695ce26899ef7602a94";
+  "1cc8225129d857e1c2adba32a9bb1af6a739c22eb621de8bc42b2bdeb5e11d23";
 
 const paletteTextureIds = new Set([
   "paper-washi",
@@ -306,7 +316,7 @@ function readManifest(source) {
     manifest.canvas?.width !== 1080 ||
     manifest.canvas?.height !== 1920 ||
     manifest.photoCount !== 7 ||
-    manifest.defaultTemplateId !== "scrapbook-calm"
+    manifest.defaultTemplateId !== "calm-film-trio"
   ) {
     fail("The source must preserve the v2 1080x1920 seven-photo contract.");
   }
@@ -379,6 +389,10 @@ function readManifest(source) {
     const template = manifest.templates[templateId];
     if (!Array.isArray(template.backgrounds) || template.backgrounds.length === 0) {
       fail(`${templateId} must declare asset-backed backgrounds.`);
+    }
+    const minimumPhotoShortSide = template.minimumPhotoShortSide ?? 270;
+    if (!Number.isFinite(minimumPhotoShortSide) || minimumPhotoShortSide <= 0) {
+      fail(`${templateId} has an invalid minimumPhotoShortSide.`);
     }
     const backgroundIds = template.backgrounds.map((background) => background.id);
     const backgroundIdSet = new Set(backgroundIds);
@@ -473,6 +487,12 @@ function readManifest(source) {
         ) {
           fail(`${templateId} slot ${slot.slot} has an invalid canvas rect.`);
         }
+        if (
+          rect.width < minimumPhotoShortSide ||
+          rect.height < minimumPhotoShortSide
+        ) {
+          fail(`${templateId} slot ${slot.slot} is below its photo size floor.`);
+        }
         continue;
       }
       if (slot.kind === "mattedRect") {
@@ -500,6 +520,12 @@ function readManifest(source) {
         ) {
           fail(`${templateId} slot ${slot.slot} does not honor its mat inset.`);
         }
+        if (
+          slot.rect.width < minimumPhotoShortSide ||
+          slot.rect.height < minimumPhotoShortSide
+        ) {
+          fail(`${templateId} slot ${slot.slot} is below its photo size floor.`);
+        }
         continue;
       }
       if (slot.kind !== undefined && slot.kind !== "assetWindow") {
@@ -509,6 +535,15 @@ function readManifest(source) {
       const asset = layer && assetsById.get(layer.asset);
       if (!asset?.photoWindows?.[slot.windowIndex]) {
         fail(`${templateId} slot ${slot.slot} references a missing asset window.`);
+      }
+      const window = asset.photoWindows[slot.windowIndex];
+      const effectiveWidth = window.width / asset.width * layer.width;
+      const effectiveHeight = window.height / asset.height * layer.height;
+      if (
+        effectiveWidth < minimumPhotoShortSide ||
+        effectiveHeight < minimumPhotoShortSide
+      ) {
+        fail(`${templateId} slot ${slot.slot} is below its photo size floor.`);
       }
       const target = `${slot.layerId}:${slot.windowIndex}`;
       if (targets.has(target)) fail(`${templateId} repeats photo target ${target}.`);
@@ -526,7 +561,11 @@ function readManifest(source) {
   }
   const calmProjection = {
     assets: designRasterAssetIds.map((id) => assetsById.get(id)),
-    template: manifest.templates["scrapbook-calm"],
+    templates: [
+      manifest.templates["calm-classic"],
+      manifest.templates["calm-film-trio"],
+      manifest.templates["calm-accent-print"],
+    ],
   };
   const calmDigest = sha256(JSON.stringify(calmProjection));
   if (calmDigest !== expectedCalmDesignContractDigest) {
@@ -534,7 +573,11 @@ function readManifest(source) {
   }
   const minimalProjection = {
     assets: generatedColorAssetIds.map((id) => assetsById.get(id)),
-    template: manifest.templates["minimal-editorial"],
+    templates: [
+      manifest.templates["minimal-classic"],
+      manifest.templates["minimal-rows"],
+      manifest.templates["minimal-grid"],
+    ],
   };
   const minimalDigest = sha256(JSON.stringify(minimalProjection));
   if (minimalDigest !== expectedMinimalDesignContractDigest) {
@@ -550,11 +593,12 @@ function cleanAsset(asset) {
       width: asset.width,
       height: asset.height,
       opaque: true,
-      ...(asset.id === "editorial-charcoal" ? { dark: true } : {}),
       role: "background",
     };
   }
   const noteOverrides = {
+    "film-strip-four-horizontal":
+      "calm umber film stock with four live horizontal windows",
     "film-strip-three-horizontal":
       "calm umber film stock with three live horizontal windows",
     "print-frame-hero": "even-border cream print frame with a baked alpha seam",
@@ -641,8 +685,6 @@ function runtimeTitleStyle(source, { z, layerId } = {}) {
 
 function normalizeRuntimeManifest(source) {
   const maximal = source.templates["scrapbook-maximal"];
-  const calm = source.templates["scrapbook-calm"];
-  const minimal = source.templates["minimal-editorial"];
   const common = {
     rotationOrigin: source.rotationOrigin,
     overflow: source.overflow,
@@ -652,6 +694,74 @@ function normalizeRuntimeManifest(source) {
     defaultAssetId: template.defaultBackgroundId,
     assetIds: template.backgrounds.map((entry) => entry.id),
   });
+  const normalizeCalm = (id) => {
+    const template = source.templates[id];
+    return {
+      id,
+      ...common,
+      ...(template.minimumPhotoShortSide === undefined
+        ? {}
+        : { minimumPhotoShortSide: template.minimumPhotoShortSide }),
+      background: background(template),
+      layers: cleanLayers(template.layers),
+      photoSlots: assetWindowSlots(template.photoSlots),
+      appRendered: "title text is typeset directly by the app",
+      titleStyle: runtimeTitleStyle(template.titleStyle, { z: 20 }),
+    };
+  };
+  const normalizeMinimal = (id) => {
+    const template = source.templates[id];
+    return {
+      id,
+      ...common,
+      ...(template.minimumPhotoShortSide === undefined
+        ? {}
+        : { minimumPhotoShortSide: template.minimumPhotoShortSide }),
+      background: background(template),
+      layers: [
+        {
+          layerId: "bg",
+          asset: template.defaultBackgroundId,
+          x: 0,
+          y: 0,
+          width: source.canvas.width,
+          height: source.canvas.height,
+          z: 0,
+          rotation: 0,
+        },
+        ...cleanLayers(template.layers),
+      ],
+      matStyle: {
+        fill: template.matStyle.fill,
+        photoFill: template.matStyle.photoFill,
+        border: template.matStyle.border,
+        shadows: template.matStyle.shadows,
+        photoInset: template.matStyle.photoInset,
+      },
+      rules: [...template.accents, ...template.rules].map((rule) => ({
+        x: rule.x,
+        y: rule.y,
+        width: rule.width,
+        height: rule.height,
+        z: 10,
+        color: rule.color,
+        ...(rule.colorsByBackground
+          ? { colorsByBackground: rule.colorsByBackground }
+          : {}),
+      })),
+      photoSlots: template.photoSlots.map((slot) => ({
+        slot: slot.slot,
+        kind: "mattedRect",
+        mat: slot.mat,
+        rect: slot.rect,
+        z: 4,
+        rotation: slot.rotation,
+      })),
+      appRendered:
+        "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
+      titleStyle: runtimeTitleStyle(template.titleStyle, { z: 20 }),
+    };
+  };
 
   return {
     version: source.version,
@@ -676,64 +786,12 @@ function normalizeRuntimeManifest(source) {
         appRendered: maximal.appRendered,
         titleStyle: runtimeTitleStyle(maximal.titleStyle, { z: 20 }),
       },
-      {
-        id: "scrapbook-calm",
-        ...common,
-        background: background(calm),
-        layers: cleanLayers(calm.layers),
-        photoSlots: assetWindowSlots(calm.photoSlots),
-        appRendered: "title text is typeset directly by the app",
-        titleStyle: runtimeTitleStyle(calm.titleStyle, { z: 20 }),
-      },
-      {
-        id: "minimal-editorial",
-        ...common,
-        background: background(minimal),
-        layers: [
-          {
-            layerId: "bg",
-            asset: minimal.defaultBackgroundId,
-            x: 0,
-            y: 0,
-            width: source.canvas.width,
-            height: source.canvas.height,
-            z: 0,
-            rotation: 0,
-          },
-          ...cleanLayers(minimal.layers),
-        ],
-        matStyle: {
-          fill: minimal.matStyle.fill,
-          fillOnDark: minimal.matStyle.fillOnDark,
-          photoFill: minimal.matStyle.photoFill,
-          border: minimal.matStyle.border,
-          shadows: minimal.matStyle.shadows,
-          photoInset: minimal.matStyle.photoInset,
-        },
-        rules: [...minimal.accents, ...minimal.rules].map((rule) => ({
-          x: rule.x,
-          y: rule.y,
-          width: rule.width,
-          height: rule.height,
-          z: 10,
-          color: rule.color,
-          ...(rule.colorsByBackground
-            ? { colorsByBackground: rule.colorsByBackground }
-            : {}),
-          colorOnDark: rule.colorOnDark,
-        })),
-        photoSlots: minimal.photoSlots.map((slot) => ({
-          slot: slot.slot,
-          kind: "mattedRect",
-          mat: slot.mat,
-          rect: slot.rect,
-          z: 4,
-          rotation: slot.rotation,
-        })),
-        appRendered:
-          "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
-        titleStyle: runtimeTitleStyle(minimal.titleStyle, { z: 20 }),
-      },
+      normalizeCalm("calm-classic"),
+      normalizeCalm("calm-film-trio"),
+      normalizeCalm("calm-accent-print"),
+      normalizeMinimal("minimal-classic"),
+      normalizeMinimal("minimal-rows"),
+      normalizeMinimal("minimal-grid"),
     ],
   };
 }

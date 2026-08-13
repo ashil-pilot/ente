@@ -151,6 +151,13 @@ class MemoryCollageManifest {
     if (template.id.isEmpty) {
       throw const FormatException("Memory collage template ID cannot be empty");
     }
+    if (!template.minimumPhotoShortSide.isFinite ||
+        template.minimumPhotoShortSide <= 0) {
+      throw FormatException(
+        "Template ${template.id} minimumPhotoShortSide must be a positive "
+        "finite number",
+      );
+    }
     _validateUnique(
       template.layers.map((layer) => layer.layerID),
       "layer IDs in template ${template.id}",
@@ -399,6 +406,7 @@ class MemoryCollageManifest {
           _validatePhotoSize(
             width: window.width / asset.width * layer.width,
             height: window.height / asset.height * layer.height,
+            minimumShortSide: template.minimumPhotoShortSide,
             path: "Photo slot ${slot.slot} in template ${template.id}",
           );
         case MemoryCollageRectPhotoSlot():
@@ -433,6 +441,7 @@ class MemoryCollageManifest {
           _validatePhotoSize(
             width: slot.rect.width,
             height: slot.rect.height,
+            minimumShortSide: template.minimumPhotoShortSide,
             path: "Photo slot ${slot.slot} in template ${template.id}",
           );
         case MemoryCollageMattedRectPhotoSlot():
@@ -459,6 +468,7 @@ class MemoryCollageManifest {
           _validatePhotoSize(
             width: slot.photoRect.width,
             height: slot.photoRect.height,
+            minimumShortSide: template.minimumPhotoShortSide,
             path: "Photo slot ${slot.slot} in template ${template.id}",
           );
       }
@@ -468,12 +478,13 @@ class MemoryCollageManifest {
   void _validatePhotoSize({
     required double width,
     required double height,
+    required double minimumShortSide,
     required String path,
   }) {
-    if (width < _minimumPhotoShortSide || height < _minimumPhotoShortSide) {
+    if (width < minimumShortSide || height < minimumShortSide) {
       throw FormatException(
         "$path must keep its shorter side at least "
-        "$_minimumPhotoShortSide canvas pixels",
+        "$minimumShortSide canvas pixels",
       );
     }
   }
@@ -755,6 +766,7 @@ class MemoryCollageRule {
 
 class MemoryCollageTemplate {
   final String id;
+  final double minimumPhotoShortSide;
   final String rotationOrigin;
   final String overflow;
   final MemoryCollageBackgroundConfig background;
@@ -767,6 +779,7 @@ class MemoryCollageTemplate {
 
   MemoryCollageTemplate._({
     required this.id,
+    required this.minimumPhotoShortSide,
     required this.rotationOrigin,
     required this.overflow,
     required this.background,
@@ -805,6 +818,9 @@ class MemoryCollageTemplate {
 
     return MemoryCollageTemplate._(
       id: _jsonString(json, "id"),
+      minimumPhotoShortSide:
+          _optionalDouble(json, "minimumPhotoShortSide") ??
+          _minimumPhotoShortSide,
       rotationOrigin: _optionalString(json, "rotationOrigin") ?? "layer center",
       overflow: _optionalString(json, "overflow") ?? "crop to canvas",
       background: MemoryCollageBackgroundConfig.fromJson(

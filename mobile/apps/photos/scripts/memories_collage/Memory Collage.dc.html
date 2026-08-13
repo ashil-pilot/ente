@@ -28,12 +28,12 @@ a{color:#8a4a2a}a:hover{color:#68371d}
  },
  "photoCount": 7,
  "photoPolicy": "seven-photo-only: one seven-photo set fills every template (slot i shows photo i everywhere); memories with fewer than seven eligible photos do not get a collage",
- "defaultTemplateId": "scrapbook-calm",
+ "defaultTemplateId": "calm-film-trio",
  "rotationOrigin": "layer center",
  "overflow": "crop to canvas",
  "shadowSchema": "shadows: [{kind:dropShadow, dx, dy, blur, color}] in 1080x1920 px, cast from the owning layer or mat silhouette after rotation; render under its art",
  "photoRendering": "draw each photo cover-fit into its window rect (asset px -> canvas via the layer transform), beneath the frame asset; apply the template photoFilter",
- "appRendered": "titles are app-typeset, never baked; all template backgrounds composite ordinary full-canvas PNG assets; minimal-editorial additionally app-draws its shadowed photo mats and hairline rules, and composites the reused grain-overlay only on its flat editorial backgrounds",
+ "appRendered": "titles are app-typeset, never baked; all template backgrounds composite ordinary full-canvas PNG assets; Minimal variants additionally app-draw their shadowed photo mats and hairline rules, and composite the reused grain-overlay only on flat editorial backgrounds",
  "assets": [
   {
    "id": "paper-washi",
@@ -195,6 +195,39 @@ a{color:#8a4a2a}a:hover{color:#68371d}
    "note": "flat-alpha approximation; composite with overlay blend to match the approved look"
   },
   {
+   "id": "film-strip-four-horizontal",
+   "width": 972,
+   "height": 252,
+   "emptyWindowColor": "#33241a",
+   "photoWindows": [
+    {
+     "x": 30,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    },
+    {
+     "x": 264,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    },
+    {
+     "x": 498,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    },
+    {
+     "x": 732,
+     "y": 39,
+     "width": 210,
+     "height": 174
+    }
+   ],
+   "note": "calm umber film stock; 4-window horizontal strip; window pixels transparent"
+  },
+  {
    "id": "film-strip-three-horizontal",
    "width": 972,
    "height": 348,
@@ -253,15 +286,6 @@ a{color:#8a4a2a}a:hover{color:#68371d}
    "role": "background",
    "source": "generatedColor",
    "color": "#dde0d6"
-  },
-  {
-   "id": "editorial-charcoal",
-   "width": 1080,
-   "height": 1920,
-   "opaque": true,
-   "role": "background",
-   "source": "generatedColor",
-   "color": "#2b2723"
   }
  ],
  "templates": {
@@ -665,7 +689,314 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     }
    }
   },
-  "scrapbook-calm": {
+  "calm-classic": {
+   "backgrounds": [
+    {
+     "id": "paper-washi",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-cream-fiber",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-blush-stripe",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-sage-stripe",
+     "kind": "asset"
+    }
+   ],
+   "defaultBackgroundId": "paper-cream-fiber",
+   "photoFilter": "saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)",
+   "layers": [
+    {
+     "layerId": "bg",
+     "asset": "paper-cream-fiber",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 0,
+     "rotation": 0,
+     "backgroundSwappable": true
+    },
+    {
+     "layerId": "fern",
+     "asset": "fern",
+     "x": 882,
+     "y": -42,
+     "width": 228,
+     "height": 408,
+     "z": 3,
+     "rotation": 188,
+     "opacity": 0.85,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 3,
+       "dy": 6,
+       "blur": 9,
+       "color": "rgba(80,60,30,0.28)"
+      }
+     ]
+    },
+    {
+     "layerId": "strip",
+     "asset": "film-strip-four-horizontal",
+     "x": 54,
+     "y": 1566,
+     "width": 972,
+     "height": 252,
+     "z": 5,
+     "rotation": -1.2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 24,
+       "blur": 48,
+       "color": "rgba(70,40,18,0.3)"
+      }
+     ]
+    },
+    {
+     "layerId": "hero",
+     "asset": "print-frame-hero",
+     "x": 102,
+     "y": 264,
+     "width": 876,
+     "height": 594,
+     "z": 6,
+     "rotation": -0.8,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 21,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 66,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "p1",
+     "asset": "polaroid-frame",
+     "x": 78,
+     "y": 900,
+     "width": 462,
+     "height": 534,
+     "z": 7,
+     "rotation": 1.2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 60,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "p2",
+     "asset": "polaroid-frame",
+     "x": 546,
+     "y": 918,
+     "width": 462,
+     "height": 534,
+     "z": 8,
+     "rotation": -1,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 60,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeL",
+     "asset": "tape-blush",
+     "x": 48,
+     "y": 228,
+     "width": 228,
+     "height": 66,
+     "z": 10,
+     "rotation": -43,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(110,60,45,0.2)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeR",
+     "asset": "tape-sage",
+     "x": 816,
+     "y": 222,
+     "width": 210,
+     "height": 63,
+     "z": 11,
+     "rotation": 44,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(70,80,45,0.2)"
+      }
+     ]
+    },
+    {
+     "layerId": "stamp",
+     "asset": "stamp-postmark",
+     "x": 840,
+     "y": 1398,
+     "width": 192,
+     "height": 216,
+     "z": 12,
+     "rotation": -6,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(90,60,30,0.28)"
+      }
+     ]
+    },
+    {
+     "layerId": "sunStreak",
+     "asset": "sun-streak",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 34,
+     "rotation": 0,
+     "blendMode": "soft-light",
+     "opacity": 1
+    },
+    {
+     "layerId": "vignette",
+     "asset": "vignette",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 36,
+     "rotation": 0,
+     "blendMode": "multiply",
+     "opacity": 0.7
+    },
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.41
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "layerId": "hero",
+     "windowIndex": 0
+    },
+    {
+     "slot": 1,
+     "layerId": "p1",
+     "windowIndex": 0
+    },
+    {
+     "slot": 2,
+     "layerId": "p2",
+     "windowIndex": 0
+    },
+    {
+     "slot": 3,
+     "layerId": "strip",
+     "windowIndex": 0
+    },
+    {
+     "slot": 4,
+     "layerId": "strip",
+     "windowIndex": 1
+    },
+    {
+     "slot": 5,
+     "layerId": "strip",
+     "windowIndex": 2
+    },
+    {
+     "slot": 6,
+     "layerId": "strip",
+     "windowIndex": 3
+    }
+   ],
+   "titleStyle": {
+    "box": {
+     "x": 114,
+     "y": 66,
+     "width": 672,
+     "height": 180
+    },
+    "align": "left",
+    "vAlign": "top",
+    "rotation": -1.5,
+    "fontFamily": "Lora, Georgia, serif",
+    "fontAsset": "fonts/Lora-SemiBold.ttf",
+    "nonLatinFallback": "system serif (ship a Noto Serif family for Indic scripts)",
+    "fontWeight": 600,
+    "fontStyle": "normal",
+    "textTransform": "none",
+    "fontSize": 96,
+    "minFontSize": 60,
+    "letterSpacing": -0.5,
+    "lineHeight": 1.06,
+    "maxLines": 2,
+    "color": "#6f5642",
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
+   },
+   "minimumPhotoShortSide": 174
+  },
+  "calm-film-trio": {
    "backgrounds": [
     {
      "id": "paper-washi",
@@ -997,7 +1328,319 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
    }
   },
-  "minimal-editorial": {
+  "calm-accent-print": {
+   "backgrounds": [
+    {
+     "id": "paper-washi",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-cream-fiber",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-blush-stripe",
+     "kind": "asset"
+    },
+    {
+     "id": "paper-sage-stripe",
+     "kind": "asset"
+    }
+   ],
+   "defaultBackgroundId": "paper-cream-fiber",
+   "photoFilter": "saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)",
+   "layers": [
+    {
+     "layerId": "bg",
+     "asset": "paper-cream-fiber",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 0,
+     "rotation": 0
+    },
+    {
+     "layerId": "fern",
+     "asset": "fern",
+     "x": 882,
+     "y": -42,
+     "width": 228,
+     "height": 408,
+     "z": 3,
+     "rotation": 188,
+     "opacity": 0.85,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 3,
+       "dy": 6,
+       "blur": 9,
+       "color": "rgba(80,60,30,0.28)"
+      }
+     ]
+    },
+    {
+     "layerId": "strip",
+     "asset": "film-strip-three-horizontal",
+     "x": 54,
+     "y": 1506,
+     "width": 972,
+     "height": 348,
+     "z": 5,
+     "rotation": -1.2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 24,
+       "blur": 48,
+       "color": "rgba(70,40,18,0.3)"
+      }
+     ]
+    },
+    {
+     "layerId": "hero",
+     "asset": "print-frame-hero",
+     "x": 102,
+     "y": 264,
+     "width": 876,
+     "height": 594,
+     "z": 6,
+     "rotation": -0.8,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 21,
+       "color": "rgba(90,60,30,0.2)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 30,
+       "blur": 66,
+       "color": "rgba(90,60,30,0.22)"
+      }
+     ]
+    },
+    {
+     "layerId": "p1",
+     "asset": "polaroid-frame",
+     "x": 78,
+     "y": 900,
+     "width": 462,
+     "height": 534,
+     "z": 7,
+     "rotation": 1.2,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.22)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 36,
+       "blur": 72,
+       "color": "rgba(90,60,30,0.26)"
+      }
+     ]
+    },
+    {
+     "layerId": "p2",
+     "asset": "polaroid-frame",
+     "x": 546,
+     "y": 918,
+     "width": 462,
+     "height": 534,
+     "z": 8,
+     "rotation": -1,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 9,
+       "blur": 18,
+       "color": "rgba(90,60,30,0.22)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 36,
+       "blur": 72,
+       "color": "rgba(90,60,30,0.26)"
+      }
+     ]
+    },
+    {
+     "layerId": "tapeL",
+     "asset": "tape-blush",
+     "x": 48,
+     "y": 228,
+     "width": 228,
+     "height": 66,
+     "z": 10,
+     "rotation": -43,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(110,60,45,0.2)"
+      }
+     ]
+    },
+    {
+     "layerId": "print",
+     "asset": "polaroid-frame",
+     "x": 726,
+     "y": 204,
+     "width": 312,
+     "height": 361,
+     "z": 12,
+     "rotation": 5,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(90,60,30,0.22)"
+      },
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 21,
+       "blur": 42,
+       "color": "rgba(90,60,30,0.26)"
+      }
+     ]
+    },
+    {
+     "layerId": "printTape",
+     "asset": "tape-sage",
+     "x": 777,
+     "y": 172,
+     "width": 210,
+     "height": 63,
+     "z": 13,
+     "rotation": -6,
+     "shadows": [
+      {
+       "kind": "dropShadow",
+       "dx": 0,
+       "dy": 6,
+       "blur": 12,
+       "color": "rgba(110,60,45,0.2)"
+      }
+     ]
+    },
+    {
+     "layerId": "sunStreak",
+     "asset": "sun-streak",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 34,
+     "rotation": 0,
+     "blendMode": "soft-light",
+     "opacity": 1
+    },
+    {
+     "layerId": "vignette",
+     "asset": "vignette",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 36,
+     "rotation": 0,
+     "blendMode": "multiply",
+     "opacity": 0.7
+    },
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.41
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "layerId": "hero",
+     "windowIndex": 0
+    },
+    {
+     "slot": 1,
+     "layerId": "p1",
+     "windowIndex": 0
+    },
+    {
+     "slot": 2,
+     "layerId": "p2",
+     "windowIndex": 0
+    },
+    {
+     "slot": 3,
+     "layerId": "strip",
+     "windowIndex": 0
+    },
+    {
+     "slot": 4,
+     "layerId": "strip",
+     "windowIndex": 1
+    },
+    {
+     "slot": 5,
+     "layerId": "strip",
+     "windowIndex": 2
+    },
+    {
+     "slot": 6,
+     "layerId": "print",
+     "windowIndex": 0
+    }
+   ],
+   "titleStyle": {
+    "box": {
+     "x": 114,
+     "y": 66,
+     "width": 672,
+     "height": 180
+    },
+    "align": "left",
+    "vAlign": "top",
+    "rotation": -1.5,
+    "fontFamily": "Lora, Georgia, serif",
+    "fontAsset": "fonts/Lora-SemiBold.ttf",
+    "nonLatinFallback": "system serif (ship a Noto Serif family for Indic scripts)",
+    "fontWeight": 600,
+    "fontStyle": "normal",
+    "textTransform": "none",
+    "fontSize": 96,
+    "minFontSize": 60,
+    "letterSpacing": -0.5,
+    "lineHeight": 1.06,
+    "maxLines": 2,
+    "color": "#6f5642",
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
+   }
+  },
+  "minimal-classic": {
    "backgrounds": [
     {
      "id": "paper-cream-fiber",
@@ -1015,20 +1658,13 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "kind": "asset",
      "color": "#dde0d6",
      "dark": false
-    },
-    {
-     "id": "editorial-charcoal",
-     "kind": "asset",
-     "color": "#2b2723",
-     "dark": true
     }
    ],
    "defaultBackgroundId": "paper-cream-fiber",
    "photoFilter": "none",
-   "drawOrder": "background asset -> mats + photos in slot order -> rules -> title -> grain layer on editorial-sand/editorial-sage/editorial-charcoal only",
+   "drawOrder": "background asset -> mats + photos in slot order -> rules -> title -> grain layer on editorial-sand/editorial-sage only",
    "matStyle": {
     "fill": "#faf6ec",
-    "fillOnDark": "#faf6ec",
     "photoFill": "#e7e1d4",
     "border": {
      "width": 3,
@@ -1057,8 +1693,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "colorsByBackground": {
       "editorial-sand": "#d8cfbc",
       "editorial-sage": "#d8cfbc"
-     },
-     "colorOnDark": "rgba(244,240,232,0.3)"
+     }
     },
     {
      "x": 78,
@@ -1069,8 +1704,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "colorsByBackground": {
       "editorial-sand": "#d8cfbc",
       "editorial-sage": "#d8cfbc"
-     },
-     "colorOnDark": "rgba(244,240,232,0.3)"
+     }
     }
    ],
    "layers": [
@@ -1087,8 +1721,253 @@ a{color:#8a4a2a}a:hover{color:#68371d}
      "opacity": 0.12,
      "backgroundAssetIds": [
       "editorial-sand",
-      "editorial-sage",
-      "editorial-charcoal"
+      "editorial-sage"
+     ]
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 78,
+      "y": 390,
+      "width": 924,
+      "height": 798
+     },
+     "rect": {
+      "x": 93,
+      "y": 405,
+      "width": 894,
+      "height": 768
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    },
+    {
+     "slot": 1,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 78,
+      "y": 1212,
+      "width": 450,
+      "height": 318
+     },
+     "rect": {
+      "x": 93,
+      "y": 1227,
+      "width": 420,
+      "height": 288
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    },
+    {
+     "slot": 2,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 552,
+      "y": 1212,
+      "width": 450,
+      "height": 318
+     },
+     "rect": {
+      "x": 567,
+      "y": 1227,
+      "width": 420,
+      "height": 288
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    },
+    {
+     "slot": 3,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 78,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "rect": {
+      "x": 93,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    },
+    {
+     "slot": 4,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 315,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "rect": {
+      "x": 330,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    },
+    {
+     "slot": 5,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 552,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "rect": {
+      "x": 567,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    },
+    {
+     "slot": 6,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 789,
+      "y": 1554,
+      "width": 213,
+      "height": 252
+     },
+     "rect": {
+      "x": 804,
+      "y": 1569,
+      "width": 183,
+      "height": 222
+     },
+     "fit": "cover",
+     "cornerRadius": 0,
+     "rotation": 0
+    }
+   ],
+   "titleStyle": {
+    "box": {
+     "x": 78,
+     "y": 84,
+     "width": 924,
+     "height": 186
+    },
+    "align": "left",
+    "vAlign": "top",
+    "rotation": 0,
+    "fontFamily": "Inter, Arial, sans-serif",
+    "fontAsset": "fonts/Inter-Medium.ttf",
+    "nonLatinFallback": "platform font fallback",
+    "fontWeight": 500,
+    "fontStyle": "normal",
+    "textTransform": "none",
+    "fontSize": 102,
+    "minFontSize": 66,
+    "letterSpacing": -1.5,
+    "lineHeight": 1.04,
+    "maxLines": 2,
+    "color": "#24201a",
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
+   },
+   "minimumPhotoShortSide": 183
+  },
+  "minimal-rows": {
+   "backgrounds": [
+    {
+     "id": "paper-cream-fiber",
+     "kind": "asset",
+     "dark": false
+    },
+    {
+     "id": "editorial-sand",
+     "kind": "asset",
+     "color": "#e8dfcc",
+     "dark": false
+    },
+    {
+     "id": "editorial-sage",
+     "kind": "asset",
+     "color": "#dde0d6",
+     "dark": false
+    }
+   ],
+   "defaultBackgroundId": "paper-cream-fiber",
+   "photoFilter": "none",
+   "drawOrder": "background asset -> mats + photos in slot order -> rules -> title -> grain layer on editorial-sand/editorial-sage only",
+   "matStyle": {
+    "fill": "#faf6ec",
+    "photoFill": "#e7e1d4",
+    "border": {
+     "width": 3,
+     "color": "rgba(90,75,55,0.20)"
+    },
+    "shadows": [
+     {
+      "kind": "dropShadow",
+      "dx": 0,
+      "dy": 3,
+      "blur": 9,
+      "color": "rgba(90,70,45,0.12)"
+     }
+    ],
+    "photoInset": 15,
+    "note": "app-drawn warm mat with a subtle drop shadow; photo rect = mat rect inset 15px; border drawn inside the mat rect"
+   },
+   "accents": [],
+   "rules": [
+    {
+     "x": 78,
+     "y": 288,
+     "width": 924,
+     "height": 3,
+     "color": "#cfc5ae",
+     "colorsByBackground": {
+      "editorial-sand": "#d8cfbc",
+      "editorial-sage": "#d8cfbc"
+     }
+    },
+    {
+     "x": 78,
+     "y": 1842,
+     "width": 924,
+     "height": 3,
+     "color": "#cfc5ae",
+     "colorsByBackground": {
+      "editorial-sand": "#d8cfbc",
+      "editorial-sage": "#d8cfbc"
+     }
+    }
+   ],
+   "layers": [
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.12,
+     "backgroundAssetIds": [
+      "editorial-sand",
+      "editorial-sage"
      ]
     }
    ],
@@ -1249,7 +2128,244 @@ a{color:#8a4a2a}a:hover{color:#68371d}
     "lineHeight": 1.04,
     "maxLines": 2,
     "color": "#24201a",
-    "colorOnDark": "#f2ede2",
+    "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
+   }
+  },
+  "minimal-grid": {
+   "backgrounds": [
+    {
+     "id": "paper-cream-fiber",
+     "kind": "asset",
+     "dark": false
+    },
+    {
+     "id": "editorial-sand",
+     "kind": "asset",
+     "color": "#e8dfcc",
+     "dark": false
+    },
+    {
+     "id": "editorial-sage",
+     "kind": "asset",
+     "color": "#dde0d6",
+     "dark": false
+    }
+   ],
+   "defaultBackgroundId": "paper-cream-fiber",
+   "photoFilter": "none",
+   "drawOrder": "background asset -> mats + photos in slot order -> rules -> title -> grain layer on editorial-sand/editorial-sage only",
+   "matStyle": {
+    "fill": "#faf6ec",
+    "photoFill": "#e7e1d4",
+    "border": {
+     "width": 3,
+     "color": "rgba(90,75,55,0.20)"
+    },
+    "shadows": [
+     {
+      "kind": "dropShadow",
+      "dx": 0,
+      "dy": 3,
+      "blur": 9,
+      "color": "rgba(90,70,45,0.12)"
+     }
+    ],
+    "photoInset": 15,
+    "note": "app-drawn warm mat with a subtle drop shadow; photo rect = mat rect inset 15px; border drawn inside the mat rect"
+   },
+   "accents": [],
+   "rules": [
+    {
+     "x": 78,
+     "y": 288,
+     "width": 924,
+     "height": 3,
+     "color": "#cfc5ae",
+     "colorsByBackground": {
+      "editorial-sand": "#d8cfbc",
+      "editorial-sage": "#d8cfbc"
+     }
+    },
+    {
+     "x": 78,
+     "y": 1842,
+     "width": 924,
+     "height": 3,
+     "color": "#cfc5ae",
+     "colorsByBackground": {
+      "editorial-sand": "#d8cfbc",
+      "editorial-sage": "#d8cfbc"
+     }
+    }
+   ],
+   "layers": [
+    {
+     "layerId": "grain",
+     "asset": "grain-overlay",
+     "x": 0,
+     "y": 0,
+     "width": 1080,
+     "height": 1920,
+     "z": 38,
+     "rotation": 0,
+     "blendMode": "overlay",
+     "opacity": 0.12,
+     "backgroundAssetIds": [
+      "editorial-sand",
+      "editorial-sage"
+     ]
+    }
+   ],
+   "photoSlots": [
+    {
+     "slot": 0,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 78,
+      "y": 357,
+      "width": 450,
+      "height": 474
+     },
+     "rect": {
+      "x": 93,
+      "y": 372,
+      "width": 420,
+      "height": 444
+     },
+     "z": 4,
+     "rotation": 0
+    },
+    {
+     "slot": 1,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 552,
+      "y": 357,
+      "width": 450,
+      "height": 474
+     },
+     "rect": {
+      "x": 567,
+      "y": 372,
+      "width": 420,
+      "height": 444
+     },
+     "z": 4,
+     "rotation": 0
+    },
+    {
+     "slot": 2,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 78,
+      "y": 900,
+      "width": 300,
+      "height": 330
+     },
+     "rect": {
+      "x": 93,
+      "y": 915,
+      "width": 270,
+      "height": 300
+     },
+     "z": 4,
+     "rotation": 0
+    },
+    {
+     "slot": 3,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 390,
+      "y": 900,
+      "width": 300,
+      "height": 330
+     },
+     "rect": {
+      "x": 405,
+      "y": 915,
+      "width": 270,
+      "height": 300
+     },
+     "z": 4,
+     "rotation": 0
+    },
+    {
+     "slot": 4,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 702,
+      "y": 900,
+      "width": 300,
+      "height": 330
+     },
+     "rect": {
+      "x": 717,
+      "y": 915,
+      "width": 270,
+      "height": 300
+     },
+     "z": 4,
+     "rotation": 0
+    },
+    {
+     "slot": 5,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 78,
+      "y": 1299,
+      "width": 450,
+      "height": 474
+     },
+     "rect": {
+      "x": 93,
+      "y": 1314,
+      "width": 420,
+      "height": 444
+     },
+     "z": 4,
+     "rotation": 0
+    },
+    {
+     "slot": 6,
+     "kind": "mattedRect",
+     "mat": {
+      "x": 552,
+      "y": 1299,
+      "width": 450,
+      "height": 474
+     },
+     "rect": {
+      "x": 567,
+      "y": 1314,
+      "width": 420,
+      "height": 444
+     },
+     "z": 4,
+     "rotation": 0
+    }
+   ],
+   "titleStyle": {
+    "box": {
+     "x": 78,
+     "y": 84,
+     "width": 924,
+     "height": 186
+    },
+    "align": "left",
+    "vAlign": "top",
+    "rotation": 0,
+    "fontFamily": "Inter, Arial, sans-serif",
+    "fontAsset": "fonts/Inter-Medium.ttf",
+    "nonLatinFallback": "platform font fallback",
+    "fontWeight": 500,
+    "fontStyle": "normal",
+    "textTransform": "none",
+    "fontSize": 102,
+    "minFontSize": 66,
+    "letterSpacing": -1.5,
+    "lineHeight": 1.04,
+    "maxLines": 2,
+    "color": "#24201a",
     "overflow": "shrink to minFontSize on one line first; wrap to 2 lines only at minFontSize; if still overflowing, shrink below minFontSize with a bounded search; never ellipsize or truncate"
    }
   }
@@ -1266,7 +2382,7 @@ a{color:#8a4a2a}a:hover{color:#68371d}
   </defs>
 </svg>
 <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:22">
-  <div style="padding:22px 24px 4px;font-size:13px;color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif" data-om-id="dd620bf5:23">Asset export index — 21 raster roots plus 3 generated color assets. Load with ?exportAsset=&lt;id&gt; for an isolated render at intrinsic pixel size on a transparent page. Manifest: &lt;script id=&quot;asset-manifest&quot;&gt;.</div>
+  <div style="padding:22px 24px 4px;font-size:13px;color:#3d332a;font-family:system-ui,-apple-system,'Segoe UI',sans-serif" data-om-id="dd620bf5:23">Asset export index — 22 raster roots plus 2 generated color assets. Load with ?exportAsset=&lt;id&gt; for an isolated render at intrinsic pixel size on a transparent page. Manifest: &lt;script id=&quot;asset-manifest&quot;&gt;.</div>
 </sc-if>
 <sc-if value="{{ axPaperWashi }}" hint-placeholder-val="{{ false }}" data-om-id="dd620bf5:24">
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start" data-om-id="dd620bf5:25">
@@ -1533,6 +2649,22 @@ a{color:#8a4a2a}a:hover{color:#68371d}
   </div>
 </sc-if>
 
+<sc-if value="{{ axFilmStripH }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+    <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">film-strip-four-horizontal · 972×252</div></sc-if>
+    <div data-export-asset="film-strip-four-horizontal" style="position:relative;width:972px;height:252px;overflow:hidden;isolation:isolate">
+      <div style="position:absolute;left:0;top:0;width:324px;height:84px;transform:scale(3);transform-origin:0 0">
+        <div style="position:absolute;left:0px;top:0px;width:324px;height:84px;background-image:linear-gradient(180deg,rgba(45,25,12,0.35) 0px,rgba(45,25,12,0) 4px),linear-gradient(0deg,rgba(45,25,12,0.35) 0px,rgba(45,25,12,0) 4px),repeating-linear-gradient(88deg,rgba(235,210,180,0.08) 0px,rgba(235,210,180,0.08) 1px,rgba(235,210,180,0) 1px,rgba(235,210,180,0) 14px),radial-gradient(90px 60px at 12% 20%,rgba(230,195,160,0.25),rgba(230,195,160,0) 70%),radial-gradient(120px 70px at 70% 80%,rgba(50,28,12,0.3),rgba(50,28,12,0) 72%),linear-gradient(92deg,#7d5b3c 0%,#6b4a2e 30%,#7a583a 55%,#5f4128 80%,#755539 100%);mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);mask-size:100% 13px,100% 13px,10px 100%,10px 100%,8px 100%,8px 100%,8px 100%;mask-position:0 0,0 100%,0 0,100% 0,80px 0,158px 0,236px 0;mask-repeat:no-repeat;-webkit-mask-image:linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000),linear-gradient(#000,#000);-webkit-mask-size:100% 13px,100% 13px,10px 100%,10px 100%,8px 100%,8px 100%,8px 100%;-webkit-mask-position:0 0,0 100%,0 0,100% 0,80px 0,158px 0,236px 0;-webkit-mask-repeat:no-repeat" style-before="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22400%22%20height=%22400%22%3E%3Cfilter%20id=%22m%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.013%22%20numOctaves=%223%22%20seed=%228%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22400%22%20height=%22400%22%20filter=%22url(%23m)%22/%3E%3C/svg%3E');background-size:240px;mix-blend-mode:multiply;opacity:0.36" style-after="content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22160%22%20height=%22160%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.9%22%20numOctaves=%222%22%20seed=%222%22%20stitchTiles=%22stitch%22/%3E%3CfeColorMatrix%20type=%22saturate%22%20values=%220%22/%3E%3C/filter%3E%3Crect%20width=%22160%22%20height=%22160%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E');background-size:130px;mix-blend-mode:overlay;opacity:0.32">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+            <div style="height:13px;display:flex;justify-content:space-between;align-items:center;padding:0 12px"><sc-for list="{{ sprocketsH }}" as="s" hint-placeholder-count="11"><div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(70,40,18,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94"></div></sc-for></div>
+            <div style="flex:1;display:flex;gap:8px;padding:0 10px"><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div><div style="position:relative;width:70px;box-shadow:0 0 0 2px rgba(40,22,10,0.5)"></div></div>
+            <div style="height:13px;display:flex;justify-content:space-between;align-items:center;padding:0 12px"><sc-for list="{{ sprocketsH }}" as="s" hint-placeholder-count="11"><div style="width:11px;height:8px;border-radius:2.5px;background:linear-gradient(165deg,#efe4cb,#dfcfae);box-shadow:inset 0 1.5px 2.5px rgba(70,40,18,0.5),inset 0 -1px 1.5px rgba(255,248,230,0.5);opacity:0.94"></div></sc-for></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
 <sc-if value="{{ axFilmStripThreeH }}" hint-placeholder-val="{{ false }}">
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
     <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ false }}"><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#3d332a;padding:12px 0 0 2px">film-strip-three-horizontal · 972×348</div></sc-if>
@@ -1568,8 +2700,8 @@ a{color:#8a4a2a}a:hover{color:#68371d}
 <section style="padding:34px 40px 64px;display:flex;flex-direction:column;gap:24px" data-om-id="dd620bf5:184">
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;max-width:1180px" data-om-id="dd620bf5:185">
     <div style="display:flex;flex-direction:column;gap:5px" data-om-id="dd620bf5:186">
-      <div style="font-size:15px;font-weight:650;letter-spacing:0.2px" data-om-id="dd620bf5:187">Memory share card — three directions</div>
-      <div style="font-size:12px;color:#6f6353" data-om-id="dd620bf5:188">Ente Photos · crisp die-cut edges, wear lives in the print texture · one seven-photo set fills all three · stays on-device</div>
+      <div style="font-size:15px;font-weight:650;letter-spacing:0.2px" data-om-id="dd620bf5:187">Memory share card — seven production styles, three representative previews</div>
+      <div style="font-size:12px;color:#6f6353" data-om-id="dd620bf5:188">Ente Photos · crisp die-cut edges, wear lives in the print texture · one seven-photo set fills all seven styles · stays on-device</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px" data-om-id="dd620bf5:189">
       <div style="font-size:11px;color:#6f6353" data-om-id="dd620bf5:190">{{ photoCount }} / 7 added</div>
@@ -1873,7 +3005,7 @@ class Component extends DCLogic {
       photoFilter: (this.props.filmTint ?? true) ? 'saturate(0.93) sepia(0.13) contrast(0.97) brightness(1.02)' : 'none',
       showEphemera: this.props.showEphemera ?? true,
       normalMode: !isIndex && !singleAsset, isIndex: isIndex,
-      axPaperWashi: ax('paper-washi'), axPaperCream: ax('paper-cream-fiber'), axPaperBlush: ax('paper-blush-stripe'), axPaperSage: ax('paper-sage-stripe'), axPaperTerracotta: ax('paper-terracotta-mottle'), axPaperTorn: ax('paper-torn'), axPolaroid: ax('polaroid-frame'), axFilmStripFour: ax('film-strip-four'), axFilmStripThreeH: ax('film-strip-three-horizontal'), axPrintHero: ax('print-frame-hero'), axBannerWide: ax('banner-wide'), axTapeMustard: ax('tape-mustard'), axTapeBlush: ax('tape-blush'), axTapeSage: ax('tape-sage'), axStamp: ax('stamp-postmark'), axStar: ax('star'), axFern: ax('fern'), axCoffeeRing: ax('coffee-ring'), axSunStreak: ax('sun-streak'), axVignette: ax('vignette'), axGrain: ax('grain-overlay')
+      axPaperWashi: ax('paper-washi'), axPaperCream: ax('paper-cream-fiber'), axPaperBlush: ax('paper-blush-stripe'), axPaperSage: ax('paper-sage-stripe'), axPaperTerracotta: ax('paper-terracotta-mottle'), axPaperTorn: ax('paper-torn'), axPolaroid: ax('polaroid-frame'), axFilmStripFour: ax('film-strip-four'), axFilmStripH: ax('film-strip-four-horizontal'), axFilmStripThreeH: ax('film-strip-three-horizontal'), axPrintHero: ax('print-frame-hero'), axBannerWide: ax('banner-wide'), axTapeMustard: ax('tape-mustard'), axTapeBlush: ax('tape-blush'), axTapeSage: ax('tape-sage'), axStamp: ax('stamp-postmark'), axStar: ax('star'), axFern: ax('fern'), axCoffeeRing: ax('coffee-ring'), axSunStreak: ax('sun-streak'), axVignette: ax('vignette'), axGrain: ax('grain-overlay')
     };
   }
 }

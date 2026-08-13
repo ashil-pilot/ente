@@ -78,16 +78,30 @@ void main() {
         const Color(0xFF2E2318),
         const Color(0xFF3A2A1C),
       ],
-      "scrapbook-calm": [
+      "calm-classic": [
         const Color(0xFF2E2318),
         const Color(0xFF2E2318),
         const Color(0xFF2E2318),
-        const Color(0xFF2E2318),
+        const Color(0xFF33241A),
         const Color(0xFF33241A),
         const Color(0xFF33241A),
         const Color(0xFF33241A),
       ],
-      "minimal-editorial": List.filled(7, const Color(0xFFE7E1D4)),
+      "calm-film-trio": [
+        ...List.filled(4, const Color(0xFF2E2318)),
+        ...List.filled(3, const Color(0xFF33241A)),
+      ],
+      "calm-accent-print": [
+        ...List.filled(3, const Color(0xFF2E2318)),
+        ...List.filled(3, const Color(0xFF33241A)),
+        const Color(0xFF2E2318),
+      ],
+      for (final templateID in const [
+        "minimal-classic",
+        "minimal-rows",
+        "minimal-grid",
+      ])
+        templateID: List.filled(7, const Color(0xFFE7E1D4)),
     };
 
     for (final templateID in _runtimeTemplateIDs) {
@@ -279,26 +293,13 @@ void main() {
     expect(find.text(normalizedTitle), findsOneWidget);
   });
 
-  testWidgets("minimal editorial uses its dark title and rule colors", (
+  testWidgets("minimal rows retains flat-background grain and rules", (
     tester,
   ) async {
     await verifyMemoryCollageCanvas(
       tester,
       loadedManifest: manifest,
-      templateID: "minimal-editorial",
-      backgroundAssetIDOverride: "editorial-charcoal",
-      expectedRequiredAssetIDs: const {"editorial-charcoal", "grain-overlay"},
-      minimumEncodedByteLength: 1000,
-    );
-  });
-
-  testWidgets("minimal editorial retains flat-background grain and rules", (
-    tester,
-  ) async {
-    await verifyMemoryCollageCanvas(
-      tester,
-      loadedManifest: manifest,
-      templateID: "minimal-editorial",
+      templateID: "minimal-rows",
       backgroundAssetIDOverride: "editorial-sand",
       expectedRequiredAssetIDs: const {"editorial-sand", "grain-overlay"},
       minimumEncodedByteLength: 1000,
@@ -312,7 +313,7 @@ void main() {
     await verifyMemoryCollageCanvas(
       tester,
       loadedManifest: manifest,
-      templateID: "scrapbook-calm",
+      templateID: "calm-film-trio",
       titleText: longTitle,
     );
 
@@ -320,7 +321,7 @@ void main() {
     expect(title.maxLines, 2);
     expect(
       title.style!.fontSize,
-      manifest.templateFor("scrapbook-calm").titleStyle.minFontSize /
+      manifest.templateFor("calm-film-trio").titleStyle.minFontSize /
           memoryCollageExportPixelRatio,
     );
   });
@@ -394,8 +395,12 @@ void main() {
 
 const _runtimeTemplateIDs = [
   "scrapbook-maximal",
-  "scrapbook-calm",
-  "minimal-editorial",
+  "calm-classic",
+  "calm-film-trio",
+  "calm-accent-print",
+  "minimal-classic",
+  "minimal-rows",
+  "minimal-grid",
 ];
 
 const _veryLongTitle =
@@ -426,7 +431,20 @@ const _requiredAssetIDsByTemplate = <String, Set<String>>{
     "vignette",
     "grain-overlay",
   },
-  "scrapbook-calm": {
+  "calm-classic": {
+    "paper-cream-fiber",
+    "fern",
+    "film-strip-four-horizontal",
+    "print-frame-hero",
+    "polaroid-frame",
+    "tape-blush",
+    "tape-sage",
+    "stamp-postmark",
+    "sun-streak",
+    "vignette",
+    "grain-overlay",
+  },
+  "calm-film-trio": {
     "paper-cream-fiber",
     "fern",
     "film-strip-three-horizontal",
@@ -439,10 +457,24 @@ const _requiredAssetIDsByTemplate = <String, Set<String>>{
     "vignette",
     "grain-overlay",
   },
-  "minimal-editorial": {"paper-cream-fiber"},
+  "calm-accent-print": {
+    "paper-cream-fiber",
+    "fern",
+    "film-strip-three-horizontal",
+    "print-frame-hero",
+    "polaroid-frame",
+    "tape-blush",
+    "tape-sage",
+    "sun-streak",
+    "vignette",
+    "grain-overlay",
+  },
+  "minimal-classic": {"paper-cream-fiber"},
+  "minimal-rows": {"paper-cream-fiber"},
+  "minimal-grid": {"paper-cream-fiber"},
 };
 
-const _backgroundAssetIDsByTemplate = <String, List<String>>{
+final _backgroundAssetIDsByTemplate = <String, List<String>>{
   "scrapbook-maximal": [
     "paper-washi",
     "paper-cream-fiber",
@@ -450,18 +482,23 @@ const _backgroundAssetIDsByTemplate = <String, List<String>>{
     "paper-sage-stripe",
     "paper-terracotta-mottle",
   ],
-  "scrapbook-calm": [
-    "paper-washi",
-    "paper-cream-fiber",
-    "paper-blush-stripe",
-    "paper-sage-stripe",
-  ],
-  "minimal-editorial": [
-    "paper-cream-fiber",
-    "editorial-sand",
-    "editorial-sage",
-    "editorial-charcoal",
-  ],
+  for (final templateID in const [
+    "calm-classic",
+    "calm-film-trio",
+    "calm-accent-print",
+  ])
+    templateID: [
+      "paper-washi",
+      "paper-cream-fiber",
+      "paper-blush-stripe",
+      "paper-sage-stripe",
+    ],
+  for (final templateID in const [
+    "minimal-classic",
+    "minimal-rows",
+    "minimal-grid",
+  ])
+    templateID: ["paper-cream-fiber", "editorial-sand", "editorial-sage"],
 };
 
 Future<void> _verifyTitleLayout(
