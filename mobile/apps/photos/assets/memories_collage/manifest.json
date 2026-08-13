@@ -166,37 +166,31 @@
       "note": "flat-alpha approximation; composite with overlay blend to match the approved look"
     },
     {
-      "id": "film-strip-four-horizontal",
+      "id": "film-strip-three-horizontal",
       "width": 972,
-      "height": 252,
+      "height": 348,
       "emptyWindowColor": "#33241a",
       "photoWindows": [
         {
           "x": 30,
           "y": 39,
-          "width": 210,
-          "height": 174
+          "width": 288,
+          "height": 270
         },
         {
-          "x": 264,
+          "x": 342,
           "y": 39,
-          "width": 210,
-          "height": 174
+          "width": 288,
+          "height": 270
         },
         {
-          "x": 498,
+          "x": 654,
           "y": 39,
-          "width": 210,
-          "height": 174
-        },
-        {
-          "x": 732,
-          "y": 39,
-          "width": 210,
-          "height": 174
+          "width": 288,
+          "height": 270
         }
       ],
-      "note": "calm umber film stock with four live horizontal windows"
+      "note": "calm umber film stock with three live horizontal windows"
     },
     {
       "id": "print-frame-hero",
@@ -279,7 +273,7 @@
           "layerId": "torn",
           "asset": "paper-torn",
           "x": -12,
-          "y": 162,
+          "y": 120,
           "width": 1098,
           "height": 1734,
           "z": 2,
@@ -308,7 +302,7 @@
           "layerId": "fern",
           "asset": "fern",
           "x": 897,
-          "y": 114,
+          "y": 72,
           "width": 228,
           "height": 408,
           "z": 4,
@@ -346,7 +340,7 @@
           "layerId": "strip",
           "asset": "film-strip-four",
           "x": 618,
-          "y": 312,
+          "y": 270,
           "width": 390,
           "height": 1800,
           "z": 10,
@@ -364,8 +358,8 @@
         {
           "layerId": "p1",
           "asset": "polaroid-frame",
-          "x": 18,
-          "y": 354,
+          "x": 42,
+          "y": 312,
           "width": 462,
           "height": 534,
           "z": 12,
@@ -390,8 +384,8 @@
         {
           "layerId": "p2",
           "asset": "polaroid-frame",
-          "x": 72,
-          "y": 900,
+          "x": 96,
+          "y": 858,
           "width": 462,
           "height": 534,
           "z": 13,
@@ -416,8 +410,8 @@
         {
           "layerId": "p3",
           "asset": "polaroid-frame",
-          "x": 24,
-          "y": 1404,
+          "x": 48,
+          "y": 1362,
           "width": 462,
           "height": 534,
           "z": 14,
@@ -443,7 +437,7 @@
           "layerId": "banner",
           "asset": "banner-wide",
           "x": 90,
-          "y": 180,
+          "y": 138,
           "width": 900,
           "height": 150,
           "z": 16,
@@ -462,7 +456,7 @@
           "layerId": "tapeA",
           "asset": "tape-mustard",
           "x": 54,
-          "y": 120,
+          "y": 78,
           "width": 336,
           "height": 72,
           "z": 17,
@@ -481,7 +475,7 @@
           "layerId": "tapeB",
           "asset": "tape-blush",
           "x": 132,
-          "y": 318,
+          "y": 276,
           "width": 228,
           "height": 66,
           "z": 15,
@@ -500,7 +494,7 @@
           "layerId": "tapeC",
           "asset": "tape-sage",
           "x": 444,
-          "y": 864,
+          "y": 822,
           "width": 210,
           "height": 63,
           "z": 15,
@@ -519,7 +513,7 @@
           "layerId": "stamp",
           "asset": "stamp-postmark",
           "x": 786,
-          "y": 114,
+          "y": 72,
           "width": 240,
           "height": 270,
           "z": 17,
@@ -620,7 +614,7 @@
         "placement": {
           "kind": "rect",
           "x": 144,
-          "y": 198,
+          "y": 156,
           "width": 618,
           "height": 114,
           "z": 20,
@@ -697,11 +691,11 @@
         },
         {
           "layerId": "strip",
-          "asset": "film-strip-four-horizontal",
+          "asset": "film-strip-three-horizontal",
           "x": 54,
-          "y": 1566,
+          "y": 1434,
           "width": 972,
-          "height": 252,
+          "height": 348,
           "z": 5,
           "rotation": -1.2,
           "shadows": [
@@ -743,10 +737,10 @@
         {
           "layerId": "p1",
           "asset": "polaroid-frame",
-          "x": 78,
+          "x": 48,
           "y": 900,
-          "width": 462,
-          "height": 534,
+          "width": 312,
+          "height": 361,
           "z": 7,
           "rotation": 1.2,
           "shadows": [
@@ -769,12 +763,38 @@
         {
           "layerId": "p2",
           "asset": "polaroid-frame",
-          "x": 546,
-          "y": 918,
-          "width": 462,
-          "height": 534,
+          "x": 384,
+          "y": 930,
+          "width": 312,
+          "height": 361,
           "z": 8,
           "rotation": -1,
+          "shadows": [
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 9,
+              "blur": 18,
+              "color": "rgba(90,60,30,0.2)"
+            },
+            {
+              "kind": "dropShadow",
+              "dx": 0,
+              "dy": 30,
+              "blur": 60,
+              "color": "rgba(90,60,30,0.22)"
+            }
+          ]
+        },
+        {
+          "layerId": "p3",
+          "asset": "polaroid-frame",
+          "x": 720,
+          "y": 912,
+          "width": 312,
+          "height": 361,
+          "z": 9,
+          "rotation": 1.8,
           "shadows": [
             {
               "kind": "dropShadow",
@@ -834,7 +854,7 @@
           "layerId": "stamp",
           "asset": "stamp-postmark",
           "x": 840,
-          "y": 1398,
+          "y": 1254,
           "width": 192,
           "height": 216,
           "z": 12,
@@ -908,26 +928,26 @@
         {
           "slot": 3,
           "kind": "assetWindow",
-          "layerId": "strip",
+          "layerId": "p3",
           "windowIndex": 0
         },
         {
           "slot": 4,
           "kind": "assetWindow",
           "layerId": "strip",
-          "windowIndex": 1
+          "windowIndex": 0
         },
         {
           "slot": 5,
           "kind": "assetWindow",
           "layerId": "strip",
-          "windowIndex": 2
+          "windowIndex": 1
         },
         {
           "slot": 6,
           "kind": "assetWindow",
           "layerId": "strip",
-          "windowIndex": 3
+          "windowIndex": 2
         }
       ],
       "appRendered": "title text is typeset directly by the app",
@@ -1061,15 +1081,15 @@
           "kind": "mattedRect",
           "mat": {
             "x": 78,
-            "y": 390,
+            "y": 351,
             "width": 924,
-            "height": 798
+            "height": 699
           },
           "rect": {
             "x": 93,
-            "y": 405,
+            "y": 366,
             "width": 894,
-            "height": 768
+            "height": 669
           },
           "z": 4,
           "rotation": 0
@@ -1079,15 +1099,15 @@
           "kind": "mattedRect",
           "mat": {
             "x": 78,
-            "y": 1212,
-            "width": 450,
-            "height": 318
+            "y": 1095,
+            "width": 300,
+            "height": 330
           },
           "rect": {
             "x": 93,
-            "y": 1227,
-            "width": 420,
-            "height": 288
+            "y": 1110,
+            "width": 270,
+            "height": 300
           },
           "z": 4,
           "rotation": 0
@@ -1096,16 +1116,16 @@
           "slot": 2,
           "kind": "mattedRect",
           "mat": {
-            "x": 552,
-            "y": 1212,
-            "width": 450,
-            "height": 318
+            "x": 390,
+            "y": 1095,
+            "width": 300,
+            "height": 330
           },
           "rect": {
-            "x": 567,
-            "y": 1227,
-            "width": 420,
-            "height": 288
+            "x": 405,
+            "y": 1110,
+            "width": 270,
+            "height": 300
           },
           "z": 4,
           "rotation": 0
@@ -1114,16 +1134,16 @@
           "slot": 3,
           "kind": "mattedRect",
           "mat": {
-            "x": 78,
-            "y": 1554,
-            "width": 213,
-            "height": 252
+            "x": 702,
+            "y": 1095,
+            "width": 300,
+            "height": 330
           },
           "rect": {
-            "x": 93,
-            "y": 1569,
-            "width": 183,
-            "height": 222
+            "x": 717,
+            "y": 1110,
+            "width": 270,
+            "height": 300
           },
           "z": 4,
           "rotation": 0
@@ -1132,16 +1152,16 @@
           "slot": 4,
           "kind": "mattedRect",
           "mat": {
-            "x": 315,
-            "y": 1554,
-            "width": 213,
-            "height": 252
+            "x": 78,
+            "y": 1470,
+            "width": 300,
+            "height": 330
           },
           "rect": {
-            "x": 330,
-            "y": 1569,
-            "width": 183,
-            "height": 222
+            "x": 93,
+            "y": 1485,
+            "width": 270,
+            "height": 300
           },
           "z": 4,
           "rotation": 0
@@ -1150,16 +1170,16 @@
           "slot": 5,
           "kind": "mattedRect",
           "mat": {
-            "x": 552,
-            "y": 1554,
-            "width": 213,
-            "height": 252
+            "x": 390,
+            "y": 1470,
+            "width": 300,
+            "height": 330
           },
           "rect": {
-            "x": 567,
-            "y": 1569,
-            "width": 183,
-            "height": 222
+            "x": 405,
+            "y": 1485,
+            "width": 270,
+            "height": 300
           },
           "z": 4,
           "rotation": 0
@@ -1168,16 +1188,16 @@
           "slot": 6,
           "kind": "mattedRect",
           "mat": {
-            "x": 789,
-            "y": 1554,
-            "width": 213,
-            "height": 252
+            "x": 702,
+            "y": 1470,
+            "width": 300,
+            "height": 330
           },
           "rect": {
-            "x": 804,
-            "y": 1569,
-            "width": 183,
-            "height": 222
+            "x": 717,
+            "y": 1485,
+            "width": 270,
+            "height": 300
           },
           "z": 4,
           "rotation": 0

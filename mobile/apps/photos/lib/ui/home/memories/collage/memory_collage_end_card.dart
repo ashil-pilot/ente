@@ -34,10 +34,6 @@ const memoryCollageSaveActionKey = ValueKey<String>(
   "memory-collage-save-action",
 );
 
-// Keeps the authored title clear of the shared viewer header. On taller
-// screens the collage remains full-width; compact screens shrink to fit.
-const _memoryCollageViewerTopInset = 96.0;
-
 class MemoryCollageEndCard extends StatefulWidget {
   final String title;
   final String memoryID;
@@ -356,20 +352,16 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       return const SizedBox.expand();
     }
     final defaultTemplate = manifest.defaultTemplate;
-    return Padding(
-      padding: const EdgeInsets.only(top: _memoryCollageViewerTopInset),
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: RepaintBoundary(
-          key: _repaintKey,
-          child: MemoryCollageCanvasView(
-            manifest: manifest,
-            files: files,
-            title: widget.title,
-            backgroundAssetID: defaultTemplate.background.defaultAssetID,
-            templateID: defaultTemplate.id,
-            photoBuilder: _buildExportPhoto,
-          ),
+    return MemoryCollageEndCardCanvasLayout(
+      child: RepaintBoundary(
+        key: _repaintKey,
+        child: MemoryCollageCanvasView(
+          manifest: manifest,
+          files: files,
+          title: widget.title,
+          backgroundAssetID: defaultTemplate.background.defaultAssetID,
+          templateID: defaultTemplate.id,
+          photoBuilder: _buildExportPhoto,
         ),
       ),
     );
@@ -396,6 +388,21 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       key: ValueKey("memory-collage-end-$generation-$slot"),
       tagPrefix: "memory-collage-end-$generation-$slot-",
       onFinalImageLoaded: () => _onFinalPhotoLoaded(file, generation, slot),
+    );
+  }
+}
+
+class MemoryCollageEndCardCanvasLayout extends StatelessWidget {
+  final Widget child;
+
+  const MemoryCollageEndCardCanvasLayout({required this.child, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      child: child,
     );
   }
 }

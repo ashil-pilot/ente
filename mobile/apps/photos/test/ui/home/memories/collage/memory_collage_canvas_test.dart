@@ -82,7 +82,7 @@ void main() {
         const Color(0xFF2E2318),
         const Color(0xFF2E2318),
         const Color(0xFF2E2318),
-        const Color(0xFF33241A),
+        const Color(0xFF2E2318),
         const Color(0xFF33241A),
         const Color(0xFF33241A),
         const Color(0xFF33241A),
@@ -429,7 +429,7 @@ const _requiredAssetIDsByTemplate = <String, Set<String>>{
   "scrapbook-calm": {
     "paper-cream-fiber",
     "fern",
-    "film-strip-four-horizontal",
+    "film-strip-three-horizontal",
     "print-frame-hero",
     "polaroid-frame",
     "tape-blush",

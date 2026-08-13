@@ -24,7 +24,7 @@ const isRealOutput = outputDirectory === realOutputDirectory;
 
 const expectedSourceHashes = {
   "Memory Collage.dc.html":
-    "f619a9caebb242cfcbd67c5fb6c429e98f403ac686fe0173a93922d7f3b44668",
+    "6b27e83c89b66bf95187774bb242ac7b78f56d5c3868f4185eb411c4bbb433ca",
   "support.js":
     "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
 };
@@ -69,7 +69,7 @@ const retainedAssetIds = [
 ];
 const maximalRasterAssetIds = ["banner-wide"];
 const designRasterAssetIds = [
-  "film-strip-four-horizontal",
+  "film-strip-three-horizontal",
   "print-frame-hero",
 ];
 const generatedColors = new Map([
@@ -97,7 +97,7 @@ const expectedRetainedInventoryDigest =
 const expectedMaximalInventoryDigest =
   "cf69c941c126da1c0333f3ac663951372c9745d14316068f35486a5c2d6af052";
 const expectedCalmInventoryDigest =
-  "9a2c7a78411cb8fd469c85fc688fcac82d31a1d245eb6313ed30e93cec04f49d";
+  "d08156d88c492d89bf9a9e4e3eeed74d83b564cce355c7bab8d4b254e51abcde";
 
 const dimensions = new Map([
   ["paper-washi", [1080, 1920]],
@@ -119,7 +119,7 @@ const dimensions = new Map([
   ["sun-streak", [1080, 1920]],
   ["vignette", [1080, 1920]],
   ["grain-overlay", [1080, 1920]],
-  ["film-strip-four-horizontal", [972, 252]],
+  ["film-strip-three-horizontal", [972, 348]],
   ["print-frame-hero", [876, 594]],
   ["editorial-sand", [1080, 1920]],
   ["editorial-sage", [1080, 1920]],
@@ -133,11 +133,10 @@ const expectedPhotoWindows = new Map([
     { x: 57, y: 837, width: 276, height: 318 },
     { x: 57, y: 1221, width: 276, height: 318 },
   ]],
-  ["film-strip-four-horizontal", [
-    { x: 30, y: 39, width: 210, height: 174 },
-    { x: 264, y: 39, width: 210, height: 174 },
-    { x: 498, y: 39, width: 210, height: 174 },
-    { x: 732, y: 39, width: 210, height: 174 },
+  ["film-strip-three-horizontal", [
+    { x: 30, y: 39, width: 288, height: 270 },
+    { x: 342, y: 39, width: 288, height: 270 },
+    { x: 654, y: 39, width: 288, height: 270 },
   ]],
   ["print-frame-hero", [
     { x: 24, y: 24, width: 834, height: 546 },
@@ -148,20 +147,20 @@ const expectedTemplateIds = [
   "scrapbook-calm",
   "minimal-editorial",
 ];
-// 2a projection: JSON.stringify({ assets: its new raster asset record,
+// 2a/B2 projection: JSON.stringify({ assets: its new raster asset record,
 // template: scrapbook-maximal }).
 const expectedMaximalDesignContractDigest =
-  "9a9246ff8988d8741f86c0ea2f71df22dba594b762d3939abce2a20cc4cc94da";
+  "ec31b48701b048d324d17b05a589f88287328386f9c60cb2fe5cac086b4319bb";
 // Each later direction is pinned separately so a change in one cannot be
 // hidden by simultaneously changing the other projection.
 // 2b projection: JSON.stringify({ assets: its two raster asset records,
 // template: scrapbook-calm }).
 const expectedCalmDesignContractDigest =
-  "2aa194fe85f3a66443c573cc4918c64ed6cbf81786aa539fbd7f1f135856b1d2";
-// 3b/4a/5b projection: JSON.stringify({ assets: its three retained generated
-// color records, template: minimal-editorial }).
+  "121d10ca64825d4790c4830f22088cc068569a5f74b1806729d8a6965ae22d62";
+// 3b/4a/5b/D1 projection: JSON.stringify({ assets: its three retained
+// generated color records, template: minimal-editorial }).
 const expectedMinimalDesignContractDigest =
-  "2fd7f1656224932cc74a4dcc966ce08fdeff9aac0ff1dfcf1fc5ff59fbc4c593";
+  "fec40d41802d26aa6fd06f012be72bc758caaf9c1cb97695ce26899ef7602a94";
 
 const paletteTextureIds = new Set([
   "paper-washi",
@@ -556,8 +555,8 @@ function cleanAsset(asset) {
     };
   }
   const noteOverrides = {
-    "film-strip-four-horizontal":
-      "calm umber film stock with four live horizontal windows",
+    "film-strip-three-horizontal":
+      "calm umber film stock with three live horizontal windows",
     "print-frame-hero": "even-border cream print frame with a baked alpha seam",
   };
   return noteOverrides[asset.id]
@@ -906,7 +905,7 @@ async function validatePng(sharp, path, asset, numerator) {
       ? 36
       : asset.id === "print-frame-hero"
         ? 57
-        : asset.id === "film-strip-four-horizontal"
+        : asset.id === "film-strip-three-horizontal"
           ? 9
           : 9;
     const inset = Math.max(1, Math.ceil(sourceInset * scale));
@@ -938,7 +937,7 @@ async function validatePng(sharp, path, asset, numerator) {
       ? 0.31
       : asset.id === "print-frame-hero"
         ? 0.29
-        : asset.id === "film-strip-four-horizontal"
+        : asset.id === "film-strip-three-horizontal"
           ? 0.13
           : 0.12;
     if (nonzeroFraction > fractionLimit) {

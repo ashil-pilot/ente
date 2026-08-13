@@ -33,7 +33,7 @@ void main() {
       manifest.templateFor("scrapbook-calm"),
       same(manifest.defaultTemplate),
     );
-    expect(manifest.defaultTemplate.layers, hasLength(12));
+    expect(manifest.defaultTemplate.layers, hasLength(13));
     expect(manifest.templateFor("scrapbook-maximal").layers, hasLength(17));
     for (final template in manifest.templates) {
       expect(template.photoSlots, hasLength(7));
@@ -134,7 +134,58 @@ void main() {
     expect(polaroidWindows.single.height, 420);
   });
 
-  test("parses the wider maximal banner and explicit title safe rect", () {
+  test("parses the C1 calm hero, three prints, and three-frame film", () {
+    final calm = manifest.templateFor("scrapbook-calm");
+    final film = manifest.assetFor("film-strip-three-horizontal");
+
+    expect((film.width, film.height), (972, 348));
+    expect(film.photoWindows, hasLength(3));
+    expect(
+      film.photoWindows.map(
+        (window) => (window.x, window.y, window.width, window.height),
+      ),
+      orderedEquals([
+        (30, 39, 288, 270),
+        (342, 39, 288, 270),
+        (654, 39, 288, 270),
+      ]),
+    );
+    expect(
+      ["hero", "p1", "p2", "p3", "strip", "stamp"].map((id) {
+        final layer = calm.layerFor(id);
+        return (
+          id,
+          layer.x,
+          layer.y,
+          layer.width,
+          layer.height,
+          layer.rotation,
+        );
+      }),
+      orderedEquals([
+        ("hero", 102, 264, 876, 594, -0.8),
+        ("p1", 48, 900, 312, 361, 1.2),
+        ("p2", 384, 930, 312, 361, -1),
+        ("p3", 720, 912, 312, 361, 1.8),
+        ("strip", 54, 1434, 972, 348, -1.2),
+        ("stamp", 840, 1254, 192, 216, -6),
+      ]),
+    );
+    expect(
+      calm.photoSlots.map(_slotContract),
+      orderedEquals([
+        (0, "hero", 0),
+        (1, "p1", 0),
+        (2, "p2", 0),
+        (3, "p3", 0),
+        (4, "strip", 0),
+        (5, "strip", 1),
+        (6, "strip", 2),
+      ]),
+    );
+  });
+
+  test("parses the B2 maximal rebalance and explicit title safe rect", () {
     final template = manifest.templateFor("scrapbook-maximal");
     final title = template.titleStyle;
     final bannerAsset = manifest.assetFor("banner-wide");
@@ -154,10 +205,45 @@ void main() {
         bannerLayer.height,
         bannerLayer.rotation,
       ),
-      (90, 180, 900, 150, -2.5),
+      (90, 138, 900, 150, -2.5),
     );
-    expect((tape.x, tape.y), (54, 120));
-    expect((stamp.x, stamp.y), (786, 114));
+    expect((tape.x, tape.y), (54, 78));
+    expect((stamp.x, stamp.y), (786, 72));
+    expect(
+      [
+        "torn",
+        "fern",
+        "strip",
+        "p1",
+        "p2",
+        "p3",
+        "banner",
+        "tapeA",
+        "tapeB",
+        "tapeC",
+        "stamp",
+      ].map((id) {
+        final layer = template.layerFor(id);
+        return (id, layer.x, layer.y);
+      }),
+      orderedEquals([
+        ("torn", -12, 120),
+        ("fern", 897, 72),
+        ("strip", 618, 270),
+        ("p1", 42, 312),
+        ("p2", 96, 858),
+        ("p3", 48, 1362),
+        ("banner", 90, 138),
+        ("tapeA", 54, 78),
+        ("tapeB", 132, 276),
+        ("tapeC", 444, 822),
+        ("stamp", 786, 72),
+      ]),
+    );
+    for (final id in ["bg", "sunStreak", "vignette", "grain"]) {
+      final layer = template.layerFor(id);
+      expect((layer.x, layer.y), (0, 0));
+    }
 
     expect(title.placement, isA<MemoryCollageTitleRect>());
     final titlePlacement = title.placement as MemoryCollageTitleRect;
@@ -168,7 +254,7 @@ void main() {
         titlePlacement.rect.width,
         titlePlacement.rect.height,
       ),
-      (144, 198, 618, 114),
+      (144, 156, 618, 114),
     );
     expect(titlePlacement.z, 20);
     expect(titlePlacement.rotation, -2.5);
@@ -276,13 +362,13 @@ void main() {
         );
       }),
       orderedEquals([
-        (78, 390, 924, 798),
-        (78, 1212, 450, 318),
-        (552, 1212, 450, 318),
-        (78, 1554, 213, 252),
-        (315, 1554, 213, 252),
-        (552, 1554, 213, 252),
-        (789, 1554, 213, 252),
+        (78, 351, 924, 699),
+        (78, 1095, 300, 330),
+        (390, 1095, 300, 330),
+        (702, 1095, 300, 330),
+        (78, 1470, 300, 330),
+        (390, 1470, 300, 330),
+        (702, 1470, 300, 330),
       ]),
     );
     for (final slot
@@ -291,6 +377,12 @@ void main() {
       expect(slot.photoRect.y, slot.matRect.y + 15);
       expect(slot.photoRect.width, slot.matRect.width - 30);
       expect(slot.photoRect.height, slot.matRect.height - 30);
+      expect(
+        slot.photoRect.width < slot.photoRect.height
+            ? slot.photoRect.width
+            : slot.photoRect.height,
+        greaterThanOrEqualTo(270),
+      );
       expect(slot.z, 4);
       expect(slot.rotation, 0);
       expect(slot.radius ?? 0, 0);
@@ -620,6 +712,38 @@ void main() {
       };
       expect(
         () => MemoryCollageManifest.fromJson(invalidTitleRect),
+        throwsFormatException,
+      );
+    });
+
+    test("rejects photo windows below the approved shorter-side floor", () {
+      final undersizedAssetWindow = _copyJson(sourceJson);
+      final film = (undersizedAssetWindow["assets"]! as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .singleWhere((asset) => asset["id"] == "film-strip-four");
+      final filmWindow =
+          (film["photoWindows"]! as List<dynamic>).first
+              as Map<String, dynamic>;
+      filmWindow["width"] = 260;
+      expect(
+        () => MemoryCollageManifest.fromJson(undersizedAssetWindow),
+        throwsFormatException,
+      );
+
+      final undersizedDirectRect = _copyJson(sourceJson);
+      final slots =
+          _firstTemplate(undersizedDirectRect)["photoSlots"]! as List<dynamic>;
+      slots[0] = {
+        "slot": 0,
+        "kind": "rect",
+        "x": 0,
+        "y": 0,
+        "width": 269,
+        "height": 360,
+        "z": 1,
+      };
+      expect(
+        () => MemoryCollageManifest.fromJson(undersizedDirectRect),
         throwsFormatException,
       );
     });

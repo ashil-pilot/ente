@@ -6,6 +6,31 @@ import "package:photos/ui/home/memories/collage/memory_collage_end_card.dart";
 import "package:photos/ui/home/memories/memory_viewer_chrome.dart";
 
 void main() {
+  testWidgets("centers the full-width collage vertically in the viewer", (
+    tester,
+  ) async {
+    const viewportSize = Size(402, 874);
+    const collageKey = ValueKey("collage-canvas");
+    await _setSurfaceSize(tester, viewportSize);
+
+    await tester.pumpWidget(
+      _testApp(
+        const MemoryCollageEndCardCanvasLayout(
+          child: SizedBox(key: collageKey, width: 360, height: 640),
+        ),
+      ),
+    );
+
+    final collageRect = tester.getRect(find.byKey(collageKey));
+    final topSpace = collageRect.top;
+    final bottomSpace = viewportSize.height - collageRect.bottom;
+
+    expect(collageRect.width, closeTo(viewportSize.width, 0.001));
+    expect(collageRect.height / collageRect.width, closeTo(16 / 9, 0.001));
+    expect(topSpace, closeTo(bottomSpace, 0.001));
+    expect(topSpace, closeTo(79.67, 0.01));
+  });
+
   testWidgets("shows share, edit, and save as the three collage actions", (
     tester,
   ) async {

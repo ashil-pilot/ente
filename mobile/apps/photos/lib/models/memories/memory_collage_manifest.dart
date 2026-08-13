@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:flutter/services.dart";
 
 const memoryCollageManifestAsset = "assets/memories_collage/manifest.json";
+const _minimumPhotoShortSide = 270.0;
 
 class MemoryCollageManifest {
   final int version;
@@ -394,6 +395,12 @@ class MemoryCollageManifest {
               "an invalid window on ${asset.id}",
             );
           }
+          final window = asset.photoWindows[slot.windowIndex];
+          _validatePhotoSize(
+            width: window.width / asset.width * layer.width,
+            height: window.height / asset.height * layer.height,
+            path: "Photo slot ${slot.slot} in template ${template.id}",
+          );
         case MemoryCollageRectPhotoSlot():
           _validateCanvasRect(
             slot.rect,
@@ -423,6 +430,11 @@ class MemoryCollageManifest {
               "${template.id}.photoSlots[${slot.slot}].shadows[$index]",
             );
           }
+          _validatePhotoSize(
+            width: slot.rect.width,
+            height: slot.rect.height,
+            path: "Photo slot ${slot.slot} in template ${template.id}",
+          );
         case MemoryCollageMattedRectPhotoSlot():
           final path = "${template.id}.photoSlots[${slot.slot}]";
           _validateCanvasRect(slot.matRect, "$path.mat");
@@ -444,7 +456,25 @@ class MemoryCollageManifest {
               "its photo rect by $inset on every side",
             );
           }
+          _validatePhotoSize(
+            width: slot.photoRect.width,
+            height: slot.photoRect.height,
+            path: "Photo slot ${slot.slot} in template ${template.id}",
+          );
       }
+    }
+  }
+
+  void _validatePhotoSize({
+    required double width,
+    required double height,
+    required String path,
+  }) {
+    if (width < _minimumPhotoShortSide || height < _minimumPhotoShortSide) {
+      throw FormatException(
+        "$path must keep its shorter side at least "
+        "$_minimumPhotoShortSide canvas pixels",
+      );
     }
   }
 
