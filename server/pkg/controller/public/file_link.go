@@ -14,7 +14,6 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 )
 
-// FileLinkController controls share collection operations
 type FileLinkController struct {
 	FileController *controller.FileController
 	FileLinkRepo   *public.FileLinkRepository
@@ -51,7 +50,6 @@ func (c *FileLinkController) CreateLink(ctx *gin.Context, req ente.CreateFileUrl
 				if updateErr != nil {
 					return nil, stacktrace.Propagate(updateErr, "failed to update link secret")
 				}
-				// Re-fetch to include any values that might have been updated.
 				row, rowErr = c.FileLinkRepo.GetFileUrlRowByFileID(ctx, req.FileID)
 				if rowErr != nil {
 					return nil, stacktrace.Propagate(rowErr, "failed to get active file url token after updating secret")
@@ -66,7 +64,6 @@ func (c *FileLinkController) CreateLink(ctx *gin.Context, req ente.CreateFileUrl
 	return nil, stacktrace.Propagate(ente.ErrAccessTokenInUse, "failed to generate unique access token for file link")
 }
 
-// Disable all public accessTokens generated for the given fileID till date.
 func (c *FileLinkController) Disable(ctx *gin.Context, fileID int64) error {
 	userID := auth.GetUserID(ctx.Request.Header)
 	file, err := c.FileRepo.GetFileAttributes(fileID)
@@ -151,10 +148,7 @@ func (c *FileLinkController) PassInfo(ctx *gin.Context) (*ente.FileLinkRow, erro
 	return c.FileLinkRepo.GetFileUrlRowByFileID(ctx, accessContext.FileID)
 }
 
-// VerifyPassword verifies if the user has provided correct pw hash. If yes, it returns a signed jwt token which can be
-// used by the client to pass in other requests for public collection.
-// Having a separate endpoint for password validation allows us to easily rate-limit the attempts for brute-force
-// attack for guessing password.
+// Password verification is separate so attempts can be rate-limited.
 func (c *FileLinkController) VerifyPassword(ctx *gin.Context, req ente.VerifyPasswordRequest) (*ente.VerifyPasswordResponse, error) {
 	accessContext := auth.MustGetFileLinkAccessContext(ctx)
 	collectionLinkRow, err := c.FileLinkRepo.GetActiveFileUrlToken(ctx, accessContext.FileID)

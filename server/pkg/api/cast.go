@@ -17,7 +17,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CastHandler exposes request handlers for publicly accessible collections
 type CastHandler struct {
 	FileCtrl       *controller.FileController
 	CollectionCtrl *collections.CollectionController
@@ -98,7 +97,6 @@ func (h *CastHandler) InsertCastData(c *gin.Context) {
 	})
 }
 
-// RevokeAllToken disable all active cast token for a user
 func (h *CastHandler) RevokeAllToken(c *gin.Context) {
 	err := h.Ctrl.RevokeAllToken(c)
 	if err != nil {
@@ -121,29 +119,24 @@ func (h *CastHandler) GetCastData(c *gin.Context) {
 
 }
 
-// GetFile redirects the request to the file location
 func (h *CastHandler) GetFile(c *gin.Context) {
 	h.getFileForType(c, ente.FILE)
 }
 
-// GetThumbnail redirects the request to the file's thumbnail location
 func (h *CastHandler) GetThumbnail(c *gin.Context) {
 	h.getFileForType(c, ente.THUMBNAIL)
 }
 
-// GetFileURLV3 returns the file URL and reserves HTTP 404 for an unavailable endpoint.
 func (h *CastHandler) GetFileURLV3(c *gin.Context) {
 	url, err := h.getFileURL(c, ente.FILE)
 	writeFileURLV3(c, url, err)
 }
 
-// GetThumbnailURLV3 returns the thumbnail URL and reserves HTTP 404 for an unavailable endpoint.
 func (h *CastHandler) GetThumbnailURLV3(c *gin.Context) {
 	url, err := h.getFileURL(c, ente.THUMBNAIL)
 	writeFileURLV3(c, url, err)
 }
 
-// GetCollection redirects the request to the collection location
 func (h *CastHandler) GetCollection(c *gin.Context) {
 	collection, err := h.CollectionCtrl.GetCastCollection(c)
 	if err != nil {
@@ -155,7 +148,6 @@ func (h *CastHandler) GetCollection(c *gin.Context) {
 	})
 }
 
-// GetDiff returns the diff within a collection since a timestamp
 func (h *CastHandler) GetDiff(c *gin.Context) {
 	sinceTime, err := strconv.ParseInt(c.Query("sinceTime"), 10, 64)
 	if err != nil {

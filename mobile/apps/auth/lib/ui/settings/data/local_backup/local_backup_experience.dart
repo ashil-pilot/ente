@@ -4,11 +4,11 @@ import 'package:ente_auth/core/configuration.dart';
 import 'package:ente_auth/services/local_backup_service.dart';
 import 'package:ente_auth/services/security_bookmark_service.dart';
 import 'package:ente_auth/theme/ente_theme.dart';
-import 'package:ente_auth/ui/components/buttons/button_widget.dart';
 import 'package:ente_auth/ui/components/dialog_widget.dart';
-import 'package:ente_auth/ui/components/models/button_type.dart';
 import 'package:ente_lock_screen/local_authentication_service.dart';
 import 'package:ente_strings/ente_strings.dart';
+import 'package:ente_ui/components/buttons/button_widget.dart';
+import 'package:ente_ui/components/buttons/models/button_type.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -794,7 +794,6 @@ class _LocalBackupExperienceState extends State<LocalBackupExperience> {
     }
   }
 
-  /// iOS/macOS: Persist location with pre-created bookmark
   Future<bool> _persistLocationWithBookmark(
     String path,
     String bookmark, {
@@ -981,11 +980,7 @@ class _LocalBackupExperienceState extends State<LocalBackupExperience> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  /// Check if the selected iOS path is the device root ("On My iPhone").
-  ///
-  /// "On My iPhone" root cannot store files directly - user must select
-  /// or create a folder inside it. Only the actual iOS File Provider Storage
-  /// root (AppGroup/UUID/File Provider Storage) is invalid.
+  // The "On My iPhone" root cannot store files; require a subfolder.
   bool _isInvalidIosPath(String path) {
     if (!Platform.isIOS) return false;
     if (path.isEmpty) return true;

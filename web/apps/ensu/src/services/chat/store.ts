@@ -539,7 +539,7 @@ export const listSessions = async (chatKey: string): Promise<ChatSession[]> => {
             list.sort((a, b) => b.createdAt - a.createdAt);
         }
 
-        return Promise.all(
+        return await Promise.all(
             activeSessions.map(async (session) => {
                 const title = await decryptSessionTitle(session, chatKey);
                 const latest = bySession.get(session.sessionUuid)?.[0];
@@ -585,7 +585,7 @@ export const listMessages = async (
             .filter((message) => message.sessionUuid === sessionUuid)
             .sort((a, b) => a.createdAt - b.createdAt);
 
-        return Promise.all(
+        return await Promise.all(
             sessionMessages.map(async (message) => ({
                 messageUuid: message.messageUuid,
                 sessionUuid: message.sessionUuid,
@@ -707,14 +707,17 @@ export const updateSessionTitle = async (
     }
 
     const db = await chatDb();
-    const session = await db.get("sessions", sessionUuid);
-    if (!session) return;
-
     const updated = await encryptChatPayload({ title: safe }, chatKey);
-    session.encryptedData = updated.encryptedData;
-    session.header = updated.header;
-    session.updatedAt = nowMicros();
-    await db.put("sessions", session);
+
+    const tx = db.transaction(["sessions"], "readwrite");
+    const sessionStore = tx.objectStore("sessions");
+    const session = await sessionStore.get(sessionUuid);
+    if (session) {
+        session.encryptedData = updated.encryptedData;
+        session.header = updated.header;
+        await sessionStore.put(session);
+    }
+    await tx.done;
 };
 
 export const updateMessage = async (

@@ -6,6 +6,7 @@ import "package:ente_lock_screen/local_authentication_service.dart";
 import "package:ente_strings/ente_strings.dart";
 import 'package:flutter/material.dart';
 import "package:flutter/services.dart";
+import "package:flutter_svg/flutter_svg.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:local_auth/local_auth.dart";
 import 'package:logging/logging.dart';
@@ -17,7 +18,6 @@ import "package:photos/models/collection/collection.dart";
 import "package:photos/models/file/extensions/file_props.dart";
 import 'package:photos/models/file/file.dart';
 import 'package:photos/models/file/file_type.dart';
-import "package:photos/models/file/trash_file.dart";
 import "package:photos/models/gallery_type.dart";
 import "package:photos/models/metadata/common_keys.dart";
 import 'package:photos/models/selected_files.dart';
@@ -137,8 +137,7 @@ class FileAppBarState extends State<FileAppBar> {
   Widget build(BuildContext context) {
     _logger.info("building app bar ${widget.file.generatedID?.toString()}");
 
-    //When the widget is initialized, the actions are not available.
-    //Cannot call _getActions() in initState.
+    // _getActions reads inherited state, so it cannot run in initState.
     if (_actions.isEmpty || _reloadActions) {
       _getActions();
       _reloadActions = false;
@@ -179,9 +178,7 @@ class FileAppBarState extends State<FileAppBar> {
               child: AppBar(
                 clipBehavior: Clip.none,
                 key: ValueKey(isGuestView),
-                iconTheme: const IconThemeData(
-                  color: Colors.white,
-                ), //same for both themes
+                iconTheme: const IconThemeData(color: Colors.white),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
@@ -217,7 +214,6 @@ class FileAppBarState extends State<FileAppBar> {
   List<Widget> _getActions() {
     _actions.clear();
 
-    // Show info icon when thumbnail fallback is active for THIS file
     final fallbackFileId = InheritedDetailPageState.maybeOf(
       context,
     )?.showingThumbnailFallbackNotifier.value;
@@ -243,7 +239,10 @@ class FileAppBarState extends State<FileAppBar> {
             behavior: HitTestBehavior.opaque,
             child: const Padding(
               padding: EdgeInsets.all(12.0),
-              child: Icon(Icons.info_outline),
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedInformationCircle,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -267,7 +266,12 @@ class FileAppBarState extends State<FileAppBar> {
     if (widget.file.isLiveOrMotionPhoto) {
       _actions.add(
         IconButton(
-          icon: const Icon(Icons.album_outlined),
+          icon: SvgPicture.asset(
+            "assets/icons/live-photo.svg",
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
           onPressed: () {
             showShortToast(
               context,
@@ -277,8 +281,12 @@ class FileAppBarState extends State<FileAppBar> {
         ),
       );
     }
-    if (!isFileHidden && isFileUploaded && widget.file is! TrashFile) {
-      _actions.add(Center(child: FavoriteWidget(widget.file)));
+    if (!isFileHidden && isFileUploaded && !widget.file.isTrash) {
+      _actions.add(
+        Center(
+          child: FavoriteWidget(widget.file, iconSize: 24, tapTargetSize: 48),
+        ),
+      );
     }
     if (!isFileUploaded && !isLocalGalleryMode) {
       _actions.add(
@@ -288,7 +296,7 @@ class FileAppBarState extends State<FileAppBar> {
 
     final List<EntePopupMenuOption<int>> items = [];
     final bool restrictFileActions =
-        widget.mode == DetailPageMode.minimalistic || widget.file is TrashFile;
+        widget.mode == DetailPageMode.minimalistic || widget.file.isTrash;
 
     if (restrictFileActions) {
       items.add(
@@ -317,7 +325,6 @@ class FileAppBarState extends State<FileAppBar> {
           );
         }
       }
-      // Edit option for images, live photos, and videos
       if (widget.showEditAction &&
           (widget.file.fileType == FileType.image ||
               widget.file.fileType == FileType.livePhoto ||
@@ -330,7 +337,6 @@ class FileAppBarState extends State<FileAppBar> {
           ),
         );
       }
-      // options for files owned by the user
       if (isOwnedByUser && !isFileHidden && isFileUploaded) {
         final bool isArchived =
             widget.file.magicMetadata.visibility == archiveVisibility;
@@ -404,7 +410,6 @@ class FileAppBarState extends State<FileAppBar> {
     }
 
     if (widget.file.isVideo && !restrictFileActions) {
-      // Video streaming options
       if (_shouldShowCreateStreamOption()) {
         items.add(
           _fileMenuOption(
@@ -669,7 +674,10 @@ class FileAppBarState extends State<FileAppBar> {
       isDismissible: true,
     );
     await dialog.show();
-    if (!mounted) return;
+    if (!mounted) {
+      await dialog.hide();
+      return;
+    }
     final Collection? sharedLinkCollection = await CollectionActions(
       CollectionsService.instance,
     ).createSharedCollectionLink(context, [file]);
@@ -701,7 +709,10 @@ class FileAppBarState extends State<FileAppBar> {
       final m = MediaExtension();
       final bool result = await m.setAs("file://${fileToSave.path}", "image/*");
       if (result == false) {
-        if (!mounted) return;
+        if (!mounted) {
+          await dialog.hide();
+          return;
+        }
         showShortToast(context, context.strings.somethingWentWrong);
       }
       await dialog.hide();
@@ -740,13 +751,11 @@ class FileAppBarState extends State<FileAppBar> {
   }
 
   bool _shouldShowCreateStreamOption() {
-    // Show "Create Stream" option for uploaded video files without streams
     return _ensureBasicRequirements() &&
         !fileDataService.previewIds.containsKey(widget.file.uploadedFileID!);
   }
 
   bool _shouldShowRecreateStreamOption() {
-    // Show "Recreate Stream" option for uploaded video files with existing streams
     return _ensureBasicRequirements() &&
         fileDataService.previewIds.containsKey(widget.file.uploadedFileID!);
   }
@@ -770,7 +779,6 @@ class FileAppBarState extends State<FileAppBar> {
       );
 
       if (!wasAdded) {
-        // File was already in queue
         if (!mounted) return;
         showToast(context, context.strings.videoAlreadyInQueue);
         return;

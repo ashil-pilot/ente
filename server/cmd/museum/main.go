@@ -154,8 +154,7 @@ func main() {
 		TaskLockingRepo: taskLockingRepo,
 		HostName:        hostName,
 	}
-	// Note: during boot-up, release any locks that might have been left behind.
-	// This is a safety measure to ensure that no locks are left behind in case of a crash or restart.
+	// Clear locks left by a crash or restart.
 	lockController.ReleaseHostLock()
 
 	var latencyLogger = promauto.NewHistogramVec(prometheus.HistogramOpts{
@@ -199,7 +198,7 @@ func main() {
 	usageRepo := &repo.UsageRepository{DB: db, UserRepo: userRepo}
 	fileRepo := &repo.FileRepository{DB: db, S3Config: s3Config, QueueRepo: queueRepo,
 		ObjectRepo: objectRepo, ObjectCleanupRepo: objectCleanupRepo,
-		ObjectCopiesRepo: objectCopiesRepo, UsageRepo: usageRepo}
+		ObjectCopiesRepo: objectCopiesRepo}
 	fileLinkRepo := public.NewFileLinkRepo(db)
 	pasteRepo := public.NewPasteRepository(db)
 	fileDataRepo := &fileDataRepo.Repository{DB: db, ObjectCleanupRepo: objectCleanupRepo}
@@ -327,6 +326,7 @@ func main() {
 		ObjectCleanupRepo:     objectCleanupRepo,
 		TrashRepository:       trashRepo,
 		UserRepo:              userRepo,
+		RemoteStoreRepo:       remoteStoreRepository,
 		UsageCtrl:             usageController,
 		AccessCtrl:            accessCtrl,
 		CollectionRepo:        collectionRepo,
@@ -414,7 +414,6 @@ func main() {
 		ReactionsRepo:         reactionsRepo,
 	}
 
-	// Pending actions' controller/handler
 	collectionActionsController := &controller.CollectionActionsController{
 		Repo: collectionActionRepo,
 	}
@@ -645,7 +644,6 @@ func main() {
 	trashHandler := &api.TrashHandler{
 		Controller: trashController,
 	}
-	storageAPI.GET("/trash/diff", trashHandler.GetDiff)
 	storageAPI.GET("/trash/v2/diff", trashHandler.GetDiffV2)
 	storageAPI.POST("/trash/delete", trashHandler.Delete)
 	storageAPI.POST("/trash/empty", trashHandler.Empty)
@@ -740,7 +738,6 @@ func main() {
 		Controller: collectionController,
 	}
 	storageAPI.POST("/collections", collectionHandler.Create)
-	// Collection actions (exposed for clients to fetch suggestions/removals)
 	storageAPI.GET("/collection-actions/pending-remove", collectionActionsHandler.ListPendingRemove)
 	storageAPI.GET("/collection-actions/delete-suggestions", collectionActionsHandler.ListDeleteSuggestions)
 	storageAPI.POST("/collection-actions/reject-delete-suggestions", collectionActionsHandler.RejectDeleteSuggestions)
@@ -879,7 +876,7 @@ func main() {
 	publicAPI.GET("/family/invite-info/:token", familyHandler.GetInviteInfo)
 	publicAPI.POST("/family/accept-invite", familyHandler.AcceptInvite)
 
-	privateAPI.DELETE("/family/leave", familyHandler.Leave) // native/web app
+	privateAPI.DELETE("/family/leave", familyHandler.Leave)
 
 	familyAuthAPI.POST("/family/create", familyHandler.CreateFamily)
 	familyAuthAPI.POST("/family/add-member", familyHandler.InviteMember)
@@ -928,7 +925,6 @@ func main() {
 	}
 	publicAPI.GET("/billing/plans/v2", billingHandler.GetPlansV2)
 	privateAPI.GET("/billing/user-plans", billingHandler.GetUserPlans)
-	privateAPI.GET("/billing/usage", billingHandler.GetUsage)
 	privateAPI.GET("/billing/subscription", billingHandler.GetSubscription)
 	privateAPI.POST("/billing/verify-subscription", billingHandler.VerifySubscription)
 	publicAPI.POST("/billing/notify/android", billingHandler.AndroidNotificationHandler)
@@ -1080,9 +1076,6 @@ func main() {
 
 	embeddingController := embeddingCtrl.New(embeddingRepo, objectCleanupController, queueRepo, taskLockingRepo, fileRepo, hostName)
 
-	offerHandler := &api.OfferHandler{Controller: offerController}
-	publicAPI.GET("/offers/black-friday", offerHandler.GetBlackFridayOffers)
-
 	discountCouponRepository := &discountCouponRepo.Repository{DB: db}
 	discountCouponController := &discountCouponCtrl.Controller{
 		Repo:                  discountCouponRepository,
@@ -1102,10 +1095,8 @@ func main() {
 		trashController, pushController, objectController, dataCleanupController, storageBonusCtrl, emergencyCtrl,
 		embeddingController, healthCheckHandler, castDb, inactiveUserOrchestrator, spaceDripController)
 
-	// Create new collectors, the names will be used as labels on the metrics
 	primaryDBCollector := sqlstats.NewStatsCollector("prod_db", db)
 	latencySensitiveDBCollector := sqlstats.NewStatsCollector("latency_sensitive_db", latencySensitiveDB)
-	// Register them with Prometheus
 	prometheus.MustRegister(primaryDBCollector, latencySensitiveDBCollector)
 
 	http.Handle("/metrics", promhttp.Handler())
@@ -1272,7 +1263,7 @@ func setupAndStartBackgroundJobs(
 		return
 	}
 
-	fileDataCtrl.StartDataDeletion() // Start data deletion for file data;
+	fileDataCtrl.StartDataDeletion()
 	contactController.StartDataDeletion()
 	objectCleanupController.StartRemovingUnreportedObjects()
 	spaceModule.Cleanup.StartRemovingUnreportedObjects()
@@ -1318,8 +1309,7 @@ func setupAndStartCrons(userAuthRepo *repo.UserAuthRepository, collectionLinkRep
 
 	schedule(c, "@every 1m", func() {
 		_ = twoFactorRepo.RemoveExpiredTwoFactorSessions()
-		// Clean up used OTP codes older than 90 seconds
-		_ = twoFactorRepo.RemoveExpiredUsedOTPCodes(90 * 1000 * 1000) // 90 seconds in microseconds
+		_ = twoFactorRepo.RemoveExpiredUsedOTPCodes(90 * 1000 * 1000)
 	})
 	schedule(c, "@every 1m", func() {
 		_ = twoFactorRepo.RemoveExpiredTempTwoFactorSecrets()
@@ -1377,7 +1367,6 @@ func setupAndStartCrons(userAuthRepo *repo.UserAuthRepository, collectionLinkRep
 	})
 
 	schedule(c, "@every 45m", func() {
-		// delete unclaimed codes older than 60 minutes
 		_ = castDb.DeleteUnclaimedCodes(context.Background(), timeUtil.MicrosecondsBeforeMinutes(60))
 		dataCleanupCtrl.DeleteDataCron()
 	})
@@ -1444,7 +1433,6 @@ func cors() gin.HandlerFunc {
 
 func cacheHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Add "Cache-Control: no-store" to HTTP GET API responses.
 		if c.Request.Method == http.MethodGet {
 			reqPath := urlSanitizer(c)
 			if reqPath == "/files/preview/:fileID" ||
@@ -1494,12 +1482,10 @@ func setKnownAPIs(routes []gin.RouteInfo) {
 	}
 }
 
-// Schedule a cron job
 func schedule(c *cron.Cron, spec string, cmd func()) (cron.EntryID, error) {
 	return c.AddFunc(spec, cmd)
 }
 
-// Schedule a cron job, and run it once immediately too.
 func scheduleAndRun(c *cron.Cron, spec string, cmd func()) (cron.EntryID, error) {
 	go cmd()
 	return schedule(c, spec, cmd)

@@ -11,13 +11,15 @@ import (
 	"github.com/lib/pq"
 )
 
-// UserAuthRepository defines the methods for inserting, updating and retrieving
-// one time tokens (currently) used for email verification.
 type UserAuthRepository struct {
 	DB *sql.DB
 }
 
-// AddOTT saves the provided one time token for the specified user
+type RevokedToken struct {
+	App   ente.App
+	Token string
+}
+
 func (repo *UserAuthRepository) AddOTT(emailHash string, app ente.App, ott string, expirationTime int64) error {
 	_, err := repo.DB.Exec(`INSERT INTO otts(email_hash, ott, creation_time, expiration_time, app)
 				VALUES($1, $2, $3, $4, $5)
@@ -26,7 +28,6 @@ func (repo *UserAuthRepository) AddOTT(emailHash string, app ente.App, ott strin
 	return stacktrace.Propagate(err, "")
 }
 
-// RemoveOTT removes the specified OTT and returns whether it was consumed.
 func (repo *UserAuthRepository) RemoveOTT(emailHash string, ott string, app ente.App) (bool, error) {
 	result, err := repo.DB.Exec(`DELETE FROM otts WHERE email_hash = $1 AND ott = $2 AND app = $3`, emailHash, ott, app)
 	if err != nil {
@@ -39,14 +40,12 @@ func (repo *UserAuthRepository) RemoveOTT(emailHash string, ott string, app ente
 	return rowsAffected > 0, nil
 }
 
-// RemoveExpiredOTTs removes all OTTs that have expired
 func (repo *UserAuthRepository) RemoveExpiredOTTs() error {
 	_, err := repo.DB.Exec(`DELETE FROM otts WHERE expiration_time <= $1`,
 		time.Microseconds())
 	return stacktrace.Propagate(err, "")
 }
 
-// GetTokenCreationTime return the creation_time for the given token
 func (repo *UserAuthRepository) GetTokenCreationTime(token string) (int64, error) {
 	row := repo.DB.QueryRow(`SELECT creation_time from tokens where token = $1`, token)
 	var result int64
@@ -92,7 +91,6 @@ func (repo *UserAuthRepository) GetAppsForUser(userID int64) ([]ente.App, error)
 	return apps, nil
 }
 
-// GetValidOTTs returns the list of OTTs that haven't expired for a given user
 func (repo *UserAuthRepository) GetValidOTTs(emailHash string, app ente.App) ([]string, error) {
 	rows, err := repo.DB.Query(`SELECT ott FROM otts WHERE email_hash = $1 AND app = $2 AND expiration_time > $3`,
 		emailHash, app, time.Microseconds())
@@ -134,14 +132,12 @@ func (repo *UserAuthRepository) RecordWrongAttemptForActiveOtt(emailHash string,
 	return nil
 }
 
-// AddToken saves the provided long lived token for the specified user
 func (repo *UserAuthRepository) AddToken(userID int64, app ente.App, token string, ip string, userAgent string) error {
 	_, err := repo.DB.Exec(`INSERT INTO tokens(user_id, app, token, creation_time, ip, user_agent) VALUES($1, $2, $3, $4, $5, $6)`,
 		userID, app, token, time.Microseconds(), ip, userAgent)
 	return stacktrace.Propagate(err, "")
 }
 
-// GetUserIDWithToken returns the userID associated with a given token and whether the token is expired
 func (repo *UserAuthRepository) GetUserIDWithToken(token string, app ente.App) (int64, bool, error) {
 	row := repo.DB.QueryRow(`
 		SELECT 
@@ -162,25 +158,24 @@ func (repo *UserAuthRepository) GetUserIDWithToken(token string, app ente.App) (
 	return id, isExpired, nil
 }
 
-// RemoveToken marks the specified token (to be used when a user logs out) as deleted
-func (repo *UserAuthRepository) RemoveToken(userID int64, token string) error {
-	_, err := repo.DB.Exec(`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND token = $2`,
-		userID, token)
-	return stacktrace.Propagate(err, "")
+func (repo *UserAuthRepository) RemoveToken(userID int64, token string) ([]RevokedToken, error) {
+	return repo.markTokensDeleted(
+		`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND token = $2 RETURNING app, token`,
+		userID, token,
+	)
 }
 
-// UpdateLastUsedAt updates the last used at timestamp for the particular token
 func (repo *UserAuthRepository) UpdateLastUsedAt(userID int64, token string, ip string, userAgent string) error {
 	_, err := repo.DB.Exec(`UPDATE tokens SET ip = $1, user_agent = $2, last_used_at = $3 WHERE user_id = $4 AND token = $5`,
 		ip, userAgent, time.Microseconds(), userID, token)
 	return stacktrace.Propagate(err, "")
 }
 
-// RemoveAllOtherTokens marks the all tokens apart from the specified one for a user as deleted
-func (repo *UserAuthRepository) RemoveAllOtherTokens(userID int64, token string) error {
-	_, err := repo.DB.Exec(`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND token <> $2`,
-		userID, token)
-	return stacktrace.Propagate(err, "")
+func (repo *UserAuthRepository) RemoveAllOtherTokens(userID int64, token string) ([]RevokedToken, error) {
+	return repo.markTokensDeleted(
+		`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND token <> $2 AND is_deleted = false RETURNING app, token`,
+		userID, token,
+	)
 }
 
 func (repo *UserAuthRepository) RemoveDeletedTokens(expiryTime int64) error {
@@ -188,27 +183,48 @@ func (repo *UserAuthRepository) RemoveDeletedTokens(expiryTime int64) error {
 	return stacktrace.Propagate(err, "")
 }
 
-// RemoveTokensForApps marks all tokens for the given apps as deleted for the user.
-func (repo *UserAuthRepository) RemoveTokensForApps(userID int64, apps []ente.App) error {
+func (repo *UserAuthRepository) RemoveTokensForApps(userID int64, apps []ente.App) ([]RevokedToken, error) {
 	if len(apps) == 0 {
-		return nil
+		return nil, nil
 	}
 	dbApps := make([]string, 0, len(apps))
 	for _, app := range apps {
 		dbApps = append(dbApps, string(app))
 	}
-	_, err := repo.DB.Exec(`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND app = ANY($2)`,
-		userID, pq.Array(dbApps))
-	return stacktrace.Propagate(err, "")
+	return repo.markTokensDeleted(
+		`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND app = ANY($2) AND is_deleted = false RETURNING app, token`,
+		userID, pq.Array(dbApps),
+	)
 }
 
-// RemoveAllTokens marks the all tokens for a user as deleted
-func (repo *UserAuthRepository) RemoveAllTokens(userID int64) error {
-	_, err := repo.DB.Exec(`UPDATE tokens SET is_deleted = true WHERE user_id = $1`, userID)
-	return stacktrace.Propagate(err, "")
+func (repo *UserAuthRepository) RemoveAllTokens(userID int64) ([]RevokedToken, error) {
+	return repo.markTokensDeleted(
+		`UPDATE tokens SET is_deleted = true WHERE user_id = $1 AND is_deleted = false RETURNING app, token`,
+		userID,
+	)
 }
 
-// GetActiveSessions returns the list of tokens that are valid for a given user
+func (repo *UserAuthRepository) markTokensDeleted(query string, args ...interface{}) ([]RevokedToken, error) {
+	rows, err := repo.DB.Query(query, args...)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "")
+	}
+	defer rows.Close()
+
+	tokens := make([]RevokedToken, 0)
+	for rows.Next() {
+		var token RevokedToken
+		if err = rows.Scan(&token.App, &token.Token); err != nil {
+			return nil, stacktrace.Propagate(err, "")
+		}
+		tokens = append(tokens, token)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, stacktrace.Propagate(err, "")
+	}
+	return tokens, nil
+}
+
 func (repo *UserAuthRepository) GetActiveSessions(userID int64, app ente.App) ([]ente.Session, error) {
 	rows, err := repo.DB.Query(`SELECT token, creation_time, ip, user_agent, last_used_at FROM tokens WHERE user_id = $1 AND app = $2 AND is_deleted = false`, userID, app)
 	if err != nil {
@@ -241,7 +257,6 @@ func (repo *UserAuthRepository) GetActiveSessions(userID int64, app ente.App) ([
 	return sessions, nil
 }
 
-// GetMinUserID returns the first user that was created in the system
 func (repo *UserAuthRepository) GetMinUserID() (int64, error) {
 	row := repo.DB.QueryRow(`select min(user_id) from users;`)
 	var id int64

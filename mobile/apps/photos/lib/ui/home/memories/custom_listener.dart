@@ -62,28 +62,21 @@ class ActivePointers with ChangeNotifier {
   }
 }
 
-/// `onLongPress` and `onLongPressUp` have not been tested enough to make sure
-/// it works as expected, so they are commented out for now.
 class MemoriesPointerGestureListener extends StatefulWidget {
   final Widget child;
   final Function(PointerEvent)? onTap;
   final VoidCallback? onSwipeUp;
   final bool Function()? canSwipeUp;
-  // final VoidCallback? onLongPress;
-  // final VoidCallback? onLongPressUp;
-
-  /// How long the pointer must stay down before a long‐press fires.
   final Duration longPressDuration;
 
-  /// Maximum movement (in logical pixels) before we consider it a drag.
   final double touchSlop;
 
-  /// Minimum upward displacement before a gesture opens file details.
   final double swipeUpThreshold;
 
-  /// Notifier that indicates whether there are active pointers.
   final ValueNotifier<bool>? hasPointerNotifier;
-  static const double kTouchSlop = 18.0; // Default touch slop value
+
+  // Matches Flutter's default touch slop.
+  static const double kTouchSlop = 18.0;
 
   const MemoriesPointerGestureListener({
     super.key,
@@ -91,11 +84,9 @@ class MemoriesPointerGestureListener extends StatefulWidget {
     this.onTap,
     this.onSwipeUp,
     this.canSwipeUp,
-    // this.onLongPress,
-    // this.onLongPressUp,
     this.hasPointerNotifier,
     this.longPressDuration = const Duration(milliseconds: 500),
-    this.touchSlop = kTouchSlop, // from flutter/gestures/constants.dart
+    this.touchSlop = kTouchSlop,
     this.swipeUpThreshold = 48,
   });
 
@@ -138,7 +129,6 @@ class MemoriesPointerGestureListenerState
     _longPressTimer?.cancel();
     _longPressTimer = Timer(widget.longPressDuration, () {
       _longPressFired = true;
-      // widget.onLongPress?.call();
     });
   }
 
@@ -146,7 +136,6 @@ class MemoriesPointerGestureListenerState
     if (event.pointer == _trackedPointer && _downPosition != null) {
       final distance = (event.localPosition - _downPosition!).distance;
       if (distance > widget.touchSlop) {
-        // user started dragging – cancel long‐press
         hasPointerMoved = true;
         _longPressTimer?.cancel();
         _longPressTimer = null;
@@ -180,7 +169,7 @@ class MemoriesPointerGestureListenerState
     if (isSwipeUp) {
       widget.onSwipeUp?.call();
     } else if (_longPressFired) {
-      // widget.onLongPressUp?.call();
+      // Long presses consume the tap.
     } else {
       if (!wasPartOfMultitouch && !hasPointerMoved) {
         widget.onTap?.call(event);

@@ -1,42 +1,72 @@
 // TODO: Audit this file (the code here is mostly fine, but needs revisiting
 // the file it depends on have been audited and their interfaces fixed).
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import type { AddToAlbumPhase } from "@/components/AlbumAddedNotification";
 import { AlbumAddedNotification } from "@/components/AlbumAddedNotification";
 import { AuthenticateUser } from "@/components/AuthenticateUser";
+import {
+    CollectionSelector,
+    type CollectionSelectorAttributes,
+} from "@/components/CollectionSelector";
+import { CollectionMapDialog } from "@/components/Collections/CollectionMapDialog";
+import {
+    EditAlbumDetailsDialog,
+    type AlbumDetails,
+} from "@/components/Collections/EditAlbumDetailsDialog";
 import { GalleryBarAndListHeader } from "@/components/Collections/GalleryBarAndListHeader";
-import { PickCoverPhotoDialog } from "@/components/Collections/PickCoverPhotoDialog";
+import { Export } from "@/components/Export";
 import { FamilyManagement } from "@/components/FamilyManagement";
 import type { FileListHeaderOrFooter } from "@/components/FileList";
 import { FileListWithViewer } from "@/components/FileListWithViewer";
 import { FixCreationTime } from "@/components/FixCreationTime";
 import { PlanSelector } from "@/components/PlanSelector";
 import { QuickLinkCreatedNotification } from "@/components/QuickLinkCreatedNotification";
+import { SearchBar, type SearchBarProps } from "@/components/SearchBar";
+import {
+    SelectedFileOptions,
+    type CollectionOp,
+    type FileOp,
+} from "@/components/SelectedFileOptions";
 import { Sidebar } from "@/components/Sidebar";
 import { Upload } from "@/components/Upload";
 import { WhatsNew } from "@/components/WhatsNew";
+import {
+    GalleryEmptyState,
+    PeopleEmptyState,
+    SearchResultsHeader,
+    type RemotePullOpts,
+} from "@/components/gallery";
+import {
+    findCollectionCreatingUncategorizedIfNeeded,
+    performCollectionOp,
+    validateKey,
+} from "@/components/gallery/helpers";
+import {
+    useGalleryReducer,
+    type GalleryBarMode,
+} from "@/components/gallery/reducer";
 import {
     notifyOthersFilesDialogAttributes,
     notifyUnsupportedSharedFavoritesDialogAttributes,
 } from "@/components/utils/dialog-attributes";
 import { useIsOffline } from "@/components/utils/use-is-offline";
 import { shouldShowWhatsNew } from "@/services/changelog";
+import exportService from "@/services/export";
+import { processPendingAlbumJoin } from "@/services/join-album";
 import { Upload01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import { IconButton, Link, Stack, Typography } from "@mui/material";
-import { sessionExpiredDialogAttributes } from "ente-accounts/components/utils/dialog";
+import { sessionExpiredDialogAttributes } from "ente-accounts-rs/components/utils/dialog";
 import {
     getAndClearIsFirstLogin,
     getAndClearJustSignedUp,
-} from "ente-accounts/services/accounts-db";
-import { processPendingAlbumJoin } from "ente-accounts/services/join-album";
-import { stashRedirect } from "ente-accounts/services/redirect";
-import { isSessionInvalid } from "ente-accounts/services/session";
-import { ensureLocalUser } from "ente-accounts/services/user";
+} from "ente-accounts-rs/services/accounts-db";
+import { stashRedirect } from "ente-accounts-rs/services/redirect";
+import { isSessionInvalid } from "ente-accounts-rs/services/session";
+import { ensureLocalUser } from "ente-accounts-rs/services/user";
 import { isDesktop } from "ente-base/app";
 import type { MiniDialogAttributes } from "ente-base/components/MiniDialog";
 import { NavbarBase } from "ente-base/components/Navbar";
@@ -65,40 +95,11 @@ import { FullScreenDropZone } from "ente-gallery/components/FullScreenDropZone";
 import type { UploadTypeSelectorIntent } from "ente-gallery/components/Upload";
 import { useSaveGroups } from "ente-gallery/components/utils/save-groups";
 import type { FileViewerInitialSidebar } from "ente-gallery/components/viewer/FileViewer";
-import { CollectionSubType, type Collection } from "ente-media/collection";
+import type { Collection } from "ente-media/collection";
 import type { EnteFile } from "ente-media/file";
 import { ItemVisibility, metadataHash } from "ente-media/file-metadata";
 import { AssignPersonDialog } from "ente-new/photos/components/AssignPersonDialog";
-import {
-    CollectionSelector,
-    type CollectionSelectorAttributes,
-} from "ente-new/photos/components/CollectionSelector";
 import { EditLocationDialog } from "ente-new/photos/components/EditLocationDialog";
-import { Export } from "ente-new/photos/components/Export";
-import {
-    SearchBar,
-    type SearchBarProps,
-} from "ente-new/photos/components/SearchBar";
-import {
-    SelectedFileOptions,
-    type CollectionOp,
-    type FileOp,
-} from "ente-new/photos/components/SelectedFileOptions";
-import {
-    GalleryEmptyState,
-    PeopleEmptyState,
-    SearchResultsHeader,
-    type RemotePullOpts,
-} from "ente-new/photos/components/gallery";
-import {
-    findCollectionCreatingUncategorizedIfNeeded,
-    performCollectionOp,
-    validateKey,
-} from "ente-new/photos/components/gallery/helpers";
-import {
-    useGalleryReducer,
-    type GalleryBarMode,
-} from "ente-new/photos/components/gallery/reducer";
 import {
     usePeopleStateSnapshot,
     useSettingsSnapshot,
@@ -114,13 +115,13 @@ import {
     createQuickLinkCollection,
     removeFromCollection,
     removeFromFavoritesCollection,
-    updateCollectionCover,
+    renameCollection,
+    updateCollectionDetails,
 } from "ente-new/photos/services/collection";
 import {
     haveOnlySystemCollections,
     PseudoCollectionID,
 } from "ente-new/photos/services/collection-summary";
-import exportService from "ente-new/photos/services/export";
 import {
     updateFilesLocation,
     updateFilesVisibility,
@@ -130,13 +131,16 @@ import {
     isMLEnabled,
 } from "ente-new/photos/services/ml";
 
+import { postPullFiles, prePullFiles, pullFiles } from "@/services/pull";
 import { uploadManager } from "@/services/upload-manager";
 import watcher from "@/services/watch";
 import {
+    selectedFavoriteCount as countSelectedFavorites,
     getSelectedFiles,
     performFileOp,
     type SelectedState,
 } from "@/utils/file";
+import type { FileContextAction } from "@/utils/file-actions";
 import {
     quickLinkNameForFiles,
     resolveQuickLinkURL,
@@ -147,11 +151,6 @@ import {
     savedTrashItems,
 } from "ente-new/photos/services/photos-fdb";
 import {
-    postPullFiles,
-    prePullFiles,
-    pullFiles,
-} from "ente-new/photos/services/pull";
-import {
     filterSearchableFiles,
     updateSearchCollectionsAndFiles,
 } from "ente-new/photos/services/search";
@@ -159,14 +158,16 @@ import type {
     SearchOption,
     SidebarActionID,
 } from "ente-new/photos/services/search/types";
-import { initSettings } from "ente-new/photos/services/settings";
+import {
+    initSettings,
+    updateMapEnabled,
+} from "ente-new/photos/services/settings";
 import {
     redirectToCustomerPortal,
     savedUserDetailsOrTriggerPull,
     verifyStripeSubscription,
 } from "ente-new/photos/services/user-details";
 import { usePhotosAppContext } from "ente-new/photos/types/context";
-import type { FileContextAction } from "ente-new/photos/utils/file-actions";
 import { PromiseQueue } from "ente-utils/promise";
 import { t } from "i18next";
 import { useRouter, type NextRouter } from "next/router";
@@ -174,19 +175,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FileWithPath } from "react-dropzone";
 import { Trans } from "react-i18next";
 
-/**
- * The default view for logged in users.
- *
- * I heard you like ASCII art.
- *
- *        Navbar / Search         ^
- *     ---------------------      |
- *          Gallery Bar         sticky
- *     ---------------------   ---/---
- *       Photo List Header    scrollable
- *     ---------------------      |
- *           Photo List           v
- */
 const Page: React.FC = () => {
     const { logout, showMiniDialog, onGenericError } = useBaseContext();
     const {
@@ -216,39 +204,23 @@ const Page: React.FC = () => {
     );
     const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
 
-    // Pending navigation from feed item click
     const [pendingFileNavigation, setPendingFileNavigation] = useState<{
         fileIndex: number;
         sidebar?: FileViewerInitialSidebar;
         commentID?: string;
     }>();
 
-    /**
-     * Tracks a pending file addition operation.
-     *
-     * Used to temporarily store the file and optional source collection ID
-     * when adding a single file to a collection, allowing the operation
-     * to be completed after any necessary user interactions (like selecting
-     * a target collection).
-     */
     const pendingSingleFileAdd = useRef<
         { file: EnteFile; sourceCollectionSummaryID?: number } | undefined
     >(undefined);
-    /**
-     * A queue to serialize calls to {@link remoteFilesPull}.
-     */
+    // Pull pipelines mutate the same local DB and reducer state.
     const remoteFilesPullQueue = useRef(new PromiseQueue<void>());
-    /**
-     * A queue to serialize calls to {@link remotePull}.
-     */
     const remotePullQueue = useRef(new PromiseQueue<void>());
 
     const [uploadTypeSelectorView, setUploadTypeSelectorView] = useState(false);
     const [uploadTypeSelectorIntent, setUploadTypeSelectorIntent] =
         useState<UploadTypeSelectorIntent>("upload");
 
-    // If the fix creation time dialog is being shown, then the list of files on
-    // which it should act.
     const [fixCreationTimeFiles, setFixCreationTimeFiles] = useState<
         EnteFile[]
     >([]);
@@ -260,17 +232,15 @@ const Page: React.FC = () => {
     const [collectionSelectorAttributes, setCollectionSelectorAttributes] =
         useState<CollectionSelectorAttributes | undefined>();
 
-    const { customDomain } = useSettingsSnapshot();
+    const { customDomain, mapEnabled } = useSettingsSnapshot();
     const userDetails = useUserDetailsSnapshot();
     const peopleState = usePeopleStateSnapshot();
 
-    // Modal visibility for the context menu "Add Person" action
     const {
         show: showContextMenuAssignPerson,
         props: contextMenuAssignPersonProps,
     } = useModalVisibility();
 
-    // Named people available for assignment (used by context menu)
     const namedPeople = useMemo(
         () =>
             (peopleState?.visiblePeople ?? []).filter(
@@ -291,13 +261,6 @@ const Page: React.FC = () => {
         SidebarActionID | undefined
     >(undefined);
 
-    /**
-     * The last time (epoch milliseconds) when we prompted the user for their
-     * password when opening the hidden section.
-     *
-     * This is used to implement a grace window, where we don't reprompt them
-     * for their password for the same purpose again and again.
-     */
     const lastAuthenticationForHiddenTimestamp = useRef<number>(0);
 
     const { show: showSidebar, props: sidebarVisibilityProps } =
@@ -323,11 +286,27 @@ const Page: React.FC = () => {
     const { show: showEditLocation, props: editLocationVisibilityProps } =
         useModalVisibility();
     const {
-        show: showPickCoverPhotoDialog,
-        props: pickCoverPhotoDialogVisibilityProps,
+        show: showEditAlbumDetails,
+        props: editAlbumDetailsVisibilityProps,
     } = useModalVisibility();
+    const { show: showCollectionMap, props: collectionMapVisibilityProps } =
+        useModalVisibility();
+    const closeCollectionMap = collectionMapVisibilityProps.onClose;
 
-    // Progress UI state for single-file add-to-album from the FileViewer
+    const handleShowCollectionMap = useCallback(() => {
+        void (async () => {
+            if (!mapEnabled) {
+                try {
+                    await updateMapEnabled(true);
+                } catch (e) {
+                    onGenericError(e);
+                    return;
+                }
+            }
+            showCollectionMap();
+        })();
+    }, [mapEnabled, onGenericError, showCollectionMap]);
+
     const [addToAlbumProgress, setAddToAlbumProgress] = useState<{
         open: boolean;
         phase: AddToAlbumPhase;
@@ -368,8 +347,7 @@ const Page: React.FC = () => {
 
     const handleCloseAuthenticateUser = useCallback(() => {
         authenticateUserVisibilityProps.onClose();
-        // Reject the pending authentication promise so the caller knows
-        // authentication was cancelled (e.g., user clicked backdrop).
+        // Reject the suspended caller when the modal is dismissed.
         if (onAuthenticateCancelCallback.current) {
             onAuthenticateCancelCallback.current();
             onAuthenticateCancelCallback.current = undefined;
@@ -377,9 +355,7 @@ const Page: React.FC = () => {
     }, [authenticateUserVisibilityProps.onClose]);
 
     const handleAuthenticate = useCallback(() => {
-        // Clear the cancel callback first since authentication succeeded.
         onAuthenticateCancelCallback.current = undefined;
-        // Then resolve the promise.
         if (onAuthenticateCallback.current) {
             onAuthenticateCallback.current();
             onAuthenticateCallback.current = undefined;
@@ -395,7 +371,6 @@ const Page: React.FC = () => {
         [],
     );
 
-    // Local aliases.
     const {
         user,
         favoriteFileIDs,
@@ -412,7 +387,6 @@ const Page: React.FC = () => {
         filteredFiles,
     } = state;
 
-    // Derived aliases.
     const barMode = state.view?.type ?? "albums";
     const activeCollectionID =
         state.view?.type == "people"
@@ -442,32 +416,6 @@ const Page: React.FC = () => {
             }, new Map<number, number[]>()),
         [state.collectionFiles],
     );
-
-    /**
-     * the below function is used to conditionallay render the setCover option in the dropdown
-     */
-    const isOwnedAlbumEligibleForCover = useMemo(() => {
-        if (
-            isInSearchMode ||
-            !activeCollection ||
-            !activeCollectionSummary ||
-            !user
-        )
-            return false;
-
-        if (activeCollection.owner.id != user.id) return false;
-        if (
-            activeCollection.magicMetadata?.data.subType ==
-            CollectionSubType.quicklink
-        ) {
-            return false;
-        }
-
-        return (
-            activeCollectionSummary.attributes.has("album") ||
-            activeCollectionSummary.attributes.has("folder")
-        );
-    }, [isInSearchMode, activeCollection, activeCollectionSummary, user]);
 
     const activeCollectionFiles = useMemo(() => {
         if (!activeCollection) return [];
@@ -540,43 +488,28 @@ const Page: React.FC = () => {
 
         void (async () => {
             if (!haveMasterKeyInSession() || !(await savedAuthToken())) {
-                // If we don't have master key or auth token, reauthenticate.
                 stashRedirect("/gallery");
-                router.push("/");
+                void router.push("/");
                 return;
             }
 
             if (!(await validateKey())) {
-                // If we have credentials but they can't be decrypted, reset.
-                //
-                // This code is never expected to run, it is only kept as a
-                // safety valve.
                 logout();
                 return;
             }
 
-            // We are logged in and everything looks fine. Proceed with page
-            // load initialization.
-
-            // One time inits.
             preloadImage("/images/subscription-card-background");
             initSettings();
             setupSelectAllKeyBoardShortcutHandler();
 
-            // Show the initial state while the rest of the sequence proceeds.
             dispatch({ type: "showAll" });
 
-            // If this is the user's first login on this client, then show them
-            // a message informing the that the initial load might take time.
             setIsFirstLoad(getAndClearIsFirstLogin());
 
-            // If the user created a new account on this client, show them the
-            // plan options.
             if (getAndClearJustSignedUp()) {
                 showPlanSelector();
             }
 
-            // Initialize the reducer.
             const user = ensureLocalUser();
             const masterKey = await masterKeyFromSession();
             if (masterKey) {
@@ -600,7 +533,7 @@ const Page: React.FC = () => {
                 trashItems: await savedTrashItems(),
             });
 
-            // Check for pending album join BEFORE fetching data
+            // Join first so the initial pull includes the new album.
             let joinedAlbumId: number | null = null;
 
             if (hasPendingAlbumToJoin()) {
@@ -621,10 +554,8 @@ const Page: React.FC = () => {
                 }
             }
 
-            // Fetch data from remote (this will include the newly joined album if any)
             await remotePull({ source: "gallery-mount" });
 
-            // Navigate directly to the joined album
             if (joinedAlbumId) {
                 dispatch({
                     type: "showCollectionSummary",
@@ -632,18 +563,16 @@ const Page: React.FC = () => {
                 });
             }
 
-            // Clear the first load message if needed.
             setIsFirstLoad(false);
 
-            // Start the interval that does a periodic pull.
             syncIntervalID = setInterval(
                 () => remotePull({ silent: true, source: "gallery-periodic" }),
-                5 * 60 * 1000 /* 5 minutes */,
+                5 * 60 * 1000,
             );
 
             if (electron) {
                 unsubscribeMainWindowFocus = subscribeMainWindowFocus(() => {
-                    remotePull({ silent: true, source: "desktop-focus" });
+                    void remotePull({ silent: true, source: "desktop-focus" });
                     void watcher.checkAccessibility();
                 });
                 if (await shouldShowWhatsNew(electron)) showWhatsNew();
@@ -657,7 +586,6 @@ const Page: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        // Only act on updates after the initial mount has completed.
         if (state.user && userDetails) {
             dispatch({ type: "setUserDetails", userDetails });
         }
@@ -673,12 +601,16 @@ const Page: React.FC = () => {
             collectionURL = `?collection=${activeCollectionID}`;
         }
         const href = `/gallery${collectionURL}`;
-        router.push(href, undefined, { shallow: true });
+        void router.push(href, undefined, { shallow: true });
     }, [activeCollectionID, router.isReady]);
 
     useEffect(() => {
+        if (!activeCollectionSummary) closeCollectionMap();
+    }, [activeCollectionSummary, closeCollectionMap]);
+
+    useEffect(() => {
         if (router.isReady && haveMasterKeyInSession()) {
-            handleSubscriptionCompletionRedirectIfNeeded(
+            void handleSubscriptionCompletionRedirectIfNeeded(
                 showMiniDialog,
                 showLoadingBar,
                 router,
@@ -731,7 +663,10 @@ const Page: React.FC = () => {
         const pendingSearchSuggestion = state.pendingSearchSuggestions.at(-1);
         if (!state.isRecomputingSearchResults && pendingSearchSuggestion) {
             dispatch({ type: "updatingSearchResults" });
-            filterSearchableFiles(pendingSearchSuggestion).then(
+            // TODO: A rejection leaves isRecomputingSearchResults stuck true,
+            // and search stops until it is exited. Recovery needs a reducer
+            // change.
+            void filterSearchableFiles(pendingSearchSuggestion).then(
                 (searchResults) => {
                     dispatch({ type: "setSearchResults", searchResults });
                 },
@@ -740,7 +675,6 @@ const Page: React.FC = () => {
     }, [state.isRecomputingSearchResults, state.pendingSearchSuggestions]);
 
     const selectAll = (e: KeyboardEvent) => {
-        // Don't intercept Ctrl/Cmd + a if the user is typing in a text field.
         if (
             e.target instanceof HTMLInputElement ||
             e.target instanceof HTMLTextAreaElement
@@ -748,17 +682,11 @@ const Page: React.FC = () => {
             return;
         }
 
-        // Prevent the browser's default select all handling (selecting all the
-        // text in the gallery).
         e.preventDefault();
 
-        // Don't select all if:
         if (
-            // - We haven't fetched the user yet;
             !user ||
-            // - There is nothing to select;
             !filteredFiles.length ||
-            // - Any of the modals are open.
             uploadTypeSelectorView ||
             openCollectionSelector ||
             sidebarVisibilityProps.open ||
@@ -767,13 +695,12 @@ const Page: React.FC = () => {
             exportVisibilityProps.open ||
             authenticateUserVisibilityProps.open ||
             albumNameInputVisibilityProps.open ||
-            pickCoverPhotoDialogVisibilityProps.open ||
+            editAlbumDetailsVisibilityProps.open ||
             isFileViewerOpen
         ) {
             return;
         }
 
-        // Create a selection with everything based on the current context.
         const selected = {
             ownCount: 0,
             count: 0,
@@ -854,12 +781,6 @@ const Page: React.FC = () => {
         [showMiniDialog, logout],
     );
 
-    // [Note: Visual feedback to acknowledge user actions]
-    //
-    // In some infrequent cases, we want to acknowledge some user action (e.g.
-    // pressing a keyboard shortcut which doesn't have an immediate on-screen
-    // impact). In these cases, we tickle the loading bar at the top to
-    // acknowledge that their action.
     const handleVisualFeedback = useCallback(() => {
         showLoadingBar();
         setTimeout(hideLoadingBar, 0);
@@ -869,24 +790,7 @@ const Page: React.FC = () => {
         setPendingFileNavigation(undefined);
     }, []);
 
-    /**
-     * Pull latest collections, collection files and trash items from remote.
-     *
-     * This wraps the vanilla {@link pullFiles} with two adornments:
-     *
-     * 1. Any local database updates due to the pull are also reflected in state
-     *    updates to the Gallery's reducer.
-     *
-     * 2. Parallel calls are serialized so that there is only one invocation of
-     *    the underlying {@link pullFiles} at a time.
-     *
-     * [Note: Full remote pull vs files pull]
-     *
-     * For interactive operations, if we know that our operation will not have
-     * other transitive effects beyond collections, collection files and trash,
-     * this is a better option as compared to a full remote pull since it
-     * involves a lesser number of API requests (and thus, time).
-     */
+    // Use this for collection/file/trash-only effects; a full pull costs more.
     const remoteFilesPull = useCallback(
         () =>
             remoteFilesPullQueue.current.add(() =>
@@ -907,45 +811,40 @@ const Page: React.FC = () => {
         [],
     );
 
-    /**
-     * Perform a serialized full remote pull, also updating our component state
-     * to match the updates to the local database.
-     *
-     * See {@link remoteFilesPull} for the general concept. This is a similar
-     * wrapper over the full remote pull sequence which also adds pre-flight
-     * checks (e.g. to ensure that the user's session has not expired).
-     *
-     * This method will usually not throw; exceptions during the pull itself are
-     * caught. This is so that this promise can be unguardedly awaited without
-     * failing the main operations it forms the tail end of: the remote changes
-     * would've already been successfully applied, and possibly transient pull
-     * failures should get resolved on the next retry.
-     */
     const remotePull = useCallback(
         async (opts?: RemotePullOpts) =>
             remotePullQueue.current.add(async () => {
-                const { silent, source } = opts ?? {};
+                const { silent, source, strict } = opts ?? {};
 
-                // Pre-flight checks.
-                if (!navigator.onLine) return;
+                if (!navigator.onLine) {
+                    if (strict) throw new Error("Remote pull failed: offline");
+                    return;
+                }
                 if (await isSessionInvalid()) {
                     showSessionExpiredDialog();
+                    if (strict)
+                        throw new Error("Remote pull failed: invalid session");
                     return;
                 }
                 if (!(await masterKeyFromSession())) {
                     clearSessionStorage();
-                    router.push("/credentials");
+                    void router.push("/credentials");
+                    if (strict)
+                        throw new Error(
+                            "Remote pull failed: missing master key",
+                        );
                     return;
                 }
 
-                // The pull itself.
                 try {
                     if (!silent) showLoadingBar();
                     await prePullFiles();
                     await remoteFilesPull();
                     await postPullFiles(source);
                 } catch (e) {
+                    // A later pull retries transient failures after remote mutations.
                     log.error("Remote pull failed", e);
+                    if (strict) throw e;
                 } finally {
                     dispatch({ type: "clearUnsyncedState" });
                     if (!silent) hideLoadingBar();
@@ -1012,7 +911,6 @@ const Page: React.FC = () => {
         (op: CollectionOp) => (selectedCollection: Collection) => {
             const selectedFiles = getSelectedFiles(selected, filteredFiles);
             const userFiles = selectedFiles.filter(
-                // If a selection is happening, there must be a user.
                 (f) => f.ownerID == user!.id,
             );
             const sourceCollectionID = selected.collectionID;
@@ -1067,11 +965,6 @@ const Page: React.FC = () => {
 
             void (async () => {
                 try {
-                    /**
-                     * The add/copy path can process non-owned files when a
-                     * shared album requires copying them through the current
-                     * user's library.
-                     */
                     const filesToProcess =
                         op == "add" ? selectedFiles : userFiles;
                     await performSelectedCollectionOp(
@@ -1110,7 +1003,6 @@ const Page: React.FC = () => {
                         silent: true,
                         source: "single-file-add-new-album",
                     });
-                    // Show custom toast with album name and navigation
                     setAddToAlbumProgress({
                         open: true,
                         phase: "done",
@@ -1123,8 +1015,6 @@ const Page: React.FC = () => {
                 }
 
                 setPostCreateAlbumOp((postCreateAlbumOp) => {
-                    // The function returned by createHandleCollectionOp does its
-                    // own progress and error reporting, defer to that.
                     createOnSelectForCollectionOp(postCreateAlbumOp!)(
                         collection,
                     );
@@ -1144,12 +1034,7 @@ const Page: React.FC = () => {
         const filesToProcess: EnteFile[] = [];
         let skippedUnsupportedSharedFile = false;
 
-        /**
-         * We currently can only process files which either the currentUser is the owner
-         * or the file has a valid metadataHash with it, so checking if we have
-         * any unspported files and if so then setting the variable flag as true
-         * for showing the modal later on.
-         */
+        // Shared copies need a metadata hash to find their owned equivalent.
         for (const file of selectedFiles) {
             if (file.ownerID == user!.id || metadataHash(file.metadata)) {
                 filesToProcess.push(file);
@@ -1158,16 +1043,10 @@ const Page: React.FC = () => {
             }
         }
 
-        // if there are no files to process, like if every file
-        // we got to process was unsupported then returning the flag and state.
         if (!filesToProcess.length) {
             return { processed: false, skippedUnsupportedSharedFile };
         }
 
-        // if we have files to process then, checking what the op is
-        // favorite and then creating a map of the current state before
-        // doing anything.  So if the API call fails later, the code knows
-        // how to restore each file back to its old state.
         const isFavorite = op == "favorite";
         const previousFavoriteByFileID = new Map(
             filesToProcess.map((file) => [
@@ -1176,14 +1055,6 @@ const Page: React.FC = () => {
             ]),
         );
 
-        /**
-         * Looping through the filesToProcess to do two things
-         * - addPendingFavoriteUpdate: Let the UI know that this file currently have a request in progress.
-         * So that the user can't trigger simultaneous updates.
-         *
-         * - unsycnedFavoriteUpdate: This changes the visible favorite state immediately, for a faster user
-         * feedback.
-         */
         for (const file of filesToProcess) {
             dispatch({ type: "addPendingFavoriteUpdate", fileID: file.id });
             dispatch({ type: "unsyncedFavoriteUpdate", file, isFavorite });
@@ -1228,7 +1099,6 @@ const Page: React.FC = () => {
                             filteredFiles,
                         );
                         const ownedSelectedFiles = selectedFiles.filter(
-                            // There'll be a user if files are being selected.
                             (file) => file.ownerID == user!.id,
                         );
                         if (!ownedSelectedFiles.length) return;
@@ -1263,9 +1133,7 @@ const Page: React.FC = () => {
                         return;
                     }
 
-                    // When hiding use all non-hidden files instead of the filtered
-                    // files since we want to move all files copies to the hidden
-                    // collection.
+                    // Hide every non-hidden copy, including copies outside this view.
                     const opFiles =
                         op == "hide"
                             ? state.collectionFiles.filter(
@@ -1295,7 +1163,6 @@ const Page: React.FC = () => {
                         op == "download"
                             ? selectedFiles
                             : selectedFiles.filter(
-                                  // There'll be a user if files are being selected.
                                   (file) => file.ownerID == user!.id,
                               );
                     if (ownedSelectedFiles.length > 0) {
@@ -1315,10 +1182,6 @@ const Page: React.FC = () => {
                         );
                     }
 
-                    // Apart from download, the other operations currently only work
-                    // on the user's own files.
-                    //
-                    // See: [Note: Add and move of non-user files].
                     if (
                         op != "download" &&
                         ownedSelectedFiles.length != selectedFiles.length
@@ -1375,7 +1238,6 @@ const Page: React.FC = () => {
         ],
     );
 
-    // Handler for selecting a person from the context menu assign person dialog
     const handleContextMenuSelectPerson = useCallback(
         (personID: string) => {
             contextMenuAssignPersonProps.onClose();
@@ -1386,7 +1248,6 @@ const Page: React.FC = () => {
 
     const handleEditLocationConfirm = useCallback(
         async (location: Location) => {
-            // Only update files owned by the user
             const userFiles = selectedFilesInView.filter(
                 (f) => f.ownerID == user!.id,
             );
@@ -1432,7 +1293,6 @@ const Page: React.FC = () => {
                 });
             }
         } else {
-            // Pass shouldExitSearchMode to the reducer (defaults to true for backward compatibility)
             const shouldExitSearchMode = options?.shouldExitSearchMode ?? true;
             dispatch({ type: "exitSearch", shouldExitSearchMode });
         }
@@ -1446,20 +1306,7 @@ const Page: React.FC = () => {
 
     const handleShowCollectionSummaryWithID = useCallback(
         (collectionSummaryID: number | undefined) => {
-            // Trigger a pull of the latest data from remote when opening the trash.
-            //
-            // This is needed for a specific scenario:
-            //
-            // 1. User deletes a collection, selecting the option to delete files.
-            // 2. Museum acks, and then client does a trash pull.
-            //
-            // This trash pull will not contain the files that belonged to the
-            // collection that got deleted because the collection deletion is a
-            // asynchronous operation.
-            //
-            // So the user might not see the entry for the just deleted file if they
-            // were to go to the trash meanwhile (until the next pull happens). To
-            // avoid this, we trigger a trash pull whenever it is opened.
+            // Museum deletes collection contents asynchronously; pull on entry.
             if (collectionSummaryID == PseudoCollectionID.trash) {
                 void remoteFilesPull();
             }
@@ -1469,16 +1316,6 @@ const Page: React.FC = () => {
         [],
     );
 
-    /**
-     * Switch to gallery view to show a collection or pseudo-collection.
-     *
-     * @param collectionSummaryID The ID of the {@link CollectionSummary} to
-     * show. If not provided, show the "All" section.
-     *
-     * @param isHidden If `true`, then any reauthentication as appropriate
-     * before switching to the hidden section of the app is performed first
-     * before before switching to the relevant collection or pseudo-collection.
-     */
     const showCollectionSummary = useCallback(
         async (
             collectionSummaryID: number | undefined,
@@ -1489,14 +1326,12 @@ const Page: React.FC = () => {
             if (
                 isHiddenCollectionSummary &&
                 barMode != "hidden-albums" &&
-                Date.now() - lastAuthAt > 5 * 60 * 1e3 /* 5 minutes */
+                Date.now() - lastAuthAt > 5 * 60 * 1e3
             ) {
                 try {
                     await authenticateUser();
                     lastAuthenticationForHiddenTimestamp.current = Date.now();
                 } catch {
-                    // User cancelled authentication (e.g., clicked backdrop).
-                    // Don't proceed to show the collection.
                     return;
                 }
             }
@@ -1558,16 +1393,7 @@ const Page: React.FC = () => {
             dispatch({ type: "addPendingVisibilityUpdate", fileID });
             try {
                 await updateFilesVisibility([file], visibility);
-                // [Note: Interactive updates to file metadata]
-                //
-                // 1. Update the remote metadata.
-                //
-                // 2. Construct a fake a metadata object with the updates
-                //    reflected in it.
-                //
-                // 3. The caller (eventually) triggers a remote pull in the
-                //    background, but meanwhile uses this updated metadata.
-                //
+                // Keep the UI ahead of the background pull.
                 // TODO: Replace with files pull?
                 dispatch({
                     type: "unsyncedPrivateMagicMetadataUpdate",
@@ -1629,17 +1455,22 @@ const Page: React.FC = () => {
     );
 
     const handleSelectCollection = useCallback(
-        (collectionID: number) =>
+        (collectionID: number) => {
+            closeCollectionMap();
             dispatch({
                 type: "showCollectionSummary",
                 collectionSummaryID: collectionID,
-            }),
-        [],
+            });
+        },
+        [closeCollectionMap],
     );
 
     const handleSelectPerson = useCallback(
-        (personID: string) => dispatch({ type: "showPerson", personID }),
-        [],
+        (personID: string) => {
+            closeCollectionMap();
+            dispatch({ type: "showPerson", personID });
+        },
+        [closeCollectionMap],
     );
 
     const handleOpenCollectionSelector = useCallback(
@@ -1652,55 +1483,46 @@ const Page: React.FC = () => {
 
     const selectedCount = selected.count;
     const selectedOwnCount = selected.ownCount;
-    const selectedFavoriteCount = useMemo(() => {
-        if (selected.count == 0) return 0;
-        let count = 0;
-        for (const [key, value] of Object.entries(selected)) {
-            if (typeof value === "boolean" && value) {
-                if (favoriteFileIDs.has(Number(key))) {
-                    count += 1;
-                }
-            }
-        }
-        return count;
-    }, [favoriteFileIDs, selected]);
-
-    const handleUpdateCollectionCover = useCallback(
-        async (coverID: number) => {
-            if (!activeCollection || !isOwnedAlbumEligibleForCover)
-                return false;
-
-            showLoadingBar();
-            try {
-                await updateCollectionCover(activeCollection, coverID);
-                await remotePull({
-                    silent: true,
-                    source: "update-collection-cover",
-                });
-                return true;
-            } catch (e) {
-                onGenericError(e);
-                return false;
-            } finally {
-                hideLoadingBar();
-            }
-        },
-        [
-            activeCollection,
-            isOwnedAlbumEligibleForCover,
-            showLoadingBar,
-            remotePull,
-            onGenericError,
-            hideLoadingBar,
-        ],
+    const selectedFavoriteCount = useMemo(
+        () => countSelectedFavorites(selected, favoriteFileIDs),
+        [favoriteFileIDs, selected],
     );
 
-    /**
-     * Handle a context menu action on a file.
-     *
-     * This handler is called when the user right-clicks on a file thumbnail
-     * and selects an action from the context menu.
-     */
+    const handleEditAlbumDetails = useCallback(
+        async ({ name, description, coverID }: AlbumDetails) => {
+            if (!activeCollection) return;
+
+            let didAttemptWrite = false;
+            try {
+                if (activeCollection.name != name) {
+                    didAttemptWrite = true;
+                    await renameCollection(activeCollection, name);
+                }
+                const descriptionChanged =
+                    (
+                        activeCollection.pubMagicMetadata?.data.caption ?? ""
+                    ).trim() != description;
+                if (descriptionChanged || coverID !== undefined) {
+                    didAttemptWrite = true;
+                    await updateCollectionDetails(activeCollection, {
+                        description: descriptionChanged
+                            ? description
+                            : undefined,
+                        coverID,
+                    });
+                }
+            } finally {
+                if (didAttemptWrite) {
+                    await remotePull({
+                        silent: true,
+                        source: "update-album-details",
+                    });
+                }
+            }
+        },
+        [activeCollection, remotePull],
+    );
+
     const handleContextMenuAction = useCallback(
         (
             action: FileContextAction,
@@ -1708,8 +1530,6 @@ const Page: React.FC = () => {
             meta?: { isEphemeralSingleSelection: boolean },
         ) => {
             const suppressSelectionBar = !!meta?.isEphemeralSingleSelection;
-            // The selection should already be set by FileList's handleContextMenu
-            // We just need to invoke the appropriate action handler
             switch (action) {
                 case "sendLink":
                     createFileOpHandler("sendLink", { suppressSelectionBar })();
@@ -1886,21 +1706,6 @@ const Page: React.FC = () => {
         ],
     );
 
-    const handleOpenPickCoverPhotoDialog = useCallback(() => {
-        if (!isOwnedAlbumEligibleForCover) return;
-        showPickCoverPhotoDialog();
-    }, [isOwnedAlbumEligibleForCover, showPickCoverPhotoDialog]);
-
-    const handleUseSelectedCoverPhoto = useCallback(
-        async (file: EnteFile) => handleUpdateCollectionCover(file.id),
-        [handleUpdateCollectionCover],
-    );
-
-    const handleResetCollectionCover = useCallback(
-        async () => handleUpdateCollectionCover(0),
-        [handleUpdateCollectionCover],
-    );
-
     const handleCloseCollectionSelector = useCallback(
         () => setOpenCollectionSelector(false),
         [],
@@ -1910,28 +1715,12 @@ const Page: React.FC = () => {
         [],
     );
 
-    /**
-     * Handles adding a single file to a collection by opening a collection selector dialog.
-     *
-     * @param file - The EnteFile to be added to a collection
-     * @param sourceCollectionSummaryID - Optional ID of the source collection where the file currently resides
-     *
-     * @remarks
-     * This function stores the pending file operation, displays a collection selector modal,
-     * and handles three scenarios:
-     * - User selects an existing collection: adds the file and triggers a remote pull
-     * - User creates a new collection: sets up post-create operation and shows album name input
-     * - User cancels: clears the pending operation
-     *
-     * The function shows/hides a loading bar during the add operation and handles errors generically.
-     */
     const handleAddSingleFileToCollection = useCallback(
         (file: EnteFile, sourceCollectionSummaryID?: number) => {
             pendingSingleFileAdd.current = { file, sourceCollectionSummaryID };
 
             const handleSelect = async (collection: Collection) => {
                 try {
-                    // Show add-to-album progress UI for this operation.
                     setAddToAlbumProgress({ open: true, phase: "processing" });
                     showLoadingBar();
                     await performCollectionOp(
@@ -1944,7 +1733,6 @@ const Page: React.FC = () => {
                         silent: true,
                         source: "single-file-add-to-album",
                     });
-                    // Show custom toast with album name and navigation
                     setAddToAlbumProgress({
                         open: true,
                         phase: "done",
@@ -1953,7 +1741,6 @@ const Page: React.FC = () => {
                     });
                 } catch (e) {
                     onGenericError(e);
-                    // Do not show the toast on failure; handled by generic error notification
                 } finally {
                     pendingSingleFileAdd.current = undefined;
                     hideLoadingBar();
@@ -1995,9 +1782,7 @@ const Page: React.FC = () => {
         !(isContextMenuOpen && selected.count === 1);
 
     if (!user) {
-        // Don't render until we dispatch "mount" with the logged in user.
-        //
-        // Tag: [Note: Gallery children can assume user]
+        // Children rely on user after the mount dispatch.
         return <div></div>;
     }
 
@@ -2123,24 +1908,13 @@ const Page: React.FC = () => {
                     // component need to be updated.
                     activeCollection: activeCollection!,
                     activeCollectionID: activeCollectionID!,
-                    files: activeCollection
-                        ? activeCollectionFiles
-                        : filteredFiles,
-                    mapFileSource,
                     activePerson,
                     setFileListHeader,
                     saveGroups,
                     canCreateAlbum: !isInArchiveSection,
                     onAddSaveGroup,
-                    onMarkTempDeleted: handleMarkTempDeleted,
-                    onAddFileToCollection: handleAddSingleFileToCollection,
-                    onRemoteFilesPull: remoteFilesPull,
-                    onVisualFeedback: handleVisualFeedback,
-                    fileNormalCollectionIDs,
-                    collectionNameByID,
-                    onSelectCollection: handleSelectCollection,
-                    canSetAlbumCover: isOwnedAlbumEligibleForCover,
-                    onSetAlbumCover: handleOpenPickCoverPhotoDialog,
+                    onEditAlbumDetails: showEditAlbumDetails,
+                    onShowMap: handleShowCollectionMap,
                 }}
                 mode={barMode}
                 shouldHide={isInSearchMode}
@@ -2233,7 +2007,7 @@ const Page: React.FC = () => {
                     footer={fileListFooter}
                     user={user}
                     files={filteredFiles}
-                    mapFileSource={mapFileSource}
+                    onShowMap={handleShowCollectionMap}
                     enableDownload={true}
                     disableGrouping={state.searchSuggestion?.type == "clip"}
                     enableSelect={true}
@@ -2242,7 +2016,6 @@ const Page: React.FC = () => {
                     // TODO: Incorrect assertion, need to update the type
                     activeCollectionID={activeCollectionID!}
                     activeCollectionSummary={activeCollectionSummary}
-                    activeCollection={activeCollection}
                     activePersonID={activePerson?.id}
                     isInIncomingSharedCollection={activeCollectionSummary?.attributes.has(
                         "sharedIncoming",
@@ -2286,18 +2059,36 @@ const Page: React.FC = () => {
                     }
                 />
             )}
-            {activeCollection && (
-                <PickCoverPhotoDialog
-                    {...pickCoverPhotoDialogVisibilityProps}
+            {activeCollectionSummary && (
+                <CollectionMapDialog
+                    {...collectionMapVisibilityProps}
+                    collectionSummary={activeCollectionSummary}
+                    files={
+                        activeCollection ? activeCollectionFiles : filteredFiles
+                    }
+                    mapFileSource={mapFileSource}
+                    onRemotePull={remotePull}
+                    onAddSaveGroup={onAddSaveGroup}
+                    onMarkTempDeleted={handleMarkTempDeleted}
+                    onAddFileToCollection={handleAddSingleFileToCollection}
+                    onRemoteFilesPull={remoteFilesPull}
+                    onVisualFeedback={handleVisualFeedback}
+                    fileNormalCollectionIDs={fileNormalCollectionIDs}
+                    collectionNameByID={collectionNameByID}
+                    emailByUserID={state.emailByUserID}
+                    onSelectCollection={handleSelectCollection}
+                    onSelectPerson={handleSelectPerson}
+                />
+            )}
+            {activeCollection && editAlbumDetailsVisibilityProps.open && (
+                <EditAlbumDetailsDialog
+                    key={activeCollection.id}
+                    {...editAlbumDetailsVisibilityProps}
                     collection={activeCollection}
                     files={activeCollectionFiles}
+                    initialCoverFile={activeCollectionSummary?.coverFile}
                     user={user}
-                    canResetToDefault={
-                        (activeCollection.pubMagicMetadata?.data.coverID ?? 0) >
-                        0
-                    }
-                    onUseSelectedPhoto={handleUseSelectedCoverPhoto}
-                    onResetToDefault={handleResetCollectionCover}
+                    onSubmit={handleEditAlbumDetails}
                 />
             )}
             <Export {...exportVisibilityProps} {...{ collectionNameByID }} />
@@ -2313,9 +2104,7 @@ const Page: React.FC = () => {
                 label={t("album_name")}
                 submitButtonTitle={t("create")}
                 onClose={() => {
-                    // If the user dismisses the album name dialog without
-                    // submitting, clear any pending single-file add so that it
-                    // doesn't leak into a future album creation.
+                    // Do not leak a cancelled add into the next album creation.
                     pendingSingleFileAdd.current = undefined;
                     albumNameInputVisibilityProps.onClose();
                 }}
@@ -2368,9 +2157,6 @@ const OfflineMessage: React.FC = () => (
     </Typography>
 );
 
-/**
- * Preload all three variants of a responsive image.
- */
 const preloadImage = (imgBasePath: string) => {
     const srcset: string[] = [];
     for (let i = 1; i <= 3; i++) srcset.push(`${imgBasePath}/${i}x.png ${i}x`);
@@ -2378,13 +2164,7 @@ const preloadImage = (imgBasePath: string) => {
 };
 
 type NormalNavbarContentsProps = SearchBarProps & {
-    /**
-     * Called when the user activates the sidebar icon.
-     */
     onSidebar: () => void;
-    /**
-     * Called when the user activates the upload button.
-     */
     onUpload: () => void;
 };
 
@@ -2458,13 +2238,6 @@ const SectionNavbarContents: React.FC<SectionNavbarContentsProps> = ({
     </Stack>
 );
 
-/**
- * When the payments app redirects back to us after a plan purchase or update
- * completes, it sets various query parameters to relay the status of the action
- * back to us.
- *
- * Check if these query parameters exist, and if so, act on them appropriately.
- */
 const handleSubscriptionCompletionRedirectIfNeeded = async (
     showMiniDialog: (attributes: MiniDialogAttributes) => void,
     showLoadingBar: () => void,

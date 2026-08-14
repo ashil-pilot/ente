@@ -86,6 +86,7 @@ class _ImageEditorTuneBarState extends State<ImageEditorTuneBar>
                     (index) {
                       final item = tuneEditor.tuneAdjustmentList[index];
                       return TuneItem(
+                        id: item.id,
                         icon: item.icon,
                         label: item.label,
                         isSelected: tuneEditor.selectedIndex == index,
@@ -125,6 +126,7 @@ class _ImageEditorTuneBarState extends State<ImageEditorTuneBar>
 }
 
 class TuneItem extends StatelessWidget {
+  final String id;
   final IconData icon;
   final String label;
   final bool isSelected;
@@ -135,6 +137,7 @@ class TuneItem extends StatelessWidget {
 
   const TuneItem({
     super.key,
+    required this.id,
     required this.icon,
     required this.label,
     required this.isSelected,
@@ -147,8 +150,8 @@ class TuneItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.componentColors;
-    final hugeIcon = _hugeIconForLabel(label);
-    final svgPath = _svgPathForLabel(label);
+    final hugeIcon = _hugeIconForID(id);
+    final svgPath = _svgPathForID(id);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
@@ -179,8 +182,8 @@ class TuneItem extends StatelessWidget {
     );
   }
 
-  List<List<dynamic>>? _hugeIconForLabel(String label) {
-    return switch (label.toLowerCase()) {
+  List<List<dynamic>>? _hugeIconForID(String id) {
+    return switch (id) {
       "brightness" => HugeIcons.strokeRoundedSun01,
       "contrast" => HugeIcons.strokeRoundedSlidersHorizontal,
       "exposure" => HugeIcons.strokeRoundedCameraLens,
@@ -192,10 +195,9 @@ class TuneItem extends StatelessWidget {
     };
   }
 
-  String? _svgPathForLabel(String label) {
-    return switch (label.toLowerCase()) {
-      "luminance" ||
-      "fade" => "assets/image-editor/image-editor-${label.toLowerCase()}.svg",
+  String? _svgPathForID(String id) {
+    return switch (id) {
+      "luminance" || "fade" => "assets/image-editor/image-editor-$id.svg",
       _ => null,
     };
   }
@@ -257,7 +259,7 @@ class _CircularProgressWithValueState extends State<CircularProgressWithValue>
     super.didUpdateWidget(oldWidget);
     if ((oldWidget.value < 0 && widget.value >= 0) ||
         (oldWidget.value > 0 && widget.value <= 0)) {
-      HapticFeedback.vibrate();
+      HapticFeedback.selectionClick();
     }
     if (oldWidget.value != widget.value) {
       _previousValue = oldWidget.value;
@@ -448,7 +450,7 @@ class _TuneAdjustWidget extends StatelessWidget {
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 0),
                 activeTrackColor: colors.primary,
                 inactiveTrackColor: colors.fillLight,
-                trackShape: const _CenterBasedTrackShape(),
+                trackShape: _CenterBasedTrackShape(isBipolar: min < 0),
                 trackHeight: 24,
               ),
               child: Slider(
@@ -500,9 +502,11 @@ class _TuneAdjustWidget extends StatelessWidget {
 class _ColorPickerThumbShape extends SliderComponentShape {
   const _ColorPickerThumbShape();
 
+  static const double thumbRadius = 15.0;
+
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return const Size(20, 20);
+    return const Size(thumbRadius * 2, thumbRadius * 2);
   }
 
   @override
@@ -531,7 +535,10 @@ class _ColorPickerThumbShape extends SliderComponentShape {
     );
 
     final constrainedCenter = Offset(
-      center.dx.clamp(trackRect.left + 15, trackRect.right - 15),
+      center.dx.clamp(
+        trackRect.left + thumbRadius,
+        trackRect.right - thumbRadius,
+      ),
       center.dy,
     );
 
@@ -539,7 +546,7 @@ class _ColorPickerThumbShape extends SliderComponentShape {
       ..color = Colors.white
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(constrainedCenter, 15, paint);
+    canvas.drawCircle(constrainedCenter, thumbRadius, paint);
 
     final innerPaint = Paint()
       ..color = const Color.fromRGBO(8, 194, 37, 1)
@@ -549,9 +556,11 @@ class _ColorPickerThumbShape extends SliderComponentShape {
 }
 
 class _CenterBasedTrackShape extends SliderTrackShape {
-  const _CenterBasedTrackShape();
+  const _CenterBasedTrackShape({this.isBipolar = true});
 
   static const double horizontalPadding = 6.0;
+
+  final bool isBipolar;
 
   @override
   Rect getPreferredRect({
@@ -595,9 +604,11 @@ class _CenterBasedTrackShape extends SliderTrackShape {
     final double centerX = trackRect.left + trackRect.width / 2;
 
     final double clampedThumbDx = thumbCenter.dx.clamp(
-      trackRect.left,
-      trackRect.right,
+      trackRect.left + _ColorPickerThumbShape.thumbRadius,
+      trackRect.right - _ColorPickerThumbShape.thumbRadius,
     );
+
+    final double activeStartDx = isBipolar ? centerX : trackRect.left;
 
     final Paint inactivePaint = Paint()
       ..color = sliderTheme.inactiveTrackColor!
@@ -610,22 +621,23 @@ class _CenterBasedTrackShape extends SliderTrackShape {
 
     canvas.drawRRect(inactiveRRect, inactivePaint);
 
-    if (clampedThumbDx != centerX) {
+    if ((clampedThumbDx - activeStartDx).abs() >
+        _ColorPickerThumbShape.thumbRadius) {
       final Paint activePaint = Paint()
         ..color = sliderTheme.activeTrackColor!
         ..style = PaintingStyle.fill;
 
-      final Rect activeRect = clampedThumbDx >= centerX
+      final Rect activeRect = clampedThumbDx >= activeStartDx
           ? Rect.fromLTWH(
-              centerX,
+              activeStartDx,
               trackRect.top,
-              clampedThumbDx - centerX,
+              clampedThumbDx - activeStartDx,
               trackRect.height,
             )
           : Rect.fromLTWH(
               clampedThumbDx,
               trackRect.top,
-              centerX - clampedThumbDx,
+              activeStartDx - clampedThumbDx,
               trackRect.height,
             );
 

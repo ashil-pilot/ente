@@ -46,6 +46,7 @@ import 'package:photos/services/memory_share_service.dart';
 import 'package:photos/services/sync/local_sync_service.dart';
 import 'package:photos/services/sync/remote_sync_service.dart';
 import "package:photos/settings/local_settings.dart";
+import "package:photos/src/rust/api/cast_api.dart";
 import "package:photos/utils/dialog_util.dart";
 import "package:photos/utils/file_key.dart";
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,15 +85,12 @@ class CollectionsService {
   final Map<String, EnteFile> _coverCache = <String, EnteFile>{};
   final Map<int, int> _countCache = <int, int>{};
 
-  //Used for links-in-app
   final _cachedPublicAlbumToken = <int, String>{};
   final _cachedPublicAlbumJWT = <int, String>{};
   final _cachedPublicCollectionID = <int>[];
   final _cachedPublicAlbumKey = <int, String>{};
   final _cachedPublicCollectionKeys = <int, Uint8List>{};
 
-  // In-memory list of recently used collection IDs for add/move actions
-  // Most recently used is at the front
   static const int _maxRecentlyUsedCollections = 3;
   final _recentlyUsedCollectionIDs = <int>[];
 
@@ -138,8 +136,6 @@ class CollectionsService {
 
   FilesDB get filesDB => _filesDB;
 
-  // sync method fetches just sync the collections, not the individual files
-  // within the collection.
   Future<void> sync() async {
     _logger.info("Syncing collections");
     final EnteWatch watch = EnteWatch("syncCollection")..start();
@@ -148,7 +144,6 @@ class CollectionsService {
 
     _logger.info("[COLLECTIONS] Starting sync");
 
-    // Might not have synced the collection fully
     final fetchedCollections = await _fetchCollections(
       lastCollectionUpdationTime,
     );
@@ -173,7 +168,6 @@ class CollectionsService {
           shouldFireDeleteEvent = true;
         }
       }
-      // remove reference for incoming collections when unshared/deleted
       if (collection.isDeleted && ownerID != collection.owner.id) {
         await _db.deleteCollection(collection.id);
       } else {
@@ -263,10 +257,6 @@ class CollectionsService {
     return true;
   }
 
-  /// Returns true if the file exists in any shared collection.
-  ///
-  /// A collection is considered "shared" if it has sharees, has a public link,
-  /// or is owned by someone else (incoming share).
   Future<bool> isFileInSharedCollection(int uploadedFileID) async {
     final Set<int> collectionIDs = await _filesDB.getAllCollectionIDsOfFile(
       uploadedFileID,
@@ -298,10 +288,6 @@ class CollectionsService {
     return false;
   }
 
-  /// Returns the shared collections containing [uploadedFileID].
-  ///
-  /// A collection is considered shared if it has sharees, has a public link,
-  /// or is owned by someone else (incoming share).
   Future<List<Collection>> getSharedCollectionsForFile(
     int uploadedFileID, {
     bool includeHidden = false,
@@ -328,10 +314,6 @@ class CollectionsService {
     return sharedCollections;
   }
 
-  /// Returns IDs of shared collections containing [uploadedFileID].
-  ///
-  /// Use this to scope social content on the view path without constructing a
-  /// list of collection objects.
   Future<List<int>> getSharedCollectionIDsForFile(
     int uploadedFileID, {
     bool includeHidden = false,
@@ -433,6 +415,26 @@ class CollectionsService {
     collections.sort(comparator);
   }
 
+  Future<List<Collection>> orderCollectionsForAlbums(
+    Iterable<Collection> collections,
+  ) async {
+    final sorted = collections.toList();
+    await sortCollectionsByAlbumPreferences(sorted);
+    return [
+      ...sorted.where(
+        (collection) => collection.type == CollectionType.favorites,
+      ),
+      ...sorted.where(
+        (collection) =>
+            collection.type != CollectionType.favorites && collection.isPinned,
+      ),
+      ...sorted.where(
+        (collection) =>
+            collection.type != CollectionType.favorites && !collection.isPinned,
+      ),
+    ];
+  }
+
   Future<Comparator<Collection>> _albumPreferenceComparator({
     AlbumSortKey? sortKey,
     AlbumSortDirection? sortDirection,
@@ -521,7 +523,6 @@ class CollectionsService {
     return _prefs.setInt(key, time);
   }
 
-  // getActiveCollections returns list of collections which are not deleted yet
   List<Collection> getActiveCollections() {
     return _collectionIDToCollections.values
         .toList()
@@ -529,7 +530,6 @@ class CollectionsService {
         .toList();
   }
 
-  // getActiveCollections returns list of collections which are not deleted yet
   Set<int> nonHiddenOwnedCollections() {
     final int ownerID = _config.getUserID()!;
     return _collectionIDToCollections.values
@@ -544,8 +544,6 @@ class CollectionsService {
         .toSet();
   }
 
-  // returns collections after removing deleted,uncategorized, and hidden
-  // collections
   List<Collection> getCollectionsForUI({
     bool includedShared = false,
     bool includeCollab = false,
@@ -581,8 +579,6 @@ class CollectionsService {
         .toList();
   }
 
-  /// Records a collection as recently used for add/move actions.
-  /// Most recently used collection is moved to front.
   void recordCollectionUsage(int collectionID) {
     _recentlyUsedCollectionIDs.remove(collectionID);
     _recentlyUsedCollectionIDs.insert(0, collectionID);
@@ -591,8 +587,6 @@ class CollectionsService {
     }
   }
 
-  /// Returns a list of recently used collections for add/move actions.
-  /// Filters out collections that no longer exist or are hidden.
   List<Collection> getRecentlyUsedCollections() {
     final List<Collection> result = [];
     for (final id in _recentlyUsedCollectionIDs) {
@@ -647,9 +641,7 @@ class CollectionsService {
 
     final comparator = await _albumPreferenceComparator();
 
-    // Sort incoming collections, then separate pinned from rest
     incoming.sort((first, second) {
-      // Sharee-pinned collections should come first
       final firstPinned = first.hasShareePinned();
       final secondPinned = second.hasShareePinned();
       if (firstPinned && !secondPinned) return -1;
@@ -677,33 +669,17 @@ class CollectionsService {
   }
 
   Future<List<Collection>> getCollectionForOnEnteSection() async {
-    final List<Collection> collections = CollectionsService.instance
-        .getCollectionsForUI();
     final bool hasFavorites = FavoritesService.instance.hasFavorites();
-    await sortCollectionsByAlbumPreferences(collections);
-    final List<Collection> favorites = [];
-    final List<Collection> pinned = [];
-    final List<Collection> rest = [];
-    for (final collection in collections) {
-      if (collection.type == CollectionType.uncategorized ||
-          collection.isQuickLinkCollection() ||
-          collection.isHidden() ||
-          collection.isArchived()) {
-        continue;
-      }
-      if (collection.type == CollectionType.favorites) {
-        // Hide fav collection if it's empty
-        if (hasFavorites) {
-          favorites.add(collection);
-        }
-      } else if (collection.isPinned) {
-        pinned.add(collection);
-      } else {
-        rest.add(collection);
-      }
-    }
-
-    return favorites + pinned + rest;
+    return orderCollectionsForAlbums(
+      getCollectionsForUI().where(
+        (collection) =>
+            collection.type != CollectionType.uncategorized &&
+            !collection.isQuickLinkCollection() &&
+            !collection.isHidden() &&
+            !collection.isArchived() &&
+            (collection.type != CollectionType.favorites || hasFavorites),
+      ),
+    );
   }
 
   Future<List<Collection>> getCollectionForWidgetSelection() async {
@@ -723,7 +699,6 @@ class CollectionsService {
         continue;
       }
       if (collection.type == CollectionType.favorites) {
-        // Hide fav collection if it's empty
         if (hasFavorites) {
           favorites.add(collection);
         }
@@ -754,7 +729,6 @@ class CollectionsService {
         continue;
       }
       if (collection.type == CollectionType.favorites) {
-        // Hide fav collection if it's empty
         if (hasFavorites) {
           favorites.add(collection);
         }
@@ -781,7 +755,7 @@ class CollectionsService {
         if (collection.owner.id == userID) {
           _cachedUserIdToUser[userID] = collection.owner;
         } else {
-          final matchingUser = collection.getSharees().firstWhereOrNull(
+          final matchingUser = collection.sharees.firstWhereOrNull(
             (u) => u.id == userID,
           );
           if (matchingUser != null) {
@@ -816,21 +790,15 @@ class CollectionsService {
     unawaited(_db.insert([updatedCollection]));
   }
 
-  String getCastData(
-    String castToken,
+  PreparedCastPayload prepareCastPayloadForCollection(
     Collection collection,
     String publicKey,
   ) {
-    final String payload = jsonEncode({
-      "collectionID": collection.id,
-      "castToken": castToken,
-      "collectionKey": CryptoUtil.bin2base64(getCollectionKey(collection.id)),
-    });
-    final encPayload = CryptoUtil.sealSync(
-      CryptoUtil.base642bin(base64Encode(payload.codeUnits)),
-      CryptoUtil.base642bin(publicKey),
+    return prepareCastPayload(
+      publicKey: publicKey,
+      collectionId: collection.id,
+      collectionKey: CryptoUtil.bin2base64(getCollectionKey(collection.id)),
     );
-    return CryptoUtil.bin2base64(encPayload);
   }
 
   Future<List<User>> share(
@@ -901,6 +869,7 @@ class CollectionsService {
     try {
       final results = await collectionShareGateway.shareBulk(
         recipientUserID: recipientUserID,
+        recipientEmail: recipientEmail,
         source: source,
         collections: items,
       );
@@ -915,6 +884,13 @@ class CollectionsService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 402) {
         throw SharingNotPermittedForFreeAccountsError();
+      }
+      if (e.response?.data?['code'] == 'RECIPIENT_IDENTITY_MISMATCH') {
+        throw RecipientIdentityMismatchError();
+      }
+      if (e.response?.data?['code'] ==
+          'AUTOMATIC_SHARE_RECIPIENT_NOT_ELIGIBLE') {
+        throw AutomaticShareRecipientNotEligibleError();
       }
       rethrow;
     }
@@ -1150,7 +1126,6 @@ class CollectionsService {
     final String customDomain = flagService.customDomain;
     final bool applyCustomDomain = isOwner && customDomain.isNotEmpty;
 
-    // Replace with custom domain if configured for the owner
     if (applyCustomDomain) {
       publicUrl = publicUrl.replace(
         host: customDomain,
@@ -1159,12 +1134,10 @@ class CollectionsService {
       );
     }
 
-    // Get the collection key for the URL fragment
     final String collectionKey = Base58Encode(
       CollectionsService.instance.getCollectionKey(c.id),
     );
 
-    // Build the final URL
     String finalUrl = publicUrl.toString();
 
     // Handle IDN domains - if the host was percent-encoded by Uri.replace,
@@ -1181,7 +1154,6 @@ class CollectionsService {
     final PublicURL url = c.publicURLs.firstOrNull!;
     Uri publicUrl = Uri.parse(url.url);
 
-    // Replace with embed URL if configured
     final String embedUrl = flagService.embedUrl;
     if (embedUrl.isNotEmpty) {
       final Uri embedUri = Uri.parse(embedUrl);
@@ -1194,12 +1166,10 @@ class CollectionsService {
       );
     }
 
-    // Get the collection key for the URL fragment
     final String collectionKey = Base58Encode(
       CollectionsService.instance.getCollectionKey(c.id),
     );
 
-    // Build the final URL
     String finalUrl = publicUrl.toString();
 
     // Handle IDN domains - if the host was percent-encoded by Uri.replace,
@@ -1227,7 +1197,6 @@ class CollectionsService {
     final encryptedKey = CryptoUtil.base642bin(collection.encryptedKey);
     Uint8List? collectionKey;
     if (collection.owner.id == _config.getUserID()) {
-      // If the collection is owned by the user, decrypt with the master key
       if (_config.getKey() == null) {
         // Possible during AppStore account migration, where SecureStorage
         // would become inaccessible to the new Developer Account
@@ -1239,7 +1208,6 @@ class CollectionsService {
         CryptoUtil.base642bin(collection.keyDecryptionNonce!),
       );
     } else {
-      // If owned by a different user, decrypt with the public key
       collectionKey = CryptoUtil.openSealSync(
         encryptedKey,
         CryptoUtil.base642bin(_config.getKeyAttributes()!.publicKey),
@@ -1301,9 +1269,6 @@ class CollectionsService {
       if (collection.owner.id != ownerID) {
         throw AssertionError("cannot modify albums not owned by you");
       }
-      // read the existing magic metadata and apply new updates to existing data
-      // current update is simple replace. This will be enhanced in the future,
-      // as required.
       final Map<String, dynamic> jsonToUpdate = jsonDecode(
         collection.mMdEncodedJson ?? '{}',
       );
@@ -1329,13 +1294,11 @@ class CollectionsService {
         ),
       );
       await collectionsGateway.updateMagicMetadata(params);
-      // update the local information so that it's reflected on UI
       collection.mMdEncodedJson = jsonEncode(jsonToUpdate);
       collection.magicMetadata = CollectionMagicMetadata.fromJson(jsonToUpdate);
       collection.mMdVersion = currentVersion + 1;
       _collectionIDToCollections[collection.id] = collection;
 
-      // trigger sync to fetch the latest collection state from server
       sync().ignore();
     } on DioException catch (e) {
       if (e.response != null && e.response?.statusCode == 409) {
@@ -1358,9 +1321,6 @@ class CollectionsService {
       if (collection.owner.id != ownerID) {
         throw AssertionError("cannot modify albums not owned by you");
       }
-      // read the existing magic metadata and apply new updates to existing data
-      // current update is simple replace. This will be enhanced in the future,
-      // as required.
       final Map<String, dynamic> jsonToUpdate = jsonDecode(
         collection.mMdPubEncodedJson ?? '{}',
       );
@@ -1386,14 +1346,12 @@ class CollectionsService {
         ),
       );
       await collectionsGateway.updatePublicMagicMetadata(params);
-      // update the local information so that it's reflected on UI
       collection.mMdPubEncodedJson = jsonEncode(jsonToUpdate);
       collection.pubMagicMetadata = CollectionPubMagicMetadata.fromJson(
         jsonToUpdate,
       );
       collection.mMbPubVersion = currentVersion + 1;
       _cacheLocalPathAndCollection(collection);
-      // trigger sync to fetch the latest collection state from server
       sync().ignore();
     } on DioException catch (e) {
       if (e.response != null && e.response?.statusCode == 409) {
@@ -1419,9 +1377,6 @@ class CollectionsService {
           "by you",
         );
       }
-      // read the existing magic metadata and apply new updates to existing data
-      // current update is simple replace. This will be enhanced in the future,
-      // as required.
       final Map<String, dynamic> jsonToUpdate = jsonDecode(
         collection.sharedMmdJson ?? '{}',
       );
@@ -1447,14 +1402,12 @@ class CollectionsService {
         ),
       );
       await collectionsGateway.updateShareeMagicMetadata(params);
-      // update the local information so that it's reflected on UI
       collection.sharedMmdJson = jsonEncode(jsonToUpdate);
       collection.sharedMagicMetadata = ShareeMagicMetadata.fromJson(
         jsonToUpdate,
       );
       collection.sharedMmdVersion = currentVersion + 1;
       _cacheLocalPathAndCollection(collection);
-      // trigger sync to fetch the latest collection state from server
       sync().ignore();
     } on DioException catch (e) {
       if (e.response != null && e.response?.statusCode == 409) {
@@ -1505,7 +1458,6 @@ class CollectionsService {
         collectionID: collection.id,
         props: prop,
       );
-      // remove existing url information
       collection.publicURLs.clear();
       collection.publicURLs.add(publicUrl);
       await _db.insert(List.from([collection]));
@@ -1837,7 +1789,6 @@ class CollectionsService {
     };
   }
 
-  /// Is a public link opened in the app via deeplink
   bool isSharedPublicLink(int collectionID) {
     return _cachedPublicCollectionID.contains(collectionID);
   }
@@ -2140,10 +2091,7 @@ class CollectionsService {
     }
   }
 
-  // This method is used to add files to a collection without firing any events.
-  // Unlike `addToCollection`, this method does not update the `FilesDB` or modify
-  // the `EnteFile` objects passed to it. This is only used during dedupe process
-  // for adding files to a collection without firing any events.
+  // Dedupe uses this without updating FilesDB or mutating the EnteFile objects.
   Future<void> addSilentlyToCollection(
     int collectionID,
     List<EnteFile> files,
@@ -2151,7 +2099,6 @@ class CollectionsService {
     if (files.isEmpty) {
       return;
     }
-    // as any non uploaded file
     final pendingUpload = files.any(
       (element) => element.uploadedFileID == null,
     );
@@ -2309,7 +2256,6 @@ class CollectionsService {
     if (srcCollection == null) {
       throw ArgumentError('Source collection not found');
     }
-    // verify that all fileIds belong to srcCollection and isn't owned by current user
     for (final f in files) {
       if (f.collectionID != srcCollectionID ||
           f.ownerID == _config.getUserID()) {
@@ -2328,7 +2274,6 @@ class CollectionsService {
   }) async {
     final int uploadedFileID = existingUploadedFile.uploadedFileID!;
 
-    // encrypt the fileKey with destination collection's key
     final fileKey = getFileKey(existingUploadedFile);
     final encryptedKeyData = CryptoUtil.encryptSync(
       fileKey,
@@ -2419,7 +2364,6 @@ class CollectionsService {
         if (localIDs.isNotEmpty) {
           await _filesDB.deleteUnSyncedLocalFiles(localIDs);
         }
-        // Force reload home gallery to pull in the restored files
         Bus.instance.fire(ForceReloadHomeGalleryEvent("restoredFromTrash"));
       } catch (e, s) {
         _logger.severe("failed to restore files", e, s);
@@ -2472,7 +2416,6 @@ class CollectionsService {
       );
     }
 
-    // remove files from old collection
     await _filesDB.removeFromCollection(
       fromCollectionID,
       files.map((e) => e.uploadedFileID!).toList(),
@@ -2485,7 +2428,6 @@ class CollectionsService {
         type: EventType.deletedFromRemote,
       ),
     );
-    // insert new files in the toCollection which are not part of the toCollection
     final existingUploadedIDs = await FilesDB.instance.getUploadedFileIDs(
       toCollectionID,
     );

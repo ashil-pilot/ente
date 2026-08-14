@@ -1,6 +1,4 @@
-// TODO: Audit this file
 // TODO: Too many null assertions in this file. The types need reworking.
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useAlbumsAppContext } from "@/app/context/albums-app-context";
 import {
     savedPublicCollectionUploaderName,
@@ -35,6 +33,10 @@ import { useBaseContext } from "ente-base/context";
 import { basename } from "ente-base/file-name";
 import type { PublicAlbumsCredentials } from "ente-base/http";
 import log from "ente-base/log";
+import {
+    uploadSheetPaperSx,
+    useIsUploadSheet,
+} from "ente-gallery/components/upload-progress/bottom-sheet";
 import { UploadProgress } from "ente-gallery/components/upload-progress/UploadProgress";
 import { CanvasReadbackBlockedDialog } from "ente-gallery/components/upload/CanvasReadbackBlockedDialog";
 import { DefaultOptions } from "ente-gallery/components/upload/DefaultOptions";
@@ -42,16 +44,12 @@ import { useFileInput } from "ente-gallery/components/utils/use-file-input";
 import { hasReliableCanvasReadback } from "ente-gallery/utils/upload/canvas-integrity";
 import type { Collection } from "ente-media/collection";
 import type { EnteFile } from "ente-media/file";
+import { SlideUpTransition } from "ente-new/photos/components/mui/SlideUpTransition";
 import { firstNonEmpty } from "ente-utils/array";
 import { t } from "i18next";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface RemotePullOpts {
-    /**
-     * Perform the pull without showing a global loading bar.
-     *
-     * Default: `false`.
-     */
     silent?: boolean;
 }
 
@@ -72,13 +70,6 @@ export interface UploadProps {
 type UploadType = "files" | "folders";
 type WebUploadItemAndPath = [File, string];
 
-/**
- * Public album uploader.
- *
- * This is a trimmed copy of the photos app uploader that only keeps the web
- * flow needed by the public albums app: select or drop files/folders, ask for
- * the uploader's name, and upload into the current public collection.
- */
 export const Upload: React.FC<UploadProps> = ({
     publicAlbumsCredentials,
     dragAndDropFiles,
@@ -124,10 +115,6 @@ export const Upload: React.FC<UploadProps> = ({
     const selectedUploadType = useRef<UploadType | undefined>(undefined);
     const currentUploadPromise = useRef<Promise<void> | undefined>(undefined);
 
-    /**
-     * `true` if we've activated one hidden input and are waiting for the
-     * browser to hand the file selection back to us.
-     */
     const [isInputPending, setIsInputPending] = useState(false);
     const [selectedInputFiles, setSelectedInputFiles] = useState<File[]>([]);
 
@@ -180,8 +167,6 @@ export const Upload: React.FC<UploadProps> = ({
                 setInProgressUploads,
                 setFinishedUploads,
                 setUploadPhase,
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 setUploadFilenames: setUploadFileNames,
                 setHasLivePhotos,
             },
@@ -281,6 +266,7 @@ export const Upload: React.FC<UploadProps> = ({
                 onGenericError(e);
             }
         })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [publicAlbumsCredentials, uploadCollection, webFiles]);
 
     const uploadFilesToExistingCollection = async (
@@ -497,22 +483,6 @@ const Inputs: React.FC<InputsProps> = ({
     </>
 );
 
-/**
- * Return the relative path or name of a File object selected or
- * drag-and-dropped on the web.
- *
- * There are three cases here:
- *
- * 1. If the user selects individual file(s), then the returned File objects
- *    will only have a `name`.
- *
- * 2. If the user selects directory(ies), then the returned File objects will
- *    have a `webkitRelativePath`. For more details, see [Note:
- *    webkitRelativePath]. In particular, these will POSIX separators.
- *
- * 3. If the user drags-and-drops, then react-dropzone internally converts
- *    `webkitRelativePath` to `path`, but otherwise behaves the same as case 2.
- */
 const pathLikeForWebFile = (file: File): string =>
     firstNonEmpty([
         "path" in file && typeof file.path == "string" ? file.path : undefined,
@@ -552,25 +522,31 @@ const UploadTypeSelector: React.FC<UploadTypeSelectorProps> = ({
         onClose();
     };
 
+    const isSheet = useIsUploadSheet();
+
     return (
         <Dialog
             open={open}
             onClose={handleClose}
             fullWidth
+            slots={isSheet ? { transition: SlideUpTransition } : undefined}
             slotProps={{
                 paper: {
-                    sx: (theme) => ({
-                        maxWidth: "440px",
-                        p: 0,
-                        borderRadius: "20px",
-                        boxShadow: "none",
-                        border: "1px solid",
-                        borderColor: "stroke.faint",
-                        backgroundColor: "secondary.main",
-                        ...theme.applyStyles("dark", {
-                            backgroundColor: "background.paper",
+                    sx: [
+                        (theme) => ({
+                            maxWidth: "440px",
+                            p: 0,
+                            borderRadius: "20px",
+                            boxShadow: "none",
+                            border: "1px solid",
+                            borderColor: "stroke.faint",
+                            backgroundColor: "secondary.main",
+                            ...theme.applyStyles("dark", {
+                                backgroundColor: "background.paper",
+                            }),
                         }),
-                    }),
+                        uploadSheetPaperSx,
+                    ],
                 },
             }}
             sx={{

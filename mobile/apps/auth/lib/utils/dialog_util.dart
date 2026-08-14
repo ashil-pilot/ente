@@ -3,25 +3,24 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import "package:dio/dio.dart";
-import 'package:ente_auth/ui/common/loading_widget.dart';
 import 'package:ente_auth/ui/components/action_sheet_widget.dart';
-import 'package:ente_auth/ui/components/buttons/button_widget.dart';
 import 'package:ente_auth/ui/components/components_constants.dart';
 import 'package:ente_auth/ui/components/dialog_widget.dart';
-import 'package:ente_auth/ui/components/models/button_result.dart';
-import 'package:ente_auth/ui/components/models/button_type.dart';
 import 'package:ente_auth/utils/email_util.dart';
 import 'package:ente_auth/utils/platform_util.dart';
 import 'package:ente_base/typedefs.dart';
 import 'package:ente_components/ente_components.dart';
 import 'package:ente_strings/ente_strings.dart';
+import 'package:ente_ui/components/buttons/button_widget.dart';
+import 'package:ente_ui/components/buttons/models/button_result.dart';
+import 'package:ente_ui/components/buttons/models/button_type.dart';
+import 'package:ente_ui/components/loading_widget.dart';
 import 'package:ente_ui/components/progress_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 typedef DialogBuilder = DialogWidget Function(BuildContext context);
 
-///Will return null if dismissed by tapping outside
 Future<ButtonResult?> showErrorDialog(
   BuildContext context,
   String title,
@@ -141,7 +140,6 @@ String parseErrorForUI(
   }
 }
 
-///Will return null if dismissed by tapping outside
 Future<ButtonResult?> showGenericErrorDialog({
   required BuildContext context,
   bool isDismissible = true,
@@ -236,7 +234,6 @@ DialogWidget choiceDialog({
   return DialogWidget(title: title, body: body, buttons: buttons, icon: icon);
 }
 
-///Will return null if dismissed by tapping outside
 Future<ButtonResult?> showChoiceDialog(
   BuildContext context, {
   required String title,
@@ -280,7 +277,6 @@ Future<ButtonResult?> showChoiceDialog(
   );
 }
 
-///Will return null if dismissed by tapping outside
 Future<ButtonResult?> showChoiceActionSheet(
   BuildContext context, {
   required String title,

@@ -7,6 +7,7 @@ import "package:ente_pure_utils/ente_pure_utils.dart"
     show deleteFileSystemEntityIfPresent;
 import "package:exif_reader/exif_reader.dart";
 import 'package:logging/logging.dart';
+import 'package:native_video_editor/native_video_editor.dart';
 import 'package:path/path.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photos/core/constants.dart';
@@ -23,7 +24,7 @@ import "package:photos/module/metadata/exif.dart";
 import 'package:photos/module/metadata/location.dart';
 import "package:photos/module/metadata/video.dart";
 import 'package:photos/module/upload/model/media_upload_data.dart';
-import "package:photos/services/sync/local_sync_service.dart";
+import "package:photos/services/sync/origin_fetch_tracker.dart";
 import "package:photos/src/rust/api/motion_photo_api.dart";
 import "package:photos/utils/apple_photos_errors.dart";
 import "package:photos/utils/device_storage_error.dart";
@@ -31,7 +32,6 @@ import "package:photos/utils/image_util.dart";
 
 final _logger = Logger("UploadData");
 
-/// Builds the source, thumbnail, hashes, and embedded metadata for an upload.
 Future<MediaUploadData> getUploadDataFromEnteFile(EnteFile file) async {
   if (file.isSharedMediaToAppSandbox) {
     return await _getMediaUploadDataFromAppCache(file);
@@ -40,7 +40,6 @@ Future<MediaUploadData> getUploadDataFromEnteFile(EnteFile file) async {
   }
 }
 
-/// Computes the content hash used to decide whether a local file changed.
 Future<String> getFileContentIdentity(EnteFile file) async {
   if (file.isSharedMediaToAppSandbox) {
     final sourceFile = File(getSharedMediaFilePath(file));
@@ -93,7 +92,6 @@ Future<MediaUploadData> _getMediaUploadDataFromAssetFile(EnteFile file) async {
         cameraModel = extractPrintableExifValue(exifData['Image Model']);
       }
     }
-    // h4ck to fetch location data if missing (thank you Android Q+) lazily only during uploads
     await _decorateEnteFileData(file, asset, sourceFile, exifData);
     fileHash = CryptoUtil.bin2base64(await CryptoUtil.getHash(sourceFile));
 
@@ -173,7 +171,13 @@ Future<AssetEntity> _getAsset(EnteFile file) async {
 
 Future<File> _getOriginFile(AssetEntity asset, EnteFile file) async {
   if (Platform.isIOS) {
-    trackOriginFetchForUploadOrML.put(file.localID!, true);
+    final modifiedDateSecond = asset.modifiedDateSecond;
+    originFetchTracker.record(
+      localID: file.localID,
+      modificationTime: modifiedDateSecond == null
+          ? null
+          : modifiedDateSecond * Duration.microsecondsPerSecond,
+    );
   }
   File? sourceFile;
   try {
@@ -214,7 +218,6 @@ Future<Uint8List?> _getThumbnailForUpload(
       quality: thumbnailQuality,
     );
     if (thumbnailData == null) {
-      // allow videos to be uploaded without thumbnails
       if (asset.type == AssetType.video) {
         return null;
       }
@@ -231,7 +234,6 @@ Future<Uint8List?> _getThumbnailForUpload(
     final String errMessage =
         "thumbErr for ${file.fileType}, ${extension(file.displayName)} ${file.tag}";
     _logger.warning(errMessage, e);
-    // allow videos to be uploaded without thumbnails
     if (asset.type == AssetType.video) {
       return null;
     }
@@ -272,7 +274,7 @@ Future<void> _decorateEnteFileData(
   File sourceFile,
   Map<String, IfdTag>? exifData,
 ) async {
-  // h4ck to fetch location data if missing (thank you Android Q+) lazily only during uploads
+  // Fetch missing Android Q+ location data lazily during upload.
   if (!file.hasLocation) {
     final latLong = await asset.latlngAsync();
     if (latLong != null) {
@@ -312,7 +314,8 @@ Future<MediaUploadData> _getMediaUploadDataFromAppCache(EnteFile file) async {
       InvalidReason.sourceFileMissing,
     );
   }
-  thumbnailData = await _getAppCacheThumbnailForUpload(file);
+  final thumbnailResult = await _getAppCacheThumbnailForUpload(file);
+  thumbnailData = thumbnailResult.data;
   final fileHash = CryptoUtil.bin2base64(await CryptoUtil.getHash(sourceFile));
   ({int width, int height})? dimensions;
   if (file.fileType == FileType.image) {
@@ -328,13 +331,10 @@ Future<MediaUploadData> _getMediaUploadDataFromAppCache(EnteFile file) async {
         }
       }
     }
-  } else if (thumbnailData != null) {
-    // The thumbnail null check ensures that video thumbnail generation worked.
-    // Use it without a max dimension to obtain the video's aspect ratio.
-    dimensions = await withTemporaryVideoThumbnail<({int width, int height})>(
-      videoPath: localPath,
-      quality: 10,
-      use: (thumbnailFile) => getImageDimensions(imagePath: thumbnailFile.path),
+  } else if (thumbnailResult.videoInfo != null) {
+    dimensions = (
+      width: thumbnailResult.videoInfo!.displayWidth,
+      height: thumbnailResult.videoInfo!.displayHeight,
     );
   }
 
@@ -359,11 +359,19 @@ Future<MediaUploadData> _getMediaUploadDataFromAppCache(EnteFile file) async {
   );
 }
 
-Future<Uint8List?> _getAppCacheThumbnailForUpload(EnteFile file) async {
+Future<({Uint8List? data, NativeVideoInfo? videoInfo})>
+_getAppCacheThumbnailForUpload(EnteFile file) async {
   try {
-    return await getThumbnailFromInAppCacheFile(file);
+    if (file.fileType == FileType.video) {
+      final result = await getVideoThumbnailFromInAppCacheFile(file);
+      return (data: result?.data, videoInfo: result?.info);
+    }
+    return (data: await getThumbnailFromInAppCacheFile(file), videoInfo: null);
   } catch (e, s) {
     _logger.warning("failed to generate thumbnail", e, s);
+    if (file.fileType == FileType.video) {
+      return (data: null, videoInfo: null);
+    }
     throw InvalidFileError(
       "thumbnail failed for appCache fileType: ${file.fileType.toString()}",
       InvalidReason.thumbnailMissing,

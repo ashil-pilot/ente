@@ -532,7 +532,6 @@ class LockerDB extends EnteBaseDatabase {
     return files;
   }
 
-  /// Removes orphaned files that exist in files but have no collection mappings.
   Future<void> cleanupOrphanedFiles() async {
     final orphanedFiles = await _db.rawQuery('''
       SELECT f.uploaded_file_id
@@ -659,8 +658,6 @@ class LockerDB extends EnteBaseDatabase {
   Map<String, dynamic> _collectionPayloadToMap(Collection collection) {
     return {
       'owner_email': collection.owner.email,
-      // ignore: deprecated_member_use
-      'owner_name': collection.owner.name,
       'name': collection.name,
       'attributes_version': collection.attributes.version,
       'attributes_encrypted_path': collection.attributes.encryptedPath,
@@ -682,9 +679,8 @@ class LockerDB extends EnteBaseDatabase {
     final payload = _collectionPayloadFromRow(map);
 
     final owner = User(
-      id: map['owner_id'] as int?,
+      id: map['owner_id'] as int,
       email: payload['owner_email'] as String? ?? '',
-      name: payload['owner_name'] as String?,
     );
 
     final attributes = CollectionAttributes(
@@ -755,7 +751,6 @@ class LockerDB extends EnteBaseDatabase {
 
     return {
       'owner_email': map['owner_email'],
-      'owner_name': map['owner_name'],
       'name': map['name'],
       'attributes_version': map['attributes_version'],
       'attributes_encrypted_path': map['attributes_encrypted_path'],
@@ -779,7 +774,7 @@ class LockerDB extends EnteBaseDatabase {
       throw Exception('Invalid collections row: missing encrypted key');
     }
 
-    final owner = User(id: map['owner_id'] as int?, email: '');
+    final owner = User(id: map['owner_id'] as int, email: '');
     final collection = Collection(
       map['id'] as int,
       owner,

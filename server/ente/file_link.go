@@ -5,7 +5,6 @@ import (
 	"github.com/ente/museum/pkg/utils/time"
 )
 
-// CreateFileUrl represents an encrypted file in the system
 type CreateFileUrl struct {
 	FileID                int64   `json:"fileID" binding:"required"`
 	App                   App     `json:"app" binding:"required"`
@@ -17,7 +16,6 @@ type CreateFileUrl struct {
 	EncryptedShareKey     *string `json:"encryptedShareKey,omitempty"`
 }
 
-// UpdateFileUrl ..
 type UpdateFileUrl struct {
 	LinkID          string `json:"linkID" binding:"required"`
 	FileID          int64  `json:"fileID" binding:"required"`
@@ -82,15 +80,14 @@ type FileLinkRow struct {
 }
 
 type FileUrl struct {
-	LinkID          string `json:"linkID" binding:"required"`
-	URL             string `json:"url" binding:"required"`
-	OwnerID         int64  `json:"ownerID" binding:"required"`
-	FileID          int64  `json:"fileID" binding:"required"`
-	IsDisabled      bool   `json:"isDisabled"`
-	ValidTill       int64  `json:"validTill"`
-	DeviceLimit     int    `json:"deviceLimit"`
-	PasswordEnabled bool   `json:"passwordEnabled"`
-	// Nonce contains the nonce value for the password if the link is password protected.
+	LinkID                string  `json:"linkID" binding:"required"`
+	URL                   string  `json:"url" binding:"required"`
+	OwnerID               int64   `json:"ownerID" binding:"required"`
+	FileID                int64   `json:"fileID" binding:"required"`
+	IsDisabled            bool    `json:"isDisabled"`
+	ValidTill             int64   `json:"validTill"`
+	DeviceLimit           int     `json:"deviceLimit"`
+	PasswordEnabled       bool    `json:"passwordEnabled"`
 	Nonce                 *string `json:"nonce,omitempty"`
 	MemLimit              *int64  `json:"memLimit,omitempty"`
 	OpsLimit              *int64  `json:"opsLimit,omitempty"`

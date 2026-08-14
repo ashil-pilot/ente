@@ -3,12 +3,12 @@ import "dart:io";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/loading_widget.dart";
 import "package:flutter/material.dart";
 import "package:logging/logging.dart";
 import "package:native_video_player/native_video_player.dart";
 import "package:photos/core/constants.dart";
 import "package:photos/core/event_bus.dart";
-import "package:photos/events/file_caption_updated_event.dart";
 import "package:photos/events/guest_view_event.dart";
 import "package:photos/events/pause_video_event.dart";
 import "package:photos/events/resume_video_event.dart";
@@ -29,12 +29,11 @@ import "package:photos/states/detail_page_state.dart";
 import "package:photos/theme/colors.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/actions/file/file_actions.dart";
-import "package:photos/ui/common/loading_widget.dart";
 import "package:photos/ui/notification/toast.dart";
 import "package:photos/ui/viewer/file/native_video_player_controls/play_pause_button.dart";
 import "package:photos/ui/viewer/file/native_video_player_controls/seek_bar.dart";
 import "package:photos/ui/viewer/file/thumbnail_widget.dart";
-import "package:photos/ui/viewer/file/video_control/mute_button.dart";
+import "package:photos/ui/viewer/file/video_control/gallery_video_controls.dart";
 import "package:photos/ui/viewer/file/video_stream_change.dart";
 import "package:photos/ui/viewer/file/zoomable_video_viewer.dart";
 import "package:photos/utils/dialog_util.dart";
@@ -72,7 +71,6 @@ class VideoWidgetNative extends StatefulWidget {
 class _VideoWidgetNativeState extends State<VideoWidgetNative>
     with WidgetsBindingObserver {
   final Logger _logger = Logger("VideoWidgetNative");
-  static const verticalMargin = 64.0;
   final _progressNotifier = ValueNotifier<double?>(null);
   late StreamSubscription<PauseVideoEvent> pauseVideoSubscription;
   late StreamSubscription<ResumeVideoEvent> resumeVideoSubscription;
@@ -92,9 +90,6 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
   StreamSubscription<PlaybackEvent>? _subscription;
   StreamSubscription<StreamSwitchedEvent>? _streamSwitchedSubscription;
   StreamSubscription<DownloadTask>? downloadTaskSubscription;
-  late final StreamSubscription<FileCaptionUpdatedEvent>
-  _captionUpdatedSubscription;
-  int position = 0;
   final _transformationController = TransformationController();
   bool _isZooming = false;
 
@@ -149,15 +144,6 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
       },
     );
 
-    _captionUpdatedSubscription = Bus.instance
-        .on<FileCaptionUpdatedEvent>()
-        .listen((event) {
-          if (event.fileGeneratedID == widget.file.generatedID) {
-            if (mounted) {
-              setState(() {});
-            }
-          }
-        });
     if (widget.file.isUploaded) {
       downloadTaskSubscription = downloadManager
           .watchDownload(widget.file.uploadedFileID!)
@@ -215,7 +201,9 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
       }
     } else {
       await widget.file.getAsset.then((asset) async {
-        if (asset == null || !(await asset.exists)) {
+        // Android trash assets may report that they do not exist.
+        if (asset == null ||
+            !(await asset.exists || widget.file.isDeviceTrash)) {
           if (widget.file.uploadedFileID != null) {
             _loadNetworkVideo(update);
           }
@@ -263,8 +251,7 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
       _logger.info("Clearing cache");
       final file = File(_filePath!);
 
-      /// Checking if exists to avoid observed PathNotFoundException. Didn't find
-      /// root cause.
+      // Avoid an observed PathNotFoundException.
       if (file.existsSync()) {
         file.delete().then((value) {
           _logger.info("Cache cleared");
@@ -284,7 +271,6 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
     _isSeeking.removeListener(_seekListener);
     _isSeeking.dispose();
     _debouncer.cancelDebounceTimer();
-    _captionUpdatedSubscription.cancel();
     _transformationController.dispose();
     wakeLockService.updateWakeLock(
       enable: false,
@@ -317,8 +303,7 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
           }
         },
         child: GestureDetector(
-          // Keep recognizer out of the arena during multi-touch/zoom to avoid
-          // it stealing pinch gestures with predominantly vertical movement.
+          // During zoom, keep this recognizer out of multi-touch gesture arenas.
           onVerticalDragUpdate: _isGuestView || _isZooming
               ? null
               : (d) {
@@ -336,8 +321,8 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
                 duration: const Duration(milliseconds: 750),
                 switchOutCurve: Curves.easeOutExpo,
                 switchInCurve: Curves.easeInExpo,
-                //Loading two high-res potrait videos together causes one to
-                //go blank. So only loading video when it is completely visible.
+                // Two high-resolution portrait videos can blank one another.
+                // Load only the completely visible one.
                 child: !_isCompletelyVisible || _filePath == null
                     ? _getLoadingWidget()
                     : Stack(
@@ -355,6 +340,22 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
                               ),
                             ),
                           ),
+                          if (!widget.isFromMemories)
+                            ValueListenableBuilder(
+                              valueListenable: _showControls,
+                              builder: (context, showControls, child) {
+                                return AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 200),
+                                  opacity: showControls ? 1 : 0,
+                                  curve: Curves.easeInOutQuad,
+                                  child: child,
+                                );
+                              },
+                              child: VideoBottomScrim(
+                                hasCaption:
+                                    widget.file.caption?.isNotEmpty ?? false,
+                              ),
+                            ),
                           GestureDetector(
                             behavior: HitTestBehavior.translucent,
                             onTap: widget.isFromMemories
@@ -416,45 +417,46 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
                           widget.isFromMemories
                               ? const SizedBox.shrink()
                               : Positioned(
-                                  bottom: verticalMargin,
+                                  bottom: kVideoProgressRowBottomInset,
                                   right: 0,
                                   left: 0,
                                   child: SafeArea(
                                     top: false,
                                     left: false,
                                     right: false,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: widget.isFromMemories ? 32 : 0,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          ValueListenableBuilder(
-                                            valueListenable: _showControls,
-                                            builder: (context, value, _) {
-                                              return VideoStreamChangeWidget(
-                                                showControls: value,
-                                                file: widget.file,
-                                                isPreviewPlayer:
-                                                    widget.selectedPreview,
-                                                onStreamChange:
-                                                    widget.onStreamChange,
-                                              );
-                                            },
-                                          ),
-                                          if (isPlaybackReady)
-                                            _SeekBarAndDuration(
-                                              controller: _controller,
-                                              duration: duration,
-                                              showControls: _showControls,
-                                              isSeeking: _isSeeking,
-                                              position: position,
-                                              file: widget.file,
-                                            ),
-                                        ],
-                                      ),
+                                    child: isPlaybackReady
+                                        ? _VideoProgressControls(
+                                            controller: _controller!,
+                                            duration: duration,
+                                            showControls: _showControls,
+                                            isSeeking: _isSeeking,
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ),
+                          widget.isFromMemories
+                              ? const SizedBox.shrink()
+                              : Positioned(
+                                  bottom: videoStreamControlBottomInset(
+                                    widget.file.caption?.isNotEmpty ?? false,
+                                  ),
+                                  right: 0,
+                                  left: 0,
+                                  child: SafeArea(
+                                    top: false,
+                                    left: false,
+                                    right: false,
+                                    child: ValueListenableBuilder(
+                                      valueListenable: _showControls,
+                                      builder: (context, value, _) {
+                                        return VideoStreamChangeWidget(
+                                          showControls: value,
+                                          file: widget.file,
+                                          isPreviewPlayer:
+                                              widget.selectedPreview,
+                                          onStreamChange: widget.onStreamChange,
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -505,12 +507,6 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
         _onPlaybackStatusChanged();
       case PlaybackReadyEvent():
         _onPlaybackReady();
-        break;
-      case PlaybackPositionChangedEvent():
-        position = event.positionInMilliseconds;
-        if (mounted) {
-          setState(() {});
-        }
         break;
       case PlaybackEndedEvent():
         _onPlaybackEnded();
@@ -585,7 +581,6 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
   }
 
   void _onError(String errorMessage) {
-    //This doesn't work all the time
     _logger.severe(
       "Error in native video player controller for file gen id: ${widget.file.generatedID}",
     );
@@ -772,8 +767,7 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
       return;
     }
     if (Platform.isIOS) {
-      // FFprobe in ffmpeg_kit can crash on certain iOS media files.
-      // On iOS, use lightweight metadata probing via AVPlayer.
+      // FFprobe can crash on some iOS media; use AVPlayer metadata instead.
       if (widget.file.hasDimensions) {
         aspectRatio = widget.file.width / widget.file.height;
       } else {
@@ -816,10 +810,7 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
       await metadataController.initialize().timeout(const Duration(seconds: 4));
       final value = metadataController.value;
       final probeAspectRatio = value.aspectRatio;
-      // Always prefer the probed aspect ratio over file metadata dimensions,
-      // because AVPlayer correctly accounts for video rotation metadata.
-      // Raw file width/height may not reflect rotation (e.g. a portrait video
-      // stored as 1920x1080 with 90° rotation).
+      // AVPlayer's aspect ratio includes rotation; stored dimensions may not.
       if (probeAspectRatio > 0) {
         aspectRatio = probeAspectRatio;
       }
@@ -854,29 +845,21 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
   }
 }
 
-class _SeekBarAndDuration extends StatelessWidget {
-  final NativeVideoPlayerController? controller;
+class _VideoProgressControls extends StatelessWidget {
+  final NativeVideoPlayerController controller;
   final String? duration;
   final ValueNotifier<bool> showControls;
   final ValueNotifier<bool> isSeeking;
-  final int position;
-  final EnteFile file;
 
-  const _SeekBarAndDuration({
+  const _VideoProgressControls({
     required this.controller,
     required this.duration,
     required this.showControls,
     required this.isSeeking,
-    required this.position,
-    required this.file,
   });
 
   @override
   Widget build(BuildContext context) {
-    final caption = file.caption;
-    final textStyle = getEnteTextTheme(
-      context,
-    ).mini.copyWith(color: textBaseDark);
     return ValueListenableBuilder(
       valueListenable: showControls,
       builder: (BuildContext context, bool value, _) {
@@ -886,66 +869,10 @@ class _SeekBarAndDuration extends StatelessWidget {
           opacity: value ? 1 : 0,
           child: IgnorePointer(
             ignoring: !value,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                  border: Border.all(color: strokeFaintDark, width: 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (caption != null && caption.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                        child: GestureDetector(
-                          onTap: () => showDetailsSheet(context, file),
-                          child: Row(
-                            children: [
-                              Text('"', style: textStyle),
-                              Flexible(
-                                child: Text(
-                                  caption,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textStyle,
-                                ),
-                              ),
-                              Text('"', style: textStyle),
-                            ],
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          AnimatedSize(
-                            duration: const Duration(seconds: 5),
-                            curve: Curves.easeInOut,
-                            child: Text(
-                              secondsToDuration(position ~/ 1000),
-                              style: textStyle,
-                            ),
-                          ),
-                          Expanded(
-                            child: SeekBar(
-                              controller!,
-                              durationToSeconds(duration),
-                              isSeeking,
-                            ),
-                          ),
-                          Text(duration ?? "0:00", style: textStyle),
-                          const SizedBox(width: 8),
-                          const VideoMuteButton(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            child: NativeVideoProgressControls(
+              controller,
+              durationToSeconds(duration),
+              isSeeking,
             ),
           ),
         );

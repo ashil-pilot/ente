@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import "package:ente_strings/ente_strings.dart";
+import 'package:ente_ui/components/loading_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -11,7 +12,6 @@ import 'package:photos/gateways/billing/models/subscription.dart';
 import "package:photos/service_locator.dart";
 import 'package:photos/services/account/billing_service.dart';
 import 'package:photos/services/account/user_service.dart';
-import 'package:photos/ui/common/loading_widget.dart';
 import 'package:photos/utils/dialog_util.dart';
 import "package:photos/utils/email_util.dart";
 
@@ -83,7 +83,6 @@ class _PaymentWebPageState extends State<PaymentWebPage> {
                 shouldOverrideUrlLoading: (controller, navigationAction) async {
                   final loadingUri = navigationAction.request.url;
                   _logger.info("Loading url $loadingUri");
-                  // handle the payment response
                   if (_isPaymentActionComplete(loadingUri)) {
                     await _handlePaymentResponse(loadingUri!);
                     return NavigationActionPolicy.CANCEL;
@@ -96,8 +95,28 @@ class _PaymentWebPageState extends State<PaymentWebPage> {
                 onLoadStart: (controller, navigationAction) async {
                   _logger.info("onLoadStart $navigationAction");
                 },
-                onReceivedError: (controller, navigationAction, code) async {
-                  _logger.severe("onLoadError $navigationAction $code");
+                onReceivedError: (controller, navigationAction, error) async {
+                  _logger.severe("onLoadError $navigationAction $error");
+                  final networkErrorTypes = {
+                    WebResourceErrorType.HOST_LOOKUP,
+                    WebResourceErrorType.NOT_CONNECTED_TO_INTERNET,
+                    WebResourceErrorType.NETWORK_CONNECTION_LOST,
+                    WebResourceErrorType.TIMEOUT,
+                    WebResourceErrorType.CANNOT_CONNECT_TO_HOST,
+                    WebResourceErrorType.SERVER_UNREACHABLE,
+                  };
+                  final isNetworkError = networkErrorTypes.contains(error.type);
+                  if (navigationAction.isForMainFrame == true &&
+                      isNetworkError) {
+                    if (!mounted) return;
+                    final navigator = Navigator.of(context);
+                    navigator.pop(false);
+                    if (!navigator.mounted) return;
+                    await showGenericErrorDialog(
+                      context: navigator.context,
+                      error: error,
+                    );
+                  }
                 },
                 onReceivedHttpError:
                     (controller, navigationAction, code) async {
@@ -138,7 +157,6 @@ class _PaymentWebPageState extends State<PaymentWebPage> {
     }
   }
 
-  // show dialog to handle accidental back press.
   Future<bool> _buildPageExitWidget(BuildContext context) async {
     final result = await showDialog(
       useRootNavigator: false,
@@ -185,7 +203,6 @@ class _PaymentWebPageState extends State<PaymentWebPage> {
       final reason = queryParams['reason'] ?? '';
       await _handlePaymentFailure(reason);
     } else {
-      // should never reach here
       _logger.severe("unexpected status", uri.toString());
       await showGenericErrorDialog(
         context: context,
@@ -218,7 +235,6 @@ class _PaymentWebPageState extends State<PaymentWebPage> {
     Navigator.of(context).pop(true);
   }
 
-  // return true if verifySubscription didn't throw any exceptions
   Future<void> _handlePaymentSuccess(Map<String, String> queryParams) async {
     final checkoutSessionID = queryParams['session_id'] ?? '';
     try {
@@ -247,7 +263,6 @@ class _PaymentWebPageState extends State<PaymentWebPage> {
     }
   }
 
-  // warn the user to wait for sometime before trying another payment
   Future<dynamic> _showExitPageDialog({String? title, String? content}) async {
     if (!mounted) return null;
     await showDialog(

@@ -79,6 +79,7 @@ const loadMLNative = (paths: MLNativePaths) => {
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const native = require(paths.addon) as MLNative;
+        native.initLogging(logRustEntry);
         native.initOrt(paths.onnxRuntimeLibrary);
         // Enables WebGPU where supported; macOS continues to use CoreML.
         native.setMlExecutionConfig(true);
@@ -90,6 +91,21 @@ const loadMLNative = (paths: MLNativePaths) => {
     } catch (e) {
         _nativeLoadError = e instanceof Error ? e.message : String(e);
         log.error(`Failed to load ML addon at ${paths.addon}`, e);
+    }
+};
+
+const logRustEntry = (level: string, target: string, message: string) => {
+    const line = `[rust][${target}] ${message}`;
+    switch (level) {
+        case "ERROR":
+            log.error(line);
+            break;
+        case "WARN":
+            log.warn(line);
+            break;
+        case "INFO":
+            log.info(line);
+            break;
     }
 };
 
@@ -107,15 +123,6 @@ const assetStore = () => {
         "init",
         `ML is unavailable: ${_nativeLoadError ?? "asset store not loaded"}`,
     );
-};
-
-const logMLRuntimeEvents = (native: MLNative) => {
-    for (const { severity, message } of native.takeMlRuntimeEvents()) {
-        const s = `[ml-rt] ${message}`;
-        if (severity == "severe") log.error(s);
-        else if (severity == "warning") log.warn(s);
-        else log.info(s);
-    }
 };
 
 const _indexingModelPaths = new Map<
@@ -159,13 +166,11 @@ export const releaseMLRuntime = () => {
     if (!_native) return;
     _native.releaseMlRuntime();
     _preparedRuntimeKey = undefined;
-    logMLRuntimeEvents(_native);
 };
 
 export interface MLWorkerAnalyzeImageRequest {
     fileID: number;
-    path?: string | undefined;
-    bytes?: Uint8Array | undefined;
+    bytes: Uint8Array;
     runFaces: boolean;
     runClip: boolean;
     runPets: boolean;
@@ -184,11 +189,7 @@ export const analyzeImage = async (
 
 const analyzeImageOrThrow = async (req: MLWorkerAnalyzeImageRequest) => {
     const native = mlNative();
-    try {
-        return await analyzeImageOnce(native, req);
-    } finally {
-        logMLRuntimeEvents(native);
-    }
+    return analyzeImageOnce(native, req);
 };
 
 // A corrupt on-disk model will fail every retry, so report an init failure that
@@ -215,15 +216,6 @@ const analyzeImageOnce = async (
     native: MLNative,
     req: MLWorkerAnalyzeImageRequest,
 ) => {
-    let source;
-    if (req.path !== undefined) {
-        source = { imagePath: req.path };
-    } else if (req.bytes) {
-        source = { imageBytes: uint8ArrayToBuffer(req.bytes) };
-    } else {
-        throw new Error("The analyze request has neither a path nor bytes");
-    }
-
     const modelPaths = await indexingModelPaths(
         req.runFaces,
         req.runClip,
@@ -232,7 +224,7 @@ const analyzeImageOnce = async (
     ensureMLRuntime(native, modelPaths);
     return await native.analyzeImage({
         fileId: req.fileID,
-        ...source,
+        imageBytes: uint8ArrayToBuffer(req.bytes),
         runFaces: req.runFaces,
         runClip: req.runClip,
         runPets: req.runPets,
@@ -265,8 +257,6 @@ const warmUpClipTextEncoder = async (native: MLNative) => {
         });
     } catch (e) {
         log.warn("Failed to warm up the CLIP text encoder", e);
-    } finally {
-        logMLRuntimeEvents(native);
     }
 };
 
@@ -288,14 +278,10 @@ export const computeCLIPTextEmbeddingIfAvailable = async (text: string) => {
     }
 
     const { modelPath, vocabPath } = pathsOrSkip;
-    try {
-        const { embedding } = await native.runClipText({
-            text,
-            modelPath,
-            vocabPath,
-        });
-        return embedding;
-    } finally {
-        logMLRuntimeEvents(native);
-    }
+    const { embedding } = await native.runClipText({
+        text,
+        modelPath,
+        vocabPath,
+    });
+    return embedding;
 };

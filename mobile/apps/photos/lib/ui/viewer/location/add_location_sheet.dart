@@ -1,4 +1,6 @@
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/divider_widget.dart";
+import "package:ente_ui/components/loading_widget.dart";
 import 'package:flutter/material.dart';
 import "package:intl/intl.dart";
 import "package:modal_bottom_sheet/modal_bottom_sheet.dart";
@@ -8,10 +10,8 @@ import "package:photos/service_locator.dart";
 import 'package:photos/states/location_state.dart';
 import "package:photos/theme/colors.dart";
 import "package:photos/theme/ente_theme.dart";
-import "package:photos/ui/common/loading_widget.dart";
 import "package:photos/ui/components/bottom_of_title_bar_widget.dart";
 import "package:photos/ui/components/buttons/button_widget.dart";
-import "package:photos/ui/components/divider_widget.dart";
 import 'package:photos/ui/components/keyboard/keyboard_oveylay.dart';
 import "package:photos/ui/components/keyboard/keyboard_top_button.dart";
 import "package:photos/ui/components/models/button_type.dart";
@@ -59,12 +59,8 @@ class AddLocationSheet extends StatefulWidget {
 }
 
 class _AddLocationSheetState extends State<AddLocationSheet> {
-  //The value of this notifier has no significance.
-  //When memoriesCountNotifier is null, we show the loading widget in the
-  //memories count section which also means the gallery is loading.
+  // null means the gallery is still loading.
   final ValueNotifier<int?> _memoriesCountNotifier = ValueNotifier(null);
-
-  //The value of this notifier has no significance.
   final ValueNotifier<bool> _submitNotifer = ValueNotifier(false);
 
   final ValueNotifier<bool> _cancelNotifier = ValueNotifier(false);

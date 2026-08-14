@@ -57,16 +57,10 @@ typedef AlbumSelectionCallbacks = ({
 });
 
 class CollectionsFlexiGridViewWidget extends StatefulWidget {
-  /*
-  Aspect ratio 1:1
-  Width changes dynamically with screen width
-  */
-
   static const maxThumbnailWidth = 224.0;
   static const _thumbnailToTextSpacing = 8.0;
   final List<Collection>? collections;
 
-  // If true, the GridView will shrink-wrap its contents.
   final bool shrinkWrap;
   final String tag;
 
@@ -159,7 +153,7 @@ class _CollectionsFlexiGridViewWidgetState
 
   void _handleCollectionLongPress(Collection collection) {
     if (widget.selectionCallbacks != null) {
-      unawaited(_toggleAlbumSelection(collection));
+      unawaited(_navigateToCollectionPage(collection));
       return;
     }
     unawaited(

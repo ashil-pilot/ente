@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"slices"
 
 	"github.com/ente/museum/pkg/controller/usercache"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/ente/museum/pkg/controller/discord"
 	"github.com/ente/museum/pkg/repo"
 	"github.com/ente/museum/pkg/repo/storagebonus"
-	"github.com/ente/museum/pkg/utils/billing"
 	"github.com/ente/museum/pkg/utils/config"
 	emailUtil "github.com/ente/museum/pkg/utils/email"
 	"github.com/ente/museum/pkg/utils/time"
@@ -24,7 +22,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// OfferController controls all offer related operations
 type OfferController struct {
 	BlackFridayOffers ente.BlackFridayOfferPerCountry
 	UserRepo          repo.UserRepository
@@ -59,19 +56,6 @@ func NewOfferController(
 		StorageBonusRepo:  storageBonusRepo,
 		UserCacheCtrl:     userCacheCtrl,
 	}
-}
-
-func (c *OfferController) GetBlackFridayOffers(countryCode string) []ente.BlackFridayOffer {
-	if slices.Contains(billing.CountriesInEU, countryCode) {
-		countryCode = "EU"
-	}
-
-	if offers, found := c.BlackFridayOffers[countryCode]; found {
-		return offers
-	}
-	// unable to find plans for given country code, return plans for default country
-	defaultCountry := billing.GetDefaultPlanCountry()
-	return c.BlackFridayOffers[defaultCountry]
 }
 
 func (c *OfferController) ApplyOffer(email string, productID string) error {

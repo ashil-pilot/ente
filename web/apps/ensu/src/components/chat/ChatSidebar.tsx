@@ -4,6 +4,7 @@ import {
     ArrowRight01Icon,
     Cancel01Icon,
     Delete01Icon,
+    Edit01Icon,
     PlusSignIcon,
     Search01Icon,
 } from "@hugeicons/core-free-icons";
@@ -22,7 +23,10 @@ import {
 import type { SxProps, Theme } from "@mui/material/styles";
 import React, { memo } from "react";
 
-type IconProps = { size: number; strokeWidth: number };
+interface IconProps {
+    size: number;
+    strokeWidth: number;
+}
 
 export interface ChatSidebarProps {
     drawerCollapsed: boolean;
@@ -39,9 +43,10 @@ export interface ChatSidebarProps {
     handleNewChat: () => void;
     handleOpenDrawer: () => void;
     handleCollapseDrawer: () => void;
-    groupedSessions: Array<[string, ChatSession[]]>;
+    groupedSessions: [string, ChatSession[]][];
     currentSessionId?: string;
     handleSelectSession: (sessionId: string) => void;
+    requestRenameSession: (session: ChatSession) => void;
     requestDeleteSession: (sessionId: string) => void;
     openSettingsModal: () => void;
 }
@@ -65,6 +70,7 @@ export const ChatSidebar = memo(
         groupedSessions,
         currentSessionId,
         handleSelectSession,
+        requestRenameSession,
         requestDeleteSession,
         openSettingsModal,
     }: ChatSidebarProps) => (
@@ -281,7 +287,7 @@ export const ChatSidebar = memo(
                         </Typography>
                         {group.map((session) => {
                             const sessionTitle =
-                                session.title?.trim() || "New chat";
+                                session.title.trim() || "New chat";
                             return (
                                 <ListItemButton
                                     key={session.sessionUuid}
@@ -305,6 +311,11 @@ export const ChatSidebar = memo(
                                         "&.Mui-selected:hover": {
                                             backgroundColor: "fill.faintHover",
                                         },
+                                        "& .rename-chat-button": {
+                                            visibility: "hidden",
+                                        },
+                                        "&:hover .rename-chat-button, &:focus-within .rename-chat-button":
+                                            { visibility: "visible" },
                                     }}
                                 >
                                     <Stack
@@ -346,6 +357,20 @@ export const ChatSidebar = memo(
                                                     "Nothing here"}
                                             </Typography>
                                         </Box>
+                                        <IconButton
+                                            className="rename-chat-button"
+                                            aria-label="Rename chat"
+                                            sx={actionButtonSx}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                requestRenameSession(session);
+                                            }}
+                                        >
+                                            <HugeiconsIcon
+                                                icon={Edit01Icon}
+                                                {...actionIconProps}
+                                            />
+                                        </IconButton>
                                         <IconButton
                                             aria-label="Delete chat"
                                             sx={actionButtonSx}

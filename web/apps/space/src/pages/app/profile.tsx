@@ -26,7 +26,7 @@ import {
     createLocalFeedPostID,
     failLocalFeedPost,
 } from "utils/localFeedPost";
-import { profilePostGroupsFromPosts } from "utils/spacePostDisplay";
+import { profilePostItemsFromPosts } from "utils/spacePostDisplay";
 import { prepareSpacePostImageFromEdit } from "utils/spacePostImage";
 import { spaceRoutes } from "utils/spaceRoutes";
 import { useSpaceRouter } from "utils/spaceRouteTransitions";
@@ -44,10 +44,7 @@ const Page: React.FC = () => {
         showInitialPostLoadingIndicator,
         setShowInitialPostLoadingIndicator,
     ] = useState(false);
-    const postGroups = useMemo(
-        () => profilePostGroupsFromPosts(posts),
-        [posts],
-    );
+    const postItems = useMemo(() => profilePostItemsFromPosts(posts), [posts]);
     const isInitialPostsLoading =
         profileLoadStatus == "ready" &&
         Boolean(profile?.spaceId) &&
@@ -131,7 +128,7 @@ const Page: React.FC = () => {
                 friendsCount={friendsCount}
                 isPostsLoading={isPostsLoading}
                 isStatsLoading={isPostsLoading}
-                postGroups={postGroups}
+                postItems={postItems}
                 profile={profile}
                 showPostLoadingIndicator={showInitialPostLoadingIndicator}
                 onBack={() => void router.push(spaceRoutes.home)}
@@ -175,7 +172,6 @@ const Page: React.FC = () => {
                             thumbHash: preparedImage.thumbHash,
                             width: preparedImage.width,
                         });
-                        if (!post) throw new Error("Couldn't create post.");
                         confirmLocalFeedPost(
                             setLocalFeedPosts,
                             localPostId,

@@ -190,8 +190,6 @@ class UserService {
     );
   }
 
-  // getPublicKey returns null value if email id is not
-  // associated with another ente account
   Future<String?> getPublicKey(String email) async {
     try {
       final response = await _enteDio.get(
@@ -230,7 +228,6 @@ class UserService {
             userDetails.profileData!.canDisableEmailMFA,
           );
         }
-        // handle email change from different client
         if (userDetails.email != _config.getEmail()) {
           await setEmail(userDetails.email);
         }
@@ -310,8 +307,7 @@ class UserService {
       }
 
       _logger.severe(e);
-      //This future is for waiting for the dialog from which logout() is called
-      //to close and only then to show the error dialog.
+      // Let the logout dialog close before showing the error.
       Future.delayed(const Duration(milliseconds: 150), () {
         if (context.mounted) {
           unawaited(showGenericErrorDialog(context: context, error: e));
@@ -477,7 +473,6 @@ class UserService {
           (route) => route.isFirst,
         );
       } else {
-        // should never reach here
         throw Exception("unexpected response during email verification");
       }
     } on DioException catch (e) {
@@ -595,7 +590,6 @@ class UserService {
 
   Future<void> setAttributes(KeyGenResult result) async {
     try {
-      await registerOrUpdateSrp(result.loginKey);
       await _enteDio.put(
         "/users/attributes",
         data: {"keyAttributes": result.keyAttributes.toMap()},
@@ -603,6 +597,12 @@ class UserService {
       await _config.setKey(result.privateKeyAttributes.key);
       await _config.setSecretKey(result.privateKeyAttributes.secretKey);
       await _config.setKeyAttributes(result.keyAttributes);
+      try {
+        await registerOrUpdateSrp(result.loginKey);
+      } catch (_) {
+        // Keys are stored; password reentry after OTT login retries SRP setup.
+        _logger.warning("Continuing signup after SRP setup failure");
+      }
     } catch (e) {
       _logger.severe(e);
       rethrow;
@@ -821,7 +821,6 @@ class UserService {
         );
       }
     } else {
-      // should never reach here
       throw Exception("unexpected response during email verification");
     }
   }

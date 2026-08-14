@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:io";
 
 import "package:dio/dio.dart";
+import "package:ente_network/network.dart";
 import "package:locker/services/configuration.dart";
 import "package:locker/services/files/download/file_url.dart";
 import "package:locker/services/files/download/models/task.dart";
@@ -23,7 +24,6 @@ class DownloadManager {
 
   DownloadManager(this._dio);
 
-  /// Subscribe to download progress updates for a specific file ID
   Stream<DownloadTask> watchDownload(int fileId) {
     _streams[fileId] ??= StreamController<DownloadTask>.broadcast();
     return _streams[fileId]!.stream;
@@ -35,8 +35,6 @@ class DownloadManager {
     return size > downloadChunkSize;
   }
 
-  /// Start download and return a Future that completes when download finishes
-  /// If download was paused, calling this again will resume it
   Future<DownloadResult> download(
     int fileId,
     String filename,
@@ -88,7 +86,6 @@ class DownloadManager {
     return completer.future;
   }
 
-  /// Pause download
   Future<void> pause(int fileId) async {
     final token = _cancelTokens[fileId];
     if (token != null && !token.isCancelled) {
@@ -108,7 +105,6 @@ class DownloadManager {
     }
   }
 
-  /// Cancel and delete download
   Future<void> cancel(int fileId) async {
     final token = _cancelTokens[fileId];
     if (token != null && !token.isCancelled) {
@@ -124,10 +120,8 @@ class DownloadManager {
     _cleanup(fileId);
   }
 
-  /// Get current download status
   Future<DownloadTask?> getDownload(int fileId) async => _tasks[fileId];
 
-  /// Get all downloads
   Future<List<DownloadTask>> getAllDownloads() async => _tasks.values.toList();
 
   Future<void> _startDownload(
@@ -164,10 +158,19 @@ class DownloadManager {
       _logger.info(
         'Resuming download for ${task.filename} (${task.bytesDownloaded}/${task.totalBytes} bytes)',
       );
+      String? downloadUrl;
       for (int i = 0; i < totalChunks; i++) {
         if (existingChunks[i] || cancelToken.isCancelled) continue;
         _logger.info('Downloading chunk ${i + 1} of $totalChunks');
-        await _downloadChunk(task, basePath, i, totalChunks, cancelToken);
+        downloadUrl ??= await _resolveDownloadUrl(task.id, cancelToken);
+        await _downloadChunk(
+          task,
+          basePath,
+          i,
+          totalChunks,
+          cancelToken,
+          downloadUrl,
+        );
         existingChunks[i] = true;
       }
 
@@ -259,6 +262,7 @@ class DownloadManager {
     int chunkIndex,
     int totalChunks,
     CancelToken cancelToken,
+    String downloadUrl,
   ) async {
     final chunkPath = _getChunkPath(basePath, chunkIndex + 1);
     final startByte = chunkIndex * downloadChunkSize;
@@ -267,13 +271,10 @@ class DownloadManager {
         : (startByte + downloadChunkSize) - 1;
 
     await _dio.download(
-      FileUrl.getUrl(task.id, FileUrlType.directDownload),
+      downloadUrl,
       chunkPath,
       options: Options(
-        headers: {
-          "X-Auth-Token": Configuration.instance.getToken(),
-          "Range": "bytes=$startByte-$endByte",
-        },
+        headers: {HttpHeaders.rangeHeader: "bytes=$startByte-$endByte"},
       ),
       cancelToken: cancelToken,
       onReceiveProgress: (received, total) async {
@@ -289,6 +290,45 @@ class DownloadManager {
       bytesDownloaded: (chunkIndex) * downloadChunkSize + chunkFileSize,
     );
     _updateTask(task);
+  }
+
+  Future<String> _resolveDownloadUrl(
+    int fileID,
+    CancelToken cancelToken,
+  ) async {
+    final signedUrl = await FileUrl.tryGetV3Url(
+      Network.instance.enteDio,
+      fileID,
+      FileUrlType.directDownload,
+      headers: {"X-Auth-Token": Configuration.instance.getToken()},
+      cancelToken: cancelToken,
+    );
+    if (signedUrl != null) {
+      return signedUrl;
+    }
+
+    final response = await _dio.get<void>(
+      FileUrl.getLegacyUrl(fileID, FileUrlType.directDownload),
+      options: Options(
+        followRedirects: false,
+        receiveDataWhenStatusError: false,
+        headers: {"X-Auth-Token": Configuration.instance.getToken()},
+        validateStatus: (status) {
+          return status != null &&
+              status >= HttpStatus.multipleChoices &&
+              status < HttpStatus.badRequest;
+        },
+      ),
+      cancelToken: cancelToken,
+    );
+    final location = response.headers.value(HttpHeaders.locationHeader);
+    if (location == null || location.isEmpty) {
+      throw StateError(
+        'Missing redirect location for file $fileID '
+        '(status ${response.statusCode})',
+      );
+    }
+    return location;
   }
 
   Future<String> _combineChunks(String basePath, int totalChunks) async {

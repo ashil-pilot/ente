@@ -4,6 +4,7 @@ import "dart:math";
 import "package:ente_components/ente_components.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/pages/language_selector_page.dart";
 import "package:flutter/foundation.dart";
 import 'package:flutter/material.dart';
 import "package:photos/app.dart";
@@ -21,7 +22,6 @@ import 'package:photos/ui/components/models/button_type.dart';
 import 'package:photos/ui/payment/subscription.dart';
 import "package:photos/ui/settings/developer_settings_tap_area.dart";
 import "package:photos/ui/settings/developer_settings_widget.dart";
-import "package:photos/ui/settings/language_picker.dart";
 import "package:rive/rive.dart" as rive;
 
 class LandingPageWidget extends StatefulWidget {
@@ -229,15 +229,11 @@ class _LandingPageWidgetState extends State<LandingPageWidget> {
     if (Configuration.instance.getEncryptedToken() == null) {
       page = const EmailEntryPage();
     } else {
-      // No key
       if (Configuration.instance.getKeyAttributes() == null) {
-        // Never had a key
         page = const PasswordEntryPage(mode: PasswordEntryMode.set);
       } else if (Configuration.instance.getKey() == null) {
-        // Yet to decrypt the key
         page = const PasswordReentryPage();
       } else {
-        // All is well, user just has not subscribed
         page = getSubscriptionPage(isOnBoarding: true);
       }
     }
@@ -258,15 +254,11 @@ class _LandingPageWidgetState extends State<LandingPageWidget> {
     if (Configuration.instance.getEncryptedToken() == null) {
       page = const LoginPage();
     } else {
-      // No key
       if (Configuration.instance.getKeyAttributes() == null) {
-        // Never had a key
         page = const PasswordEntryPage(mode: PasswordEntryMode.set);
       } else if (Configuration.instance.getKey() == null) {
-        // Yet to decrypt the key
         page = const PasswordReentryPage();
       } else {
-        // All is well, user just has not subscribed
         page = getSubscriptionPage(isOnBoarding: true);
       }
     }

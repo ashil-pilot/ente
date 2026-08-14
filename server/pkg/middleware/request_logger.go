@@ -30,10 +30,23 @@ var latency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Buckets: []float64{10, 50, 100, 200, 500, 1000, 10000, 30000, 60000, 120000, 600000},
 }, []string{"code", "method", "host", "url"})
 
-// shouldSkipBodyLog returns true if the body should not be logged.
-// This is useful for endpoints that receive large or sensitive payloads.
+// Skip read-only requests and writes with large or sensitive bodies.
 func shouldSkipBodyLog(method string, path string) bool {
 	isReadOnly := method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions
+	if !isReadOnly {
+		switch path {
+		case "/users/srp/setup",
+			"/users/two-factor/remove",
+			"/users/two-factor/passkeys/configure-recovery",
+			"/emergency-contacts/init-change-password",
+			"/legacy-kits/recovery/open",
+			"/legacy-kits/recovery/session",
+			"/legacy-kits/recovery/info",
+			"/legacy-kits/recovery/init-change-password",
+			"/legacy-kits/recovery/change-password":
+			return true
+		}
+	}
 	if method == "PUT" && path == "/embeddings" {
 		return true
 	}
@@ -70,7 +83,6 @@ func shouldSkipBodyLog(method string, path string) bool {
 	return false
 }
 
-// Logger logs the details regarding an incoming request
 func Logger(urlSanitizer func(_ *gin.Context) string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
@@ -80,7 +92,6 @@ func Logger(urlSanitizer func(_ *gin.Context) string) gin.HandlerFunc {
 			handler.Error(c, err)
 		}
 		rdr1 := io.NopCloser(bytes.NewBuffer(buf))
-		// Creating a new Buffer, because rdr1 will be read
 		rdr2 := io.NopCloser(bytes.NewBuffer(buf))
 
 		userAgent := c.GetHeader("User-Agent")
@@ -116,7 +127,6 @@ func Logger(urlSanitizer func(_ *gin.Context) string) gin.HandlerFunc {
 		}
 		reqContextLogger.Info("incoming")
 		c.Request.Body = rdr2
-		// Processing request
 		c.Next()
 		statusCode := c.Writer.Status()
 		latencyTime := time.Since(startTime)

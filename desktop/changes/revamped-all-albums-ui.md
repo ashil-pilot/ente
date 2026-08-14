@@ -1,0 +1,1 @@
+- Revamped the All Albums UI with filters for quick links, received albums, and shared albums, also added an option to delete all empty albums.

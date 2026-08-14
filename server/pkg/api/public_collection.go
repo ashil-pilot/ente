@@ -20,7 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PublicCollectionHandler exposes request handlers for publicly accessible collections
 type PublicCollectionHandler struct {
 	Controller             *public.CollectionLinkController
 	FileCtrl               *controller.FileController
@@ -29,23 +28,19 @@ type PublicCollectionHandler struct {
 	StorageBonusController *storagebonus.Controller
 }
 
-// GetThumbnail redirects the request to the file's thumbnail location
 func (h *PublicCollectionHandler) GetThumbnail(c *gin.Context) {
 	h.getFileForType(c, ente.THUMBNAIL)
 }
 
-// GetFile redirects the request to the file location
 func (h *PublicCollectionHandler) GetFile(c *gin.Context) {
 	h.getFileForType(c, ente.FILE)
 }
 
-// GetThumbnailURLV3 returns the thumbnail URL and reserves HTTP 404 for an unavailable endpoint.
 func (h *PublicCollectionHandler) GetThumbnailURLV3(c *gin.Context) {
 	url, err := h.getFileURL(c, ente.THUMBNAIL)
 	writeFileURLV3(c, url, err)
 }
 
-// GetFileURLV3 returns the file URL and reserves HTTP 404 for an unavailable endpoint.
 func (h *PublicCollectionHandler) GetFileURLV3(c *gin.Context) {
 	url, err := h.getFileURL(c, ente.FILE)
 	writeFileURLV3(c, url, err)
@@ -114,7 +109,6 @@ func (h *PublicCollectionHandler) getCollectionOwnerAndVerifyAccess(c *gin.Conte
 	return &collection.Owner.ID, nil
 }
 
-// GetCollection redirects the request to the collection location
 func (h *PublicCollectionHandler) GetCollection(c *gin.Context) {
 	collection, err := h.Controller.GetPublicCollection(c, false)
 	if err != nil {
@@ -134,7 +128,6 @@ func (h *PublicCollectionHandler) GetCollection(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// GetUploadURLV2 returns a single upload URL that enforces checksum + content-length headers
 func (h *PublicCollectionHandler) GetUploadURLV2(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 	var req ente.UploadURLRequest
@@ -155,12 +148,16 @@ func (h *PublicCollectionHandler) GetUploadURLV2(c *gin.Context) {
 	c.JSON(http.StatusOK, url)
 }
 
-// GetMultipartUploadURLV2 returns multipart upload URLs for a single object with enforced metadata
 func (h *PublicCollectionHandler) GetMultipartUploadURLV2(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 	var req ente.MultipartUploadURLRequest
 	if err := handler.BindJSON(c, &req); err != nil {
 		handler.Error(c, stacktrace.Propagate(err, ""))
+		return
+	}
+	// TODO: Remove once deferred multipart checksums are enabled for public uploads.
+	if len(req.PartMD5s) == 0 {
+		handler.Error(c, ente.ErrBadRequest)
 		return
 	}
 	collection, err := h.Controller.GetPublicCollection(c, true)
@@ -176,7 +173,6 @@ func (h *PublicCollectionHandler) GetMultipartUploadURLV2(c *gin.Context) {
 	c.JSON(http.StatusOK, upload)
 }
 
-// CreateFile create a new file inside the collection corresponding to the public accessToken
 func (h *PublicCollectionHandler) CreateFile(c *gin.Context) {
 	var file ente.File
 	if err := handler.BindJSON(c, &file); err != nil {
@@ -199,7 +195,6 @@ func (h *PublicCollectionHandler) CreateFile(c *gin.Context) {
 	c.JSON(http.StatusOK, fileRes)
 }
 
-// VerifyPassword verifies the password for given public access token and return signed jwt token if it's valid
 func (h *PublicCollectionHandler) VerifyPassword(c *gin.Context) {
 	var req ente.VerifyPasswordRequest
 	if err := handler.BindJSON(c, &req); err != nil {
@@ -214,9 +209,6 @@ func (h *PublicCollectionHandler) VerifyPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// ReportAbuse endpoint removed
-
-// GetDiff returns the diff within a collection since a timestamp
 func (h *PublicCollectionHandler) GetDiff(c *gin.Context) {
 	sinceTime, err := strconv.ParseInt(c.Query("sinceTime"), 10, 64)
 	if err != nil {

@@ -45,7 +45,7 @@ func (c *UserController) GetDeleteChallengeToken(ctx *gin.Context) (*ente.Delete
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "")
 	}
-	encryptedToken, err := crypto.GetEncryptedTokenNative(base64.StdEncoding.EncodeToString([]byte(token)), keyAttributes.PublicKey)
+	encryptedToken, err := crypto.GetEncryptedToken(base64.StdEncoding.EncodeToString([]byte(token)), keyAttributes.PublicKey)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "")
 	}
@@ -88,7 +88,6 @@ func (c *UserController) SelfDeleteAccount(ctx *gin.Context, req ente.DeleteAcco
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "")
 	}
-	// Update reason, ignore failure in updating reason
 	updateErr := c.UserRepo.UpdateDeleteFeedback(userID, req.GetReasonAttr())
 	if updateErr != nil {
 		logger.WithError(updateErr).Error("failed to update delete feedback")

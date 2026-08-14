@@ -16,11 +16,8 @@ import (
 )
 
 const (
-	// TrashDurationInDays number of days after which file will be removed from trash
 	TrashDurationInDays = 30
-	// TrashDiffLimit is the default limit for number of items server will attempt to return when clients
-	// ask for changes.
-	TrashDiffLimit = 2500
+	TrashDiffLimit      = 2500
 
 	TrashBatchSize = 1000
 
@@ -117,15 +114,19 @@ func (t *TrashRepository) GetFilesWithVersion(userID int64, updateAtTime int64, 
 	return convertRowsToTrash(rows)
 }
 
-func (t *TrashRepository) TrashFiles(fileIDs []int64, userID int64, trash ente.TrashRequest) error {
+func (t *TrashRepository) TrashFiles(ctx context.Context, userID int64, trash ente.TrashRequest) error {
+	fileIDs := make([]int64, 0, len(trash.TrashItems))
+	for _, item := range trash.TrashItems {
+		fileIDs = append(fileIDs, item.FileID)
+	}
 	updationTime := time.Microseconds()
-	ctx := context.Background()
 	tx, err := t.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "")
 	}
+	defer tx.Rollback()
 	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT collection_id FROM 
-		collection_files WHERE file_id = ANY($1) AND is_deleted = $2`, pq.Array(fileIDs), false)
+			collection_files WHERE file_id = ANY($1) AND is_deleted = $2`, pq.Array(fileIDs), false)
 	if err != nil {
 		return stacktrace.Propagate(err, "")
 	}
@@ -139,35 +140,26 @@ func (t *TrashRepository) TrashFiles(fileIDs []int64, userID int64, trash ente.T
 		cIDs = append(cIDs, cID)
 	}
 	_, err = tx.ExecContext(ctx, `UPDATE collection_files 
-		SET is_deleted = $1, updation_time = $2 WHERE file_id = ANY($3)`,
+			SET is_deleted = $1, updation_time = $2 WHERE file_id = ANY($3)`,
 		true, updationTime, pq.Array(fileIDs))
 	if err != nil {
-		tx.Rollback()
 		return stacktrace.Propagate(err, "")
 	}
 	_, err = tx.ExecContext(ctx, `UPDATE collections SET updation_time = $1
-		WHERE collection_id = ANY ($2)`, updationTime, pq.Array(cIDs))
+			WHERE collection_id = ANY ($2)`, updationTime, pq.Array(cIDs))
 	if err != nil {
-		tx.Rollback()
 		return stacktrace.Propagate(err, "")
 	}
 	err = t.InsertItems(ctx, tx, userID, trash.TrashItems)
 	if err != nil {
-		tx.Rollback()
 		return stacktrace.Propagate(err, "")
 	}
-	err = tx.Commit()
-
-	if err == nil {
-		removeLinkErr := t.FileLinkRepo.DisableLinkForFiles(ctx, fileIDs)
-		if removeLinkErr != nil {
-			return stacktrace.Propagate(removeLinkErr, "failed to disable file links for files being trashed")
-		}
+	if err = t.FileLinkRepo.DisableLinkForFilesTx(ctx, tx, fileIDs); err != nil {
+		return stacktrace.Propagate(err, "failed to disable file links for files being trashed")
 	}
-	return stacktrace.Propagate(err, "")
+	return stacktrace.Propagate(tx.Commit(), "")
 }
 
-// CleanUpDeletedFilesFromCollection deletes the files from the collection if the files are deleted from the trash
 func (t *TrashRepository) CleanUpDeletedFilesFromCollection(ctx context.Context, fileIDs []int64, userID int64) error {
 	err := t.verifyFilesAreDeleted(ctx, userID, fileIDs)
 	if err != nil {
@@ -213,8 +205,6 @@ func (t *TrashRepository) Delete(ctx context.Context, userID int64, fileIDs []in
 	if len(fileIDs) > TrashDiffLimit {
 		return fmt.Errorf("can not delete more than %d in one go", TrashDiffLimit)
 	}
-	// find file_ids from the trash which belong to the user and can be deleted
-	// skip restored and already deleted files
 	fileIDsInTrash, _, err := t.GetFilesInTrashState(ctx, userID, fileIDs)
 	if err != nil {
 		return err
@@ -245,8 +235,6 @@ func (t *TrashRepository) Delete(ctx context.Context, userID int64, fileIDs []in
 	return tx.Commit()
 }
 
-// GetFilesInTrashState for a given userID and fileIDs, return the list of fileIDs which are actually present in
-// trash and is not deleted or restored yet.
 func (t *TrashRepository) GetFilesInTrashState(ctx context.Context, userID int64, fileIDs []int64) ([]int64, bool, error) {
 	rows, err := t.DB.Query(`SELECT file_id FROM trash
 			WHERE user_id = $1 AND file_id = ANY ($2)
@@ -270,11 +258,6 @@ func (t *TrashRepository) GetFilesInTrashState(ctx context.Context, userID int64
 	return fileIDsInTrash, canRestoreOrDeleteAllFiles, nil
 }
 
-// GetFilesInTrashOrDeleted returns the subset of fileIDs that are either in trash (not restored)
-// or have been permanently deleted. This is useful for validation checks to prevent operations
-// on files that are no longer in an active state.
-// Unlike GetFilesInTrashState, this method does not log warnings when files are not found,
-// making it suitable for validation checks where files are expected to NOT be in trash.
 func (t *TrashRepository) GetFilesInTrashOrDeleted(ctx context.Context, userID int64, fileIDs []int64) ([]int64, error) {
 	rows, err := t.DB.QueryContext(ctx, `SELECT file_id FROM trash
 			WHERE user_id = $1 AND file_id = ANY ($2)
@@ -289,7 +272,6 @@ func (t *TrashRepository) GetFilesInTrashOrDeleted(ctx context.Context, userID i
 	return fileIDsInTrash, nil
 }
 
-// verifyFilesAreDeleted for a given userID and fileIDs, this method verifies that given files are actually deleted
 func (t *TrashRepository) verifyFilesAreDeleted(ctx context.Context, userID int64, fileIDs []int64) error {
 	rows, err := t.DB.QueryContext(ctx, `SELECT file_id FROM trash 
 			WHERE user_id = $1 AND file_id = ANY ($2) 
@@ -312,7 +294,6 @@ func (t *TrashRepository) verifyFilesAreDeleted(ctx context.Context, userID int6
 		return stacktrace.NewError("all file ids are not deleted from trash")
 	}
 
-	// get the size of file from object_keys table
 	row := t.DB.QueryRowContext(ctx, `SELECT coalesce(sum(size),0) FROM object_keys WHERE file_id = ANY($1) and is_deleted = FALSE`,
 		pq.Array(fileIDs))
 	var totalUsage int64
@@ -336,8 +317,6 @@ func (t *TrashRepository) verifyFilesAreDeleted(ctx context.Context, userID int6
 	return nil
 }
 
-// GetFilesIDsForDeletion for given userID and lastUpdateAt timestamp, returns the fileIDs which are in trash and
-// where last updated_at before lastUpdateAt timestamp.
 func (t *TrashRepository) GetFilesIDsForDeletion(userID int64, lastUpdatedAt int64, app ente.App) ([]int64, error) {
 	rows, err := t.DB.Query(`SELECT t.file_id FROM trash t
                 JOIN collections c ON c.collection_id = t.collection_id
@@ -352,7 +331,6 @@ func (t *TrashRepository) GetFilesIDsForDeletion(userID int64, lastUpdatedAt int
 	return fileIDs, nil
 }
 
-// GetTimeStampForLatestNonDeletedEntry returns the updated at timestamp for the latest,non-deleted entry in the trash
 func (t *TrashRepository) GetTimeStampForLatestNonDeletedEntry(userID int64) (*int64, error) {
 	row := t.DB.QueryRow(`SELECT max(updated_at) FROM trash WHERE user_id = $1 AND is_deleted = FALSE AND is_restored = FALSE`, userID)
 	var updatedAt *int64
@@ -363,7 +341,6 @@ func (t *TrashRepository) GetTimeStampForLatestNonDeletedEntry(userID int64) (*i
 	return updatedAt, stacktrace.Propagate(err, "")
 }
 
-// HasItems returns true if the user has any entries in trash.
 func (t *TrashRepository) HasItems(ctx context.Context, userID int64) (bool, error) {
 	row := t.DB.QueryRowContext(ctx, `
 		SELECT exists(
@@ -378,7 +355,6 @@ func (t *TrashRepository) HasItems(ctx context.Context, userID int64) (bool, err
 	return hasItems, stacktrace.Propagate(err, "")
 }
 
-// GetUserIDToFileIDsMapForDeletion returns map of userID to fileIds, where the file ids which should be deleted by now
 func (t *TrashRepository) GetUserIDToFileIDsMapForDeletion() (map[int64][]int64, error) {
 	rows, err := t.DB.Query(`SELECT user_id, file_id FROM trash 
 			WHERE delete_by <= $1  AND is_deleted IS FALSE AND is_restored IS FALSE limit $2`,
@@ -402,22 +378,8 @@ func (t *TrashRepository) GetUserIDToFileIDsMapForDeletion() (map[int64][]int64,
 	return result, nil
 }
 
-// GetFileIdsForDroppingMetadata retrieves file IDs of deleted files for metadata scrubbing.
-// It returns files that were deleted after the provided timestamp (sinceUpdatedAt) and have been in the trash for at least 50 days.
-// This delay ensures compliance with deletion locks.
-// The method orders the results by the 'updated_at' field in ascending order and limits the results to 'TrashDiffLimit' + 1.
-// If multiple files have the same 'updated_at' timestamp and are at the limit boundary, they are excluded to prevent partial scrubbing.
-//
-// Parameters:
-//
-//	sinceUpdatedAt: The timestamp (in microseconds) to filter files that were deleted after this time.
-//
-// Returns:
-//
-//	A slice of FileWithUpdatedAt: Each item contains a file ID and its corresponding 'updated_at' timestamp.
-//	error: If there is any issue in executing the query, an error is returned.
-//
-// Note: The method returns an empty slice if no matching files are found.
+// Wait 50 days for compliance deletion locks, and never split an updated_at
+// group across batches.
 func (t *TrashRepository) GetFileIdsForDroppingMetadata(sinceUpdatedAt int64) ([]FileWithUpdatedAt, error) {
 	rows, err := t.DB.Query(`
 		select file_id, updated_at from trash  where is_deleted=true AND updated_at > $1
@@ -446,14 +408,10 @@ order by updated_at ASC limit $2
 		return fileWithUpdatedAt, nil
 	}
 
-	// from the end ignore the fileIds from fileWithUpdatedAt that have the same updatedAt.
-	// this is to avoid scrubbing partial list of files that have same updatedAt as due to the limit not
-	// all files with the same updatedAt are returned.
 	lastUpdatedAt := fileWithUpdatedAt[len(fileWithUpdatedAt)-1].UpdatedAt
 	var i = len(fileWithUpdatedAt) - 1
 	for ; i >= 0; i-- {
 		if fileWithUpdatedAt[i].UpdatedAt != lastUpdatedAt {
-			// found index (from end) where file's version is different from given version
 			break
 		}
 	}

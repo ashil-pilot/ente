@@ -1,6 +1,7 @@
 import "dart:io";
 
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/models/settings_search_item.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:hugeicons/hugeicons.dart";
@@ -15,13 +16,11 @@ import "package:photos/ui/settings/gallery_settings_screen.dart";
 import "package:photos/ui/settings/memories_settings_screen.dart";
 import "package:photos/ui/settings/ml/machine_learning_settings_page.dart";
 import "package:photos/ui/settings/notification_settings_screen.dart";
-import "package:photos/ui/settings/search/settings_search_item.dart";
 import "package:photos/ui/settings/security/security_settings_page.dart";
 import "package:photos/ui/settings/streaming/video_streaming_settings_page.dart";
 import "package:photos/ui/settings/support/help_support_page.dart";
 import "package:photos/ui/settings/widget_settings_screen.dart";
 
-/// Registry that provides all searchable settings items
 class SettingsSearchRegistry {
   static List<SettingsSearchItem> getSearchableItems(BuildContext context) {
     final l10n = context.strings;
@@ -30,7 +29,6 @@ class SettingsSearchRegistry {
     final showThemeControls = Platform.isAndroid || kDebugMode;
     final items = <SettingsSearchItem>[];
 
-    // Account settings
     if (hasLoggedIn && !isLocalGallery) {
       items.add(
         SettingsSearchItem(
@@ -100,7 +98,6 @@ class SettingsSearchRegistry {
       ]);
     }
 
-    // Backup settings
     if (hasLoggedIn && !isLocalGallery) {
       items.add(
         SettingsSearchItem(
@@ -190,7 +187,6 @@ class SettingsSearchRegistry {
       ]);
     }
 
-    // Security settings
     items.add(
       SettingsSearchItem(
         title: l10n.security,
@@ -273,7 +269,6 @@ class SettingsSearchRegistry {
         ),
     ]);
 
-    // Appearance settings
     items.add(
       SettingsSearchItem(
         title: l10n.appearance,
@@ -321,7 +316,6 @@ class SettingsSearchRegistry {
       ),
     ]);
 
-    // Gallery settings (under Appearance)
     items.add(
       SettingsSearchItem(
         title: l10n.gallery,
@@ -335,7 +329,6 @@ class SettingsSearchRegistry {
       ),
     );
 
-    // Grid Size setting
     items.add(
       SettingsSearchItem(
         title: l10n.photoGridSize,
@@ -349,7 +342,6 @@ class SettingsSearchRegistry {
       ),
     );
 
-    // Group By setting
     items.add(
       SettingsSearchItem(
         title: l10n.groupBy,
@@ -378,7 +370,6 @@ class SettingsSearchRegistry {
       );
     }
 
-    // Machine Learning settings
     if (hasLoggedIn || isLocalGallery) {
       items.add(
         SettingsSearchItem(
@@ -555,7 +546,6 @@ class SettingsSearchRegistry {
       ]);
     }
 
-    // Free up space
     if (hasLoggedIn && !isLocalGallery) {
       items.add(
         SettingsSearchItem(
@@ -589,6 +579,7 @@ class SettingsSearchRegistry {
           icon: HugeIcons.strokeRoundedRocket01,
           routeBuilder: (_) => const FreeUpSpaceOptionsScreen(),
           isSubPage: true,
+          sectionItemPriority: 1,
           keywords: ["device space", "storage", "delete"],
         ),
         SettingsSearchItem(
@@ -633,6 +624,7 @@ class SettingsSearchRegistry {
           icon: HugeIcons.strokeRoundedDelete02,
           routeBuilder: (_) => const FreeUpSpaceOptionsScreen(),
           isSubPage: true,
+          sectionItemPriority: 0,
           keywords: ["delete", "suggestions", "cleanup"],
         ),
         SettingsSearchItem(
@@ -647,7 +639,6 @@ class SettingsSearchRegistry {
       ]);
     }
 
-    // Help & Support
     items.add(
       SettingsSearchItem(
         title: l10n.helpAndSupport,
@@ -706,7 +697,6 @@ class SettingsSearchRegistry {
       ),
     ]);
 
-    // About
     items.add(
       SettingsSearchItem(
         title: l10n.about,
@@ -769,40 +759,30 @@ class SettingsSearchRegistry {
     return items;
   }
 
-  /// Get suggestions shown when search is empty
-  static List<SettingsSearchSuggestion> getSuggestions(
-    BuildContext context,
-    void Function(Widget Function(BuildContext) routeBuilder) onNavigate,
-  ) {
+  static List<SettingsSearchSuggestion> getSuggestions(BuildContext context) {
     final l10n = context.strings;
     final hasLoggedIn = Configuration.instance.isLoggedIn();
     final isLocalGallery = isLocalGalleryMode;
 
     return [
-      // Gallery suggestion
       SettingsSearchSuggestion(
         title: l10n.gallery,
-        onTap: () => onNavigate(
-          (_) =>
-              const GallerySettingsScreen(fromGalleryLayoutSettingsCTA: false),
-        ),
+        routeBuilder: (_) =>
+            const GallerySettingsScreen(fromGalleryLayoutSettingsCTA: false),
       ),
-      // App lock suggestion
       SettingsSearchSuggestion(
         title: l10n.appLock,
-        onTap: () => onNavigate((_) => const SecuritySettingsPage()),
+        routeBuilder: (_) => const SecuritySettingsPage(),
       ),
-      // Free up device space suggestion
       if (hasLoggedIn && !isLocalGallery)
         SettingsSearchSuggestion(
           title: l10n.freeUpDeviceSpace,
-          onTap: () => onNavigate((_) => const FreeUpSpaceOptionsScreen()),
+          routeBuilder: (_) => const FreeUpSpaceOptionsScreen(),
         ),
-      // Backup settings suggestion
       if (hasLoggedIn && !isLocalGallery)
         SettingsSearchSuggestion(
           title: l10n.backupSettings,
-          onTap: () => onNavigate((_) => const BackupSettingsPage()),
+          routeBuilder: (_) => const BackupSettingsPage(),
         ),
     ];
   }

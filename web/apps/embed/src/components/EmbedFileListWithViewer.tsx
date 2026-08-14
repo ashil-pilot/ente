@@ -40,14 +40,10 @@ export const EmbedFileListWithViewer: React.FC<
         [files],
     );
 
-    const handleThumbnailClick = useCallback(
-        (index: number) => {
-            setCurrentIndex(index);
-            setOpenFileViewer(true);
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [files.length],
-    );
+    const handleThumbnailClick = useCallback((index: number) => {
+        setCurrentIndex(index);
+        setOpenFileViewer(true);
+    }, []);
 
     const handleCloseFileViewer = useCallback(() => {
         setOpenFileViewer(false);
@@ -58,6 +54,9 @@ export const EmbedFileListWithViewer: React.FC<
         [onRemotePull],
     );
 
+    const albumDescription =
+        publicCollection.pubMagicMetadata?.data.caption?.trim();
+
     const header = useMemo(
         () => (
             <GalleryItemsHeaderAdapter
@@ -66,6 +65,7 @@ export const EmbedFileListWithViewer: React.FC<
                 <SpacedRow>
                     <GalleryItemsSummary
                         name={publicCollection.name}
+                        description={albumDescription}
                         fileCount={files.length}
                     />
                     <Typography
@@ -99,7 +99,7 @@ export const EmbedFileListWithViewer: React.FC<
                 </SpacedRow>
             </GalleryItemsHeaderAdapter>
         ),
-        [publicCollection.name, files.length],
+        [publicCollection.name, albumDescription, files.length],
     );
 
     return (

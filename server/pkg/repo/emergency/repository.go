@@ -8,7 +8,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// Repository defines the methods for managing emergency contacts and recovery process.
 type Repository struct {
 	DB *sql.DB
 }
@@ -21,8 +20,6 @@ type ContactRow struct {
 	EncryptedKey       *string
 }
 
-// HasActiveLegacyContact returns true when the user has at least one accepted
-// legacy contact configured on their account.
 func (r *Repository) HasActiveLegacyContact(ctx context.Context, userID int64) (bool, error) {
 	var exists bool
 	err := r.DB.QueryRowContext(ctx,
@@ -48,7 +45,7 @@ func (r *Repository) AddEmergencyContact(ctx context.Context, userID int64, emer
 INSERT INTO  emergency_contact(user_id, emergency_contact_id, state, encrypted_key, notice_period_in_hrs) VALUES ($1,$2,$3,$4,$5)
 ON CONFLICT (user_id, emergency_contact_id) DO UPDATE SET state=$3, encrypted_key=$4, notice_period_in_hrs=$5 
 WHERE emergency_contact.user_id=$1 AND emergency_contact.emergency_contact_id=$2 AND emergency_contact.state = ANY($6)`,
-		userID, // $1 user_id
+		userID,
 		emergencyContactID,
 		ente.UserInvitedContact,
 		encKey,
@@ -64,8 +61,6 @@ WHERE emergency_contact.user_id=$1 AND emergency_contact.emergency_contact_id=$2
 	return rowAffected > 0, nil
 }
 
-// GetActiveContactForUser returns all the contacts for a user that are in state accepted or invited
-// and also returns all the contacts that have added the user as emergency contact
 func (r *Repository) GetActiveContactForUser(ctx context.Context, userID int64) ([]*ContactRow, error) {
 	rows, err := r.DB.QueryContext(ctx,
 		`SELECT user_id, emergency_contact_id, state, notice_period_in_hrs, encrypted_key 
@@ -87,7 +82,6 @@ func (r *Repository) GetActiveContactForUser(ctx context.Context, userID int64) 
 	return contacts, nil
 }
 
-// GetActiveEmergencyContact for a given userID and emergencyContactID in active state
 func (r *Repository) GetActiveEmergencyContact(ctx context.Context, userID int64, emergencyContactID int64) (*ContactRow, error) {
 	row := r.DB.QueryRowContext(ctx, `SELECT user_id, emergency_contact_id, state, notice_period_in_hrs, encrypted_key
                                                                        				FROM emergency_contact WHERE user_id=$1 and emergency_contact_id=$2 and state = $3`,
@@ -100,7 +94,6 @@ func (r *Repository) GetActiveEmergencyContact(ctx context.Context, userID int64
 	return &c, nil
 }
 
-// UpdateState will return true if the state was updated, false if the state was not updated
 func (r *Repository) UpdateState(ctx context.Context,
 	userID int64,
 	emergencyContactID int64,
@@ -125,8 +118,6 @@ func (r *Repository) UpdateState(ctx context.Context,
 	return count > 0, stacktrace.Propagate(err2, "")
 }
 
-// UpdateRecoveryNotice updates the notice period for an emergency contact
-// Only allows update if the contact state is INVITED or ACCEPTED
 func (r *Repository) UpdateRecoveryNotice(ctx context.Context,
 	userID int64,
 	emergencyContactID int64,

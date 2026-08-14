@@ -84,7 +84,7 @@ func (c *UserController) GetDetailsV2(ctx *gin.Context, userID int64, fetchMemor
 	})
 
 	g.Go(func() error {
-		return recover.Int64ToInt64RecoverWrapper(userID, c.FileRepo.GetUsage, &usage)
+		return recover.Int64ToInt64RecoverWrapper(userID, c.UsageRepo.GetUsage, &usage)
 	})
 	g.Go(func() error {
 		cnt, err := c.PasskeyRepo.GetPasskeyCount(userID)
@@ -106,9 +106,6 @@ func (c *UserController) GetDetailsV2(ctx *gin.Context, userID int64, fetchMemor
 		})
 	}
 
-	// g.Wait waits for all goroutines to complete
-	// and returns the first non-nil error returned
-	// by one of the goroutines.
 	if err := g.Wait(); err != nil {
 		return details.UserDetailsResponse{}, stacktrace.Propagate(err, "")
 	}
@@ -148,7 +145,6 @@ func (c *UserController) GetDetailsV2(ctx *gin.Context, userID int64, fetchMemor
 		result.SharedCollectionsCount = &sharedCollectionCount
 	}
 	if lockerUsage != nil {
-		// reduce the locker usage from user's usage for surfacing on photos app.
 		for _, userLockerUsage := range lockerUsage.Users {
 			if userLockerUsage.UserID == userID {
 				result.Usage -= userLockerUsage.Usage
@@ -164,7 +160,6 @@ func (c *UserController) GetDetailsV2(ctx *gin.Context, userID int64, fetchMemor
 			}
 			result.FamilyData = familyData
 		}
-		// For Locker app, include family usage data
 		if app == ente.Locker {
 			result.LockerFamilyUsage = &details.LockerFamilyUsage{
 				FamilyFileCount: lockerUsage.TotalFileCount,

@@ -60,7 +60,7 @@ class UserService {
   static const kIsEmailMFAEnabled = "is_email_mfa_enabled";
 
   final SRP6GroupParameters kDefaultSrpGroup = SRP6StandardGroups.rfc5054_4096;
-  final _publicKeyCache = TimedCache<Object, String>(
+  final _publicKeyCache = TimedCache<String, String>(
     duration: const Duration(seconds: 10),
   );
 
@@ -98,7 +98,6 @@ class UserService {
     });
     _preferences = await SharedPreferences.getInstance();
     if (Configuration.instance.isLoggedIn() && !isLocalGalleryMode) {
-      // add artificial delay in refreshing 2FA status
       Future.delayed(
         const Duration(seconds: 5),
         () => {setTwoFactor(fetchTwoFactorStatus: true).ignore()},
@@ -206,25 +205,14 @@ class UserService {
     await _gateway.sendFeedback(feedback: feedback, type: type);
   }
 
-  // getPublicKey returns null value if email id is not
-  // associated with another ente account
-  Future<String?> getPublicKey(String email) =>
-      _getPublicKey(email, () => _gateway.getPublicKey(email));
-
-  Future<String?> getPublicKeyByUserID(int userID) =>
-      _getPublicKey(userID, () => _gateway.getPublicKeyByUserID(userID));
-
-  Future<String?> _getPublicKey(
-    Object cacheKey,
-    Future<String?> Function() fetch,
-  ) async {
-    final String? cachedPubKey = _publicKeyCache.get(cacheKey);
+  Future<String?> getPublicKey(String email) async {
+    final String? cachedPubKey = _publicKeyCache.get(email);
     if (cachedPubKey != null) {
       return cachedPubKey;
     }
-    final publicKey = await fetch();
+    final publicKey = await _gateway.getPublicKey(email);
     if (publicKey != null) {
-      _publicKeyCache.set(cacheKey, publicKey);
+      _publicKeyCache.set(email, publicKey);
     }
     return publicKey;
   }
@@ -264,7 +252,6 @@ class UserService {
       if (hasSecurityStatusChanged) {
         Bus.instance.fire(UserDetailsChangedEvent());
       }
-      // handle email change from different client
       if (userDetails.email != _config.getEmail()) {
         await setEmail(userDetails.email);
       }
@@ -296,11 +283,8 @@ class UserService {
       if (!context.mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
-      // Determine if we should silently ignore the error and proceed with logout
       final bool silentlyIgnoreError =
-          // Token is already invalid (401 response)
           (e is DioException && e.response?.statusCode == 401) ||
-          // Custom endpoints where server might be non-existent or unavailable
           !endpointConfig.isProduction;
 
       if (silentlyIgnoreError) {
@@ -314,7 +298,6 @@ class UserService {
 
         await Configuration.instance.logout();
 
-        // Navigate to first route if context is still mounted
         if (context.mounted) {
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
@@ -322,8 +305,7 @@ class UserService {
       }
 
       _logger.severe("Failed to logout", e);
-      //This future is for waiting for the dialog from which logout() is called
-      //to close and only then to show the error dialog.
+      // Let the logout dialog close before showing the error.
       if (!context.mounted) return;
       unawaited(
         Future.delayed(const Duration(milliseconds: 150), () {
@@ -542,11 +524,16 @@ class UserService {
 
   Future<void> setAttributes(KeyGenResult result) async {
     try {
-      await registerOrUpdateSrp(result.loginKey);
       await _gateway.setKeyAttributes(result.keyAttributes);
       await _config.setKey(result.privateKeyAttributes.key);
       await _config.setSecretKey(result.privateKeyAttributes.secretKey);
       await _config.setKeyAttributes(result.keyAttributes);
+      try {
+        await registerOrUpdateSrp(result.loginKey);
+      } catch (_) {
+        // Keys are stored; password reentry after OTT login retries SRP setup.
+        _logger.warning("Continuing signup after SRP setup failure");
+      }
     } catch (e) {
       _logger.severe(e);
       rethrow;
@@ -1241,83 +1228,50 @@ class UserService {
     }
   }
 
-  /// Returns Contacts(Users) that are relevant to the account owner.
-  /// Note: "User" refers to the account owner in the points below.
-  /// This includes:
-  /// 	- Collaborators and viewers of collections owned by user
-  ///   - Owners of collections shared to user.
-  ///   - All collaborators of collections in which user is a collaborator or
-  ///     a viewer.
-  ///   - All family members of user.
-  ///   - All contacts linked to a person.
-  List<User> getRelevantContacts() {
-    final List<User> relevantUsers = [];
-    final existingEmails = <String>{};
+  List<UserSuggestion> getRelevantContacts() {
     final int ownerID = Configuration.instance.getUserID()!;
     final String ownerEmail = Configuration.instance.getEmail()!;
-    existingEmails.add(ownerEmail);
+    final suggestions = <UserSuggestion>[];
+    final existingEmails = <String>{ownerEmail};
+
+    void add(String email, {int? userID}) {
+      if (email.isNotEmpty && existingEmails.add(email)) {
+        suggestions.add(UserSuggestion(email, userID: userID));
+      }
+    }
 
     for (final c in CollectionsService.instance.getActiveCollections()) {
-      // Add collaborators and viewers of collections owned by user
       if (c.owner.id == ownerID) {
         for (final User u in c.sharees) {
-          if (u.id != null && u.email.isNotEmpty) {
-            if (!existingEmails.contains(u.email)) {
-              relevantUsers.add(u);
-              existingEmails.add(u.email);
-            }
-          }
+          add(u.email, userID: u.id);
         }
-      } else if (c.owner.id != null && c.owner.email.isNotEmpty) {
-        // Add owners of collections shared with user
-        if (!existingEmails.contains(c.owner.email)) {
-          relevantUsers.add(c.owner);
-          existingEmails.add(c.owner.email);
-        }
-        // Add collaborators of collections shared with user where user is a
-        // viewer or a collaborator
-        for (final User u in c.sharees) {
-          if (u.id != null &&
-              u.email.isNotEmpty &&
+      } else if (c.owner.email.isNotEmpty) {
+        add(c.owner.email, userID: c.owner.id);
+        final participates = c.sharees.any(
+          (u) =>
               u.email == ownerEmail &&
-              (u.isAdmin || u.isCollaborator || u.isViewer)) {
-            for (final User u in c.sharees) {
-              if (u.id != null &&
-                  u.email.isNotEmpty &&
-                  (u.isCollaborator || u.isAdmin)) {
-                if (!existingEmails.contains(u.email)) {
-                  relevantUsers.add(u);
-                  existingEmails.add(u.email);
-                }
-              }
+              (u.isAdmin || u.isCollaborator || u.isViewer),
+        );
+        if (participates) {
+          for (final User u in c.sharees) {
+            if (u.isCollaborator || u.isAdmin) {
+              add(u.email, userID: u.id);
             }
-            break;
           }
         }
       }
     }
 
-    // Add user's family members
-    final cachedUserDetails = getCachedUserDetails();
-    if (cachedUserDetails?.familyData?.members?.isNotEmpty ?? false) {
-      for (final member in cachedUserDetails!.familyData!.members!) {
-        if (!existingEmails.contains(member.email)) {
-          relevantUsers.add(User(id: member.userID, email: member.email));
-          existingEmails.add(member.email);
-        }
-      }
+    final familyMembers =
+        getCachedUserDetails()?.familyData?.members ?? const <FamilyMember>[];
+    for (final member in familyMembers) {
+      add(member.email, userID: member.userID);
     }
 
-    // Add contacts linked to people
-    final cachedEmailToPartialPersonData =
-        PersonService.instance.emailToPartialPersonDataMapCache;
-    for (final email in cachedEmailToPartialPersonData.keys) {
-      if (!existingEmails.contains(email)) {
-        relevantUsers.add(User(email: email));
-        existingEmails.add(email);
-      }
+    for (final email in PersonService.instance.cachedLinkedPersonEmails) {
+      add(email);
     }
 
-    return relevantUsers;
+    return suggestions;
   }
 }

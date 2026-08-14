@@ -6,8 +6,8 @@
         "Chrome 92"
     ],
     "dependencies": {
-        "ente-accounts": "*",
         "ente-base": "*",
+        "ente-cast-wasm": "*",
         "ente-media": "*"
     },
     "devDependencies": {

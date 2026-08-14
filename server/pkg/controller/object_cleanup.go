@@ -19,27 +19,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ObjectCleanupController exposes functions to remove temporary object storage
-// entries that were never committed to the database.
-//
-//  1. We create presigned URLs for clients to upload their objects to. It might
-//     happen that the client is able to successfully upload to these URLs, but
-//     not tell museum about the successful upload.
-//
-//  2. During replication, we might have half-done multipart uploads.
 type ObjectCleanupController struct {
 	Repo       *repo.ObjectCleanupRepository
 	ObjectRepo *repo.ObjectRepository
 	S3Config   *s3config.S3Config
 }
 
-// PreSignedRequestValidityDuration is the lifetime of a pre-signed URL
 const PreSignedRequestValidityDuration = 7 * 24 * stime.Hour
 
-// PreSignedPartUploadRequestDuration is the lifetime of a pre-signed multipart URL
 const PreSignedPartUploadRequestDuration = 7 * 24 * stime.Hour
 
-// Return a new instance of ObjectCleanupController
 func NewObjectCleanupController(
 	objectCleanupRepo *repo.ObjectCleanupRepository,
 	objectRepo *repo.ObjectRepository,
@@ -52,8 +41,6 @@ func NewObjectCleanupController(
 	}
 }
 
-// StartRemovingUnreportedObjects starts goroutines to cleanup deletes those
-// objects that were possibly uploaded but not reported to the database
 func (c *ObjectCleanupController) StartRemovingUnreportedObjects() {
 	// TODO: object_cleanup: This code is only currently tested for B2
 	if c.S3Config.GetHotDataCenter() != c.S3Config.GetHotBackblazeDC() {
@@ -73,9 +60,6 @@ func (c *ObjectCleanupController) StartRemovingUnreportedObjects() {
 	}
 }
 
-// Entry point for the worker goroutine to cleanup unreported objects.
-//
-// i is an arbitrary index for the current goroutine.
 func (c *ObjectCleanupController) removeUnreportedObjectsWorker(i int) {
 	for {
 		count := c.removeUnreportedObjects()
@@ -113,9 +97,7 @@ func (c *ObjectCleanupController) removeUnreportedObjects() int {
 
 	logger.Infof("Removed %d objects", count)
 
-	// We always commit the transaction, even on errors for individual rows. To
-	// avoid object getting stuck in a loop, we increase their expiry times.
-
+	// Always commit the batch. skip() delays failed rows to prevent a tight loop.
 	cerr := tx.Commit()
 	if cerr != nil {
 		cerr = stacktrace.Propagate(err, "Failed to commit transaction")
@@ -179,19 +161,11 @@ func (c *ObjectCleanupController) removeUnreportedObject(tx *sql.Tx, t ente.Temp
 	return nil
 }
 
-// AddTempObjectKey creates a new temporary object entry.
-//
-// It persists a given object key as having been provided to a client for
-// uploading. If a client does not successfully mark this object's upload as
-// having completed within PreSignedRequestValidityDuration, this temp object
-// will be cleaned up.
 func (c *ObjectCleanupController) AddTempObjectKey(objectKey string, dc string) error {
 	expiry := time.Microseconds() + (2 * PreSignedRequestValidityDuration.Microseconds())
 	return c.addCleanupEntryForObjectKey(objectKey, dc, expiry)
 }
 
-// Add the object to a queue of "temporary" objects that are deleted (if they
-// exist) if this entry is not removed from the queue by expirationTime.
 func (c *ObjectCleanupController) addCleanupEntryForObjectKey(objectKey string, dc string, expirationTime int64) error {
 	err := c.Repo.AddTempObject(ente.TempObject{
 		ObjectKey:   objectKey,
@@ -201,10 +175,6 @@ func (c *ObjectCleanupController) addCleanupEntryForObjectKey(objectKey string, 
 	return stacktrace.Propagate(err, "")
 }
 
-// AddTempObjectMultipartKey creates a new temporary object entry for a
-// multlipart upload.
-//
-// See AddTempObjectKey for more details.
 func (c *ObjectCleanupController) AddMultipartTempObjectKey(objectKey string, uploadID string, dc string) error {
 	expiry := time.Microseconds() + (2 * PreSignedPartUploadRequestDuration.Microseconds())
 	err := c.Repo.AddTempObject(ente.TempObject{
@@ -312,7 +282,6 @@ func (c *ObjectCleanupController) abortMultipartUpload(objectKey string, uploadI
 	})
 	if err != nil {
 		if isUnknownUploadError(err) {
-			// This is expected now, since we just aborted the upload
 			return nil
 		}
 		return stacktrace.Propagate(err, "")
@@ -323,25 +292,6 @@ func (c *ObjectCleanupController) abortMultipartUpload(objectKey string, uploadI
 	return nil
 }
 
-// The original code here checked for NoSuchUpload, presumably because that is
-// the error that B2 returns.
-//
-// Wasabi returns something similar:
-//
-//	<Error>
-//	  <Code>NoSuchUpload</Code>
-//	  <Message>The specified upload does not exist. The upload ID may be invalid,
-//	           or the upload may have been aborted or completed.</Message>
-//	...
-//
-// However, Scaleway returns a different error, NoSuchKey
-//
-//	<Error>
-//	  <Code>NoSuchKey</Code>
-//	  <Message>The specified key does not exist.</Message>
-//	...
-//
-// This method returns true if either of these occur.
 func isUnknownUploadError(err error) bool {
 	// B2, Wasabi
 	if strings.Contains(err.Error(), "NoSuchUpload") {

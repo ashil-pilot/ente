@@ -38,7 +38,6 @@ import (
 
 var passwordWhiteListedURLs = []string{"/public-collection/info", "/public-collection/verify-password"}
 
-// CollectionLinkMiddleware intercepts and authenticates incoming requests
 type CollectionLinkMiddleware struct {
 	CollectionLinkRepo   *public.CollectionLinkRepo
 	PublicCollectionCtrl *public2.CollectionLinkController
@@ -51,9 +50,6 @@ type CollectionLinkMiddleware struct {
 	AnonIdentitySecret   []byte
 }
 
-// Authenticate returns a middle ware that extracts the `X-Auth-Access-Token`
-// within the header of a request and uses it to validate the access token and set the
-// ente.PublicAccessContext with auth.PublicAccessKey as key
 func (m *CollectionLinkMiddleware) Authenticate(urlSanitizer func(_ *gin.Context) string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		accessToken := auth.GetAccessToken(c)
@@ -85,14 +81,12 @@ func (m *CollectionLinkMiddleware) Authenticate(urlSanitizer func(_ *gin.Context
 				c.AbortWithStatusJSON(http.StatusGone, gin.H{"error": "disabled token"})
 				return
 			}
-			// validate if user still has active paid subscription
 			isFreeUser, err := m.validateOwnersSubscription(c, publicCollectionSummary.CollectionID)
 			if err != nil {
 				logrus.WithError(err).Warn("failed to verify active paid subscription")
 				c.AbortWithStatusJSON(http.StatusGone, gin.H{"error": "no active subscription"})
 				return
 			}
-			// Override device limit to 5 for free users
 			if isFreeUser {
 				publicCollectionSummary.DeviceLimit = public2.FreeUserDeviceLimit
 			}
@@ -139,7 +133,6 @@ func (m *CollectionLinkMiddleware) Authenticate(urlSanitizer func(_ *gin.Context
 			return
 		}
 
-		// checks password protected public collection
 		if !passwordValidated && publicCollectionSummary.PassHash != nil && *publicCollectionSummary.PassHash != "" {
 			if err = m.validatePassword(c, reqPath, publicCollectionSummary); err != nil {
 				logrus.WithError(err).Warn("password validation failed")
@@ -209,8 +202,6 @@ func shouldCheckCollectionLinkDeviceLimit(reqPath string) bool {
 		reqPath == "/public-collection/diff"
 }
 
-// validateOwnersSubscription checks if the owner has an active subscription.
-// Returns (isFreeUser, error) where isFreeUser is true if user is on free plan but has active subscription.
 func (m *CollectionLinkMiddleware) validateOwnersSubscription(c *gin.Context, cID int64) (bool, error) {
 	userID, err := m.CollectionRepo.GetOwnerID(cID)
 	if err != nil {
@@ -224,7 +215,6 @@ func (m *CollectionLinkMiddleware) validateOwnersSubscription(c *gin.Context, cI
 			return false, stacktrace.Propagate(err, "failed to validate owners subscription")
 		}
 		isFreeUser = true
-		// Free user - check if they have active subscription (not expired)
 		if err = m.BillingCtrl.HasActiveSelfOrFamilySubscription(userID, false); err != nil {
 			return false, stacktrace.Propagate(err, "failed to validate owners subscription")
 		}
@@ -272,7 +262,6 @@ func (m *CollectionLinkMiddleware) isDeviceLimitReached(ctx context.Context,
 	return false, stacktrace.Propagate(err, "failed to record access history")
 }
 
-// validatePassword will verify if the user is provided correct password for the public album
 func (m *CollectionLinkMiddleware) validatePassword(c *gin.Context, reqPath string,
 	collectionSummary ente.PublicCollectionSummary) error {
 	// /public-collection/info is allowed before password unlock so clients can

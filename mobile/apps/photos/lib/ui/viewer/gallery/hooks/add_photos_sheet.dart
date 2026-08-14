@@ -1,5 +1,6 @@
 import "package:ente_components/ente_components.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/loading_widget.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
@@ -15,7 +16,6 @@ import "package:photos/services/collections_service.dart";
 import "package:photos/services/filter/db_filters.dart";
 import "package:photos/ui/actions/collection/collection_file_actions.dart";
 import "package:photos/ui/actions/collection/collection_sharing_actions.dart";
-import "package:photos/ui/common/loading_widget.dart";
 import "package:photos/ui/viewer/gallery/gallery.dart";
 import "package:photos/ui/viewer/gallery/state/boundary_reporter_mixin.dart";
 import "package:photos/ui/viewer/gallery/state/gallery_boundaries_provider.dart";
@@ -58,7 +58,6 @@ class AddPhotosPhotoWidget extends StatelessWidget {
     });
     final Set<int> hiddenCollectionIDs = CollectionsService.instance
         .getHiddenCollectionIds();
-    // Hide the current collection files from suggestions
     hiddenCollectionIDs.add(collection.id);
 
     return Container(
@@ -233,9 +232,8 @@ class AddPhotosPhotoWidget extends StatelessWidget {
     }
   }
 
-  // _getAssetPickerTextDelegate returns the text delegate for the asset picker
-  // This custom method is required to enforce English as the default fallback
-  // instead of Chinese.
+  // AssetPicker's fallback is Chinese. Unsupported locales use its English
+  // delegate.
   Future<AssetPickerTextDelegate> _getAssetPickerTextDelegate() async {
     final Locale locale = (await getLocale())!;
     switch (locale.languageCode.toLowerCase()) {

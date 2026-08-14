@@ -1,11 +1,11 @@
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/date_time_picker.dart";
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import "package:photos/models/file/file.dart";
 import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/components/buttons/button_widget.dart";
 import "package:photos/ui/components/models/button_type.dart";
-import "package:photos/ui/viewer/date/date_time_picker.dart";
 import "package:photos/ui/viewer/file/thumbnail_widget.dart";
 import "package:photos/utils/magic_util.dart";
 
@@ -38,7 +38,6 @@ class EditDateSheet extends StatefulWidget {
 }
 
 class _EditDateSheetState extends State<EditDateSheet> {
-  // Single date or shift date
   bool showSingleOrShiftChoice = false;
   bool selectSingleDate = false;
 
@@ -104,7 +103,6 @@ class _EditDateSheetState extends State<EditDateSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Photo count and date range section
             if (widget.showHeader)
               PhotoDateHeaderWidget(
                 enteFiles: widget.enteFiles,
@@ -145,19 +143,19 @@ class _EditDateSheetState extends State<EditDateSheet> {
                 },
               ),
             if (selectingDate || selectingTime)
-              DateTimePickerWidget(
-                (DateTime dateTime) {
+              DateTimePicker(
+                initialDateTime: selectedDate,
+                onDateTimeSelected: (dateTime) {
                   selectedDate = dateTime;
                   selectingDate = false;
                   selectingTime = false;
                   setState(() {});
                 },
-                () {
+                onCancel: () {
                   selectingDate = false;
                   selectingTime = false;
                   setState(() {});
                 },
-                selectedDate,
                 maxDateTime: maxDate,
                 startWithTime: selectingTime,
               ),
@@ -194,7 +192,6 @@ class _EditDateSheetState extends State<EditDateSheet> {
                   ),
                 ],
               ),
-            // Bottom indicator line
             const SizedBox(height: 20),
           ],
         ),
@@ -430,7 +427,6 @@ class SelectDateOrShiftWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Select one date option
             ListTile(
               leading: Icon(
                 Icons.calendar_today_outlined,
@@ -456,7 +452,6 @@ class SelectDateOrShiftWidget extends StatelessWidget {
               endIndent: 16,
               height: 0.5,
             ),
-            // Shift dates option
             ListTile(
               leading: Icon(
                 Icons.calendar_month_outlined,
@@ -508,7 +503,6 @@ class PhotoDateHeaderWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          // Thumbnail
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: SizedBox(
@@ -518,7 +512,6 @@ class PhotoDateHeaderWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Photo count and date info
           multipleFiles
               ? Expanded(
                   child: Column(

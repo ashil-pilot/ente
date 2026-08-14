@@ -103,10 +103,9 @@ impl<B: Backend> ChatDb<B> {
 
     pub fn update_session_title(&self, uuid: Uuid, title: &str) -> Result<()> {
         let affected = self.backend.execute(
-            "UPDATE sessions SET title = ?, updated_at = ? WHERE session_uuid = ?",
+            "UPDATE sessions SET title = ? WHERE session_uuid = ?",
             &[
                 Value::Blob(crypto::encrypt_string(title, &self.key)?),
-                Value::Integer(self.clock.now_us()),
                 Value::Text(uuid.to_string()),
             ],
         )?;
@@ -147,7 +146,7 @@ impl<B: Backend> ChatDb<B> {
              VALUES (?, ?, ?, ?)
              ON CONFLICT(session_uuid) DO UPDATE SET
                title = CASE
-                 WHEN excluded.updated_at >= sessions.updated_at THEN excluded.title
+                 WHEN excluded.updated_at > sessions.updated_at THEN excluded.title
                  ELSE sessions.title
                END,
                created_at = MIN(sessions.created_at, excluded.created_at),
@@ -209,20 +208,9 @@ impl<B: Backend> ChatDb<B> {
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub fn insert_message_with_uuid(
-        &self,
-        uuid: Uuid,
-        session_uuid: Uuid,
-        sender: &str,
-        text: &str,
-        parent: Option<Uuid>,
-        attachments: Vec<AttachmentMeta>,
-        created_at: i64,
-    ) -> Result<Message> {
-        let sender: Sender = sender.parse()?;
-        let encrypted_text = crypto::encrypt_string(text, &self.key)?;
-        let attachments_json = self.serialize_attachments(&attachments)?;
+    pub fn insert_message_with_uuid(&self, message: &Message) -> Result<Message> {
+        let encrypted_text = crypto::encrypt_string(&message.text, &self.key)?;
+        let attachments_json = self.serialize_attachments(&message.attachments)?;
 
         self.backend.transaction(|tx| {
             let inserted = tx.execute(
@@ -232,24 +220,24 @@ impl<B: Backend> ChatDb<B> {
                  ) VALUES (?, ?, ?, ?, ?, ?, ?)
                  ON CONFLICT(message_uuid) DO NOTHING",
                 &[
-                    Value::Text(uuid.to_string()),
-                    Value::Text(session_uuid.to_string()),
-                    optional_uuid(parent),
-                    Value::Text(sender.as_str().to_string()),
+                    Value::Text(message.uuid.to_string()),
+                    Value::Text(message.session_uuid.to_string()),
+                    optional_uuid(message.parent_message_uuid),
+                    Value::Text(message.sender.as_str().to_string()),
                     Value::Blob(encrypted_text),
                     attachments_json.map(Value::Text).unwrap_or(Value::Null),
-                    Value::Integer(created_at),
+                    Value::Integer(message.created_at),
                 ],
             )?;
             if inserted == 1 {
-                self.touch_session_at_least(tx, session_uuid, created_at)?;
+                self.touch_session_at_least(tx, message.session_uuid, message.created_at)?;
             }
             Ok(())
         })?;
 
-        self.get_message(uuid)?.ok_or(Error::NotFound {
+        self.get_message(message.uuid)?.ok_or(Error::NotFound {
             entity: EntityType::Message,
-            id: uuid,
+            id: message.uuid,
         })
     }
 

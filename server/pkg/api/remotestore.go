@@ -10,12 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RemoteStoreHandler expose request handlers to all remote store
 type RemoteStoreHandler struct {
 	Controller *remotestore.Controller
 }
 
-// InsertOrUpdate handler for inserting or updating key
 func (h *RemoteStoreHandler) InsertOrUpdate(c *gin.Context) {
 	var request ente.UpdateKeyValueRequest
 	if err := handler.BindJSON(c, &request); err != nil {
@@ -45,7 +43,6 @@ func (h *RemoteStoreHandler) RemoveKey(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// GetKey handler for fetching a value for particular key
 func (h *RemoteStoreHandler) GetKey(c *gin.Context) {
 	var request ente.GetValueRequest
 	if err := c.ShouldBindQuery(&request); err != nil {
@@ -62,7 +59,6 @@ func (h *RemoteStoreHandler) GetKey(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetFeatureFlags returns all the feature flags and value for given user
 func (h *RemoteStoreHandler) GetFeatureFlags(c *gin.Context) {
 	resp, err := h.Controller.GetFeatureFlags(c)
 	if err != nil {
@@ -72,7 +68,6 @@ func (h *RemoteStoreHandler) GetFeatureFlags(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// CheckDomain returns 200 ok if the custom domain is claimed by any ente user
 func (h *RemoteStoreHandler) CheckDomain(c *gin.Context) {
 	domain := c.Query("domain")
 	if domain == "" {

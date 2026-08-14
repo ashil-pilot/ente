@@ -2,6 +2,7 @@ import "dart:async" show StreamSubscription, unawaited;
 import "dart:math";
 import "dart:typed_data";
 
+import "package:ente_components/ente_components.dart";
 import "package:ente_strings/ente_strings.dart";
 import "package:flutter/foundation.dart" show kDebugMode;
 import "package:flutter/material.dart";
@@ -15,8 +16,6 @@ import 'package:photos/services/machine_learning/face_ml/feedback/cluster_feedba
 import "package:photos/services/machine_learning/face_ml/person/person_service.dart";
 import "package:photos/services/machine_learning/ml_result.dart";
 import "package:photos/theme/ente_theme.dart";
-import "package:photos/ui/components/buttons/button_widget.dart";
-import "package:photos/ui/components/models/button_type.dart";
 import "package:photos/ui/viewer/people/cluster_page.dart";
 import "package:photos/ui/viewer/people/face_thumbnail_squircle.dart";
 import "package:photos/ui/viewer/people/file_face_widget.dart";
@@ -50,14 +49,12 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
   late final Logger _logger = Logger('_PersonClustersState');
   late final mlDataDB = MLDataDB.instance;
 
-  // Declare a variable for the future
   late Future<List<ClusterSuggestion>> futureClusterSuggestions;
   StreamSubscription<PeopleChangedEvent>? _peopleChangedEvent;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the future in initState
     _fetchClusterSuggestions();
   }
 
@@ -199,33 +196,37 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
                         Row(
                           children: <Widget>[
                             Expanded(
-                              child: ButtonWidget(
-                                buttonType: ButtonType.tertiaryCritical,
-                                icon: Icons.close,
-                                labelText: context.strings.no,
-                                buttonSize: ButtonSize.large,
-                                onTap: () async => {
-                                  await _handleUserClusterChoice(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: context.componentColors.warning,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    Radii.button,
+                                  ),
+                                ),
+                                child: ButtonComponent(
+                                  variant:
+                                      ButtonComponentVariant.tertiaryCritical,
+                                  leading: const Icon(Icons.close),
+                                  label: context.strings.no,
+                                  onTap: () => _handleUserClusterChoice(
                                     clusterID,
                                     false,
                                     numberOfDifferentSuggestions,
                                   ),
-                                },
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12.0),
                             Expanded(
-                              child: ButtonWidget(
-                                buttonType: ButtonType.primary,
-                                labelText: context.strings.yes,
-                                buttonSize: ButtonSize.large,
-                                onTap: () async => {
-                                  await _handleUserClusterChoice(
-                                    clusterID,
-                                    true,
-                                    numberOfDifferentSuggestions,
-                                  ),
-                                },
+                              child: ButtonComponent(
+                                label: context.strings.yes,
+                                onTap: () => _handleUserClusterChoice(
+                                  clusterID,
+                                  true,
+                                  numberOfDifferentSuggestions,
+                                ),
                               ),
                             ),
                           ],
@@ -274,11 +275,9 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
     bool yesOrNo,
     int numberOfSuggestions,
   ) async {
-    // Perform the action based on clusterID, e.g., assignClusterToPerson or captureNotPersonFeedback
     if (!canGiveFeedback) {
       return;
     }
-    // Store the feedback in case the user wants to revert
     pastUserFeedback.add(
       SuggestionUserFeedback(yesOrNo, allSuggestions[currentSuggestionIndex]),
     );
@@ -288,17 +287,15 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
         person: widget.person,
         clusterID: clusterID,
       );
-      // Increment the suggestion index
+      _notifySuggestionReviewed();
       if (mounted) {
         setState(() => currentSuggestionIndex++);
       }
 
-      // Check if we need to fetch new data
       if (currentSuggestionIndex >= (numberOfSuggestions)) {
         setState(() {
           currentSuggestionIndex = 0;
-          futureBuilderKeySuggestions =
-              UniqueKey(); // Reset to trigger FutureBuilder
+          futureBuilderKeySuggestions = UniqueKey();
           futureBuilderKeyFaceThumbnails = UniqueKey();
           _fetchClusterSuggestions();
         });
@@ -320,14 +317,23 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
       personID: widget.person.remoteID,
       clusterID: clusterID,
     );
-    // Recalculate the suggestions when a suggestion is rejected
+    _notifySuggestionReviewed();
     setState(() {
       currentSuggestionIndex = 0;
-      futureBuilderKeySuggestions =
-          UniqueKey(); // Reset to trigger FutureBuilder
+      futureBuilderKeySuggestions = UniqueKey();
       futureBuilderKeyFaceThumbnails = UniqueKey();
       _fetchClusterSuggestions();
     });
+  }
+
+  void _notifySuggestionReviewed() {
+    Bus.instance.fire(
+      PeopleChangedEvent(
+        person: widget.person,
+        type: PeopleEventType.reviewedSuggestion,
+        source: runtimeType.toString(),
+      ),
+    );
   }
 
   Future<void> _saveAsAnotherPerson() async {
@@ -351,6 +357,7 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
       if (result == null || result == false) {
         return;
       }
+      _notifySuggestionReviewed();
       if (mounted) {
         setState(() => currentSuggestionIndex++);
       }
@@ -371,7 +378,6 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
     }
   }
 
-  // Method to fetch cluster suggestions
   void _fetchClusterSuggestions() {
     debugPrint("Fetching suggestions for ${widget.person.data.name}");
     futureClusterSuggestions = ClusterFeedbackService.instance
@@ -403,7 +409,6 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
         const SizedBox(height: 24.0),
       ],
     );
-    // Precompute face thumbnails for next suggestions, in case there are
     precomputeFaceCrops();
     return widgetToReturn;
   }
@@ -444,7 +449,6 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
             ],
           );
         } else if (snapshot.hasError) {
-          // log the error
           return Center(child: Text(context.strings.error));
         } else {
           canGiveFeedback = false;
@@ -559,6 +563,7 @@ class _PersonClustersState extends State<PersonReviewClusterSuggestion> {
           clusterID: lastFeedback.suggestion.clusterIDToMerge,
         );
       }
+      _notifySuggestionReviewed();
 
       futureClusterSuggestions = futureClusterSuggestions.then((list) {
         return list.sublist(currentSuggestionIndex)

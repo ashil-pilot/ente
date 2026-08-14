@@ -1,11 +1,10 @@
 name: "Verify Podfile.lock (Mobile)"
 
-# Verify each app's Podfile.lock is in sync with its Flutter plugins.
-
 on:
     pull_request:
         paths:
             - ".github/workflows/mobile-podfile-lock.yml"
+            - "apple/packages/EnteOnnxRuntime/EnteOnnxRuntime.podspec"
             - "mobile/**/pubspec.yaml"
             - "mobile/**/pubspec.lock"
             - "mobile/**/Podfile"

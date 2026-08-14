@@ -7,11 +7,7 @@ import { SpacePublicProfileNotificationControl } from "components/SpacePublicPro
 import { SpaceRouteFallback } from "components/SpaceRouteFallback";
 import log from "ente-base/log";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-    OnboardingScreen,
-    addFriendOnboardingTitle,
-    onboardingGreen,
-} from "screens/OnboardingScreen";
+import { OnboardingScreen, onboardingGreen } from "screens/OnboardingScreen";
 import { ProfileScreen, profileBackground } from "screens/ProfileScreen";
 import {
     loadCurrentSpaceRelationship,
@@ -41,7 +37,7 @@ import {
     useSpaceAppState,
     type OnboardingEntrySource,
 } from "state/spaceAppState";
-import { profilePostGroupsFromPosts } from "utils/spacePostDisplay";
+import { profilePostItemsFromPosts } from "utils/spacePostDisplay";
 import { spaceRoutes } from "utils/spaceRoutes";
 import { useSpaceRouter } from "utils/spaceRouteTransitions";
 
@@ -56,6 +52,14 @@ type AuthenticatedProfileRouteStatus = "idle" | "loading" | "complete";
 interface PageProps {
     invitePreview?: boolean;
 }
+
+const addFriendOnboardingTitle = (username: string) => (
+    <>
+        {`See @${username}'s`}
+        <br />
+        everyday moments
+    </>
+);
 
 const addFriendPostActionOnboardingTitle = (
     username: string,
@@ -329,8 +333,8 @@ export const Page: React.FC<PageProps> = ({ invitePreview }) => {
     const [pendingInviteIntent, setPendingInviteIntent] =
         useState<SpaceInviteIntent>();
     const [isAddingFriend, setIsAddingFriend] = useState(false);
-    const publicPostGroups = useMemo(
-        () => profilePostGroupsFromPosts(publicPosts),
+    const publicPostItems = useMemo(
+        () => profilePostItemsFromPosts(publicPosts),
         [publicPosts],
     );
 
@@ -648,7 +652,7 @@ export const Page: React.FC<PageProps> = ({ invitePreview }) => {
                             onBack={() => window.location.assign("/")}
                             onCreateSpace={createSpace}
                             onLoadPostImage={publicLink.loadPostImage}
-                            postGroups={publicPostGroups}
+                            postItems={publicPostItems}
                             postsCount={publicLink.postsCount}
                             profile={publicLink.profile}
                             publicNotificationControl={

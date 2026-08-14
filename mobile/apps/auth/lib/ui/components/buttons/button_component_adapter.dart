@@ -1,17 +1,17 @@
 import 'dart:async';
 
-import 'package:ente_auth/ui/components/buttons/button_widget.dart';
-import 'package:ente_auth/ui/components/models/button_result.dart';
-import 'package:ente_auth/ui/components/models/button_type.dart';
 import 'package:ente_components/ente_components.dart';
 import 'package:ente_strings/ente_strings.dart';
+import 'package:ente_ui/components/buttons/button_widget.dart';
+import 'package:ente_ui/components/buttons/models/button_result.dart';
+import 'package:ente_ui/components/buttons/models/button_type.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 const _loadingSurfaceDelay = Duration(milliseconds: 300);
 const _successDisplayDuration = Duration(seconds: 1);
 
-/// Preserves legacy Auth button behavior while rendering an Ente component.
+// Legacy adapter for existing ButtonWidget callers.
 class ButtonComponentAdapter extends StatelessWidget {
   const ButtonComponentAdapter({required this.button, super.key});
 

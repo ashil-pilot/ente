@@ -3,6 +3,7 @@ import "dart:typed_data";
 
 import "package:ente_components/ente_components.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/loading_widget.dart";
 import "package:flutter/material.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
@@ -21,7 +22,6 @@ import "package:photos/services/machine_learning/face_ml/feedback/cluster_feedba
 import "package:photos/services/machine_learning/face_ml/person/person_service.dart"
     show ManualPersonAssignmentResult, PersonService;
 import "package:photos/theme/ente_theme.dart";
-import "package:photos/ui/common/loading_widget.dart";
 import "package:photos/ui/components/buttons/button_widget.dart";
 import "package:photos/ui/components/models/button_type.dart";
 import "package:photos/ui/viewer/file_details/file_info_face_widget.dart";
@@ -161,7 +161,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
   Widget _buildPeopleGrid(double thumbnailWidth) {
     final children = <Widget>[];
 
-    // Add manual person widgets first
     for (final person in _manualPersons) {
       children.add(
         _ManualPersonTag(
@@ -175,7 +174,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       );
     }
 
-    // Add face widgets
     for (final faceInfo in _defaultFaces) {
       children.add(
         FileInfoFaceWidget(
@@ -195,7 +193,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       );
     }
 
-    // Add "Add person" button at the end
     if (!isLocalGalleryMode &&
         flagService.manualTagFileToPerson &&
         widget.file.uploadedFileID != null) {
@@ -217,7 +214,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
   ) async {
     final faceInfoList = <_FaceInfo>[];
 
-    // Build person mapping for sorting
     final faceIdToPersonID = <String, String>{};
     for (final face in faces) {
       final clusterID = faceIdsToClusterIds[face.faceID];
@@ -229,7 +225,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       }
     }
 
-    // Sort faces: named first, then by score, hidden last
     faces.sort((a, b) {
       final aPersonID = faceIdToPersonID[a.faceID];
       final bPersonID = faceIdToPersonID[b.faceID];
@@ -243,7 +238,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       return b.score.compareTo(a.score);
     });
 
-    // Create face info objects
     for (final face in faces) {
       final faceCrop = faceCrops[face.faceID];
       if (faceCrop == null) {
@@ -641,8 +635,7 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       fileKey = widget.file.uploadedFileID!;
     }
 
-    // Fetch persons map early so we can check for manual assignments
-    // even when no faces are detected
+    // Manual assignments can exist even when no faces were detected.
     final persons = isLocalGallery
         ? <String, PersonEntity>{}
         : await PersonService.instance.getPersonsMap();
@@ -666,7 +659,6 @@ class _FacesItemWidgetState extends State<FacesItemWidget> {
       );
     }
 
-    // Get additional data
     final faceIdsToClusterIds = await mlDataDB.getFaceIdsToClusterIds(
       faces.map((face) => face.faceID).toList(),
     );

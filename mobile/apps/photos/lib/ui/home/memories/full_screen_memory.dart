@@ -6,12 +6,14 @@ import "package:connectivity_plus/connectivity_plus.dart";
 import "package:ente_components/theme/text_styles.dart" as component;
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:flutter/foundation.dart" show ValueListenable;
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/core/event_bus.dart";
 import "package:photos/events/details_sheet_event.dart";
+import "package:photos/events/file_caption_updated_event.dart";
 import "package:photos/events/pause_video_event.dart";
 import "package:photos/events/reset_zoom_of_photo_view_event.dart";
 import "package:photos/events/resume_video_event.dart";
@@ -46,6 +48,10 @@ import "package:photos/utils/share_util.dart";
 
 const _socialRightInset = 24.0;
 const _socialToActionBarGap = 38.0;
+const _memoryCaptionHorizontalInset = 16.0;
+const _memoryCaptionActionBarGap = 4.0;
+const _memoryCaptionLineHeight = 16.0;
+const _memoryCaptionScrimTopPadding = 12.0;
 
 //There are two states of variables that FullScreenMemory depends on:
 //1. The list of memories
@@ -397,7 +403,6 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
   // AnimatedSwitcher doesn't animate its initial child, so we wrap it
   // in an AnimatedOpacity that ramps 0→1 after the first frame.
   double _firstPhotoOpacity = 0;
-  // Photo crossfade durations for auto vs manual advance.
   static const _autoCrossfadeDuration = Duration(milliseconds: 600);
   static const _manualCrossfadeDuration = Duration(milliseconds: 200);
   // How long to hold the incoming photo's Ken Burns still. Intentionally
@@ -414,13 +419,14 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
   bool _showCollageEndCard = false;
   final _socialControlsVisible = ValueNotifier<bool>(false);
 
-  /// Used to check if any pointer is on the screen.
   final hasPointerOnScreenNotifier = ValueNotifier<bool>(false);
   bool hasFinalFileLoaded = false;
   bool isAtFirstOrLastFile = false;
 
   late final StreamSubscription<DetailsSheetEvent>
   _detailSheetEventSubscription;
+  late final StreamSubscription<FileCaptionUpdatedEvent>
+  _captionUpdatedSubscription;
 
   @override
   void initState() {
@@ -449,21 +455,32 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
         }
       },
     );
+    _captionUpdatedSubscription = Bus.instance
+        .on<FileCaptionUpdatedEvent>()
+        .listen((event) {
+          if (!mounted) return;
+          final inheritedData = FullScreenMemoryData.of(context);
+          if (inheritedData == null) return;
+          final index = inheritedData.indexNotifier.value;
+          if (!_isValidMemoryIndex(index, inheritedData.memories.length)) {
+            return;
+          }
+          if (inheritedData.memories[index].file.generatedID ==
+              event.fileGeneratedID) {
+            setState(() {});
+          }
+        });
   }
 
   @override
   void dispose() {
     hasPointerOnScreenNotifier.removeListener(_hasPointerListener);
     _detailSheetEventSubscription.cancel();
+    _captionUpdatedSubscription.cancel();
     _socialControlsVisible.dispose();
     super.dispose();
   }
 
-  /// Used to check if user has touched the screen and then to pause animation
-  /// and once the pointer is removed from the screen, it resumes the animation
-  /// It also resets the zoom of the photo view to default for better user
-  /// experience after finger(s) is removed from the screen after zooming in by
-  /// pinching.
   void _hasPointerListener() {
     if (hasPointerOnScreenNotifier.value) {
       _toggleAnimation(pause: true);
@@ -868,7 +885,9 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
                 );
               },
             ),
-            MemoryViewerScrims(socialControlsVisible: _socialControlsVisible),
+            _MemoryViewerScrimsAndCaption(
+              socialControlsVisible: _socialControlsVisible,
+            ),
             ValueListenableBuilder<int>(
               valueListenable: inheritedData.indexNotifier,
               builder: (context, index, _) {
@@ -1162,6 +1181,135 @@ class _MemoryDateChevronPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _MemoryViewerScrimsAndCaption extends StatelessWidget {
+  final ValueListenable<bool> socialControlsVisible;
+
+  const _MemoryViewerScrimsAndCaption({required this.socialControlsVisible});
+
+  @override
+  Widget build(BuildContext context) {
+    final inheritedData = FullScreenMemoryData.of(context);
+    if (inheritedData == null || inheritedData.memories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final fullScreenState = context
+        .findAncestorStateOfType<_FullScreenMemoryState>()!;
+    final safePadding = MediaQuery.paddingOf(context);
+    return ValueListenableBuilder<int>(
+      valueListenable: inheritedData.indexNotifier,
+      builder: (context, index, _) {
+        final safeIndex = _clampedMemoryIndex(
+          index,
+          inheritedData.memories.length,
+        );
+        if (safeIndex == null) return const SizedBox.shrink();
+        final file = inheritedData.memories[safeIndex].file;
+        final caption = file.caption;
+        final captionText = caption == null || caption.isEmpty ? null : caption;
+        final captionStyle = component.TextStyles.mini.copyWith(
+          color: Colors.white.withValues(alpha: 0.8),
+        );
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: safePadding.top + 104,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xB8000000),
+                          Color(0x70000000),
+                          Colors.transparent,
+                        ],
+                        stops: [0, 0.6, 1],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            IgnorePointer(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: socialControlsVisible,
+                  builder: (context, socialControlsVisible, _) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      width: double.infinity,
+                      height: socialControlsVisible
+                          ? kMemorySocialScrimHeight
+                          : safePadding.bottom +
+                                kMemoryBottomActionBarHeight +
+                                (captionText == null
+                                    ? 0
+                                    : _memoryCaptionActionBarGap +
+                                          _memoryCaptionLineHeight +
+                                          _memoryCaptionScrimTopPadding),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Color.fromARGB(97, 0, 0, 0),
+                            Color.fromARGB(42, 0, 0, 0),
+                            Colors.transparent,
+                          ],
+                          stops: [0, 0.5, 1],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            if (captionText != null)
+              Positioned(
+                left: safePadding.left + _memoryCaptionHorizontalInset,
+                right: safePadding.right + _memoryCaptionHorizontalInset,
+                bottom:
+                    safePadding.bottom +
+                    kMemoryBottomActionBarHeight +
+                    _memoryCaptionActionBarGap,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () => fullScreenState._runWithViewerPaused(
+                      () => showDetailsSheet(context, file),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('"', style: captionStyle),
+                        Flexible(
+                          child: Text(
+                            captionText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: captionStyle,
+                          ),
+                        ),
+                        Text('"', style: captionStyle),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _MemoryBlur extends StatelessWidget {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data' show Uint8List;
 
+import 'package:ente_ui/components/loading_widget.dart';
 import 'package:flutter/material.dart';
 import "package:flutter_image_compress/flutter_image_compress.dart";
 import 'package:logging/logging.dart';
@@ -11,7 +12,6 @@ import 'package:photos/core/cache/thumbnail_in_memory_cache.dart';
 import 'package:photos/core/constants.dart';
 import 'package:photos/core/event_bus.dart';
 import 'package:photos/db/files_db.dart';
-import "package:photos/events/file_caption_updated_event.dart";
 import "package:photos/events/files_updated_event.dart";
 import 'package:photos/events/local_photos_updated_event.dart';
 import "package:photos/events/reset_zoom_of_photo_view_event.dart";
@@ -24,10 +24,7 @@ import "package:photos/module/metadata/exif.dart";
 import "package:photos/service_locator.dart" show flagService;
 import "package:photos/src/rust/api/image_processing_api.dart" as rust_image;
 import "package:photos/states/detail_page_state.dart";
-import "package:photos/theme/colors.dart";
-import "package:photos/theme/ente_theme.dart";
 import "package:photos/ui/actions/file/file_actions.dart";
-import 'package:photos/ui/common/loading_widget.dart';
 import 'package:photos/ui/viewer/file/thumbnail_widget.dart';
 import 'package:photos/utils/image_util.dart';
 import "package:photos/utils/ram_check_util.dart";
@@ -77,15 +74,13 @@ class _ZoomableImageState extends State<ZoomableImage> {
   bool _loadedLargeThumbnail = false;
   bool _loadingFinalImage = false;
   bool _loadedFinalImage = false;
-  // Set when a retry event arrives mid-flight. Since getFileFromServer
-  // can't be cancelled, we record intent and trigger the retry from
-  // _onFinalImageFetchFailed once the stale request finally resolves.
+  // Downloads cannot be cancelled. Defer a retry until the current attempt
+  // fails.
   bool _pendingFinalImageRetry = false;
   bool _convertToSupportedFormat = false;
   bool _showingThumbnailFallback = false;
-  // onFinalFileLoad drives memory-slideshow auto-advance; fire it once as
-  // soon as any presentable frame lands (small/large thumb or final), so
-  // the timer isn't gated on the full original download.
+  // Start the memory slideshow timer when any image is ready, without waiting
+  // for the original.
   bool _firedOnReady = false;
   ValueChanged<PhotoViewScaleState>? _scaleStateChangedCallback;
   bool _isZooming = false;
@@ -96,13 +91,11 @@ class _ZoomableImageState extends State<ZoomableImage> {
   // Baseline PhotoView scale for the current image/controller when the image
   // is at its contained size. ZoomTransform.scale is reported relative to this.
   double? _initialScale;
-  late final StreamSubscription<FileCaptionUpdatedEvent>
-  _captionUpdatedSubscription;
   late final StreamSubscription<ResetZoomOfPhotoView> _resetZoomSubscription;
   late final StreamSubscription<RetryFailedImageLoadEvent>
   _retryFailedLoadSubscription;
 
-  // This is to prevent the app from crashing when loading 200MP images
+  // Flutter can crash while decoding very large images.
   // https://github.com/flutter/flutter/issues/110331
   static const int _defaultMaxPixels = 100000000; // 100MP
   static const int _lowRamMaxPixels = 24000000; // 24MP
@@ -143,16 +136,6 @@ class _ZoomableImageState extends State<ZoomableImage> {
 
     _subscribeToZoomStream();
 
-    _captionUpdatedSubscription = Bus.instance
-        .on<FileCaptionUpdatedEvent>()
-        .listen((event) {
-          if (event.fileGeneratedID == _photo.generatedID) {
-            if (mounted) {
-              setState(() {});
-            }
-          }
-        });
-
     _resetZoomSubscription = Bus.instance.on<ResetZoomOfPhotoView>().listen((
       event,
     ) {
@@ -169,8 +152,8 @@ class _ZoomableImageState extends State<ZoomableImage> {
         .listen((_) {
           if (!mounted || _loadedFinalImage) return;
           if (!_loadedSmallThumbnail && _photo.isRemoteOnlyFile) {
-            // Evict the stale in-flight thumbnail so the rebuild's
-            // getThumbnailFromServer doesn't dedupe against the dead completer.
+            // Thumbnail requests are deduplicated. Evict the failed request
+            // before retrying.
             removePendingGetThumbnailRequestIfAny(_photo);
           }
           if (_loadingFinalImage) {
@@ -205,7 +188,6 @@ class _ZoomableImageState extends State<ZoomableImage> {
     _zoomStreamSubscription?.cancel();
     _photoViewController.dispose();
     _scaleStateController.dispose();
-    _captionUpdatedSubscription.cancel();
     _resetZoomSubscription.cancel();
     _retryFailedLoadSubscription.cancel();
     super.dispose();
@@ -224,11 +206,10 @@ class _ZoomableImageState extends State<ZoomableImage> {
       content = PhotoViewGestureDetectorScope(
         axis: Axis.vertical,
         child: PhotoView(
-          // Toggling ValueKey on _loadedFinalImage tears down PhotoView when
-          // the full file replaces the thumbnail, briefly exposing the layer
-          // underneath (the memory blur backdrop). Only needed for the
-          // gallery's zoom+late-load scale fix; in memory playback we never
-          // zoom, so keep a stable key and let gaplessPlayback swap in place.
+          // Rebuild PhotoView when the original replaces a zoomed thumbnail so
+          // the adjusted zoom takes effect. Memories do not zoom; a stable key
+          // lets gaplessPlayback replace the image without flashing the layer
+          // underneath.
           key: widget.isFromMemories ? null : ValueKey(_loadedFinalImage),
           imageProvider: _imageProvider,
           controller: _photoViewController,
@@ -244,8 +225,8 @@ class _ZoomableImageState extends State<ZoomableImage> {
           ),
           backgroundDecoration: widget.backgroundDecoration as BoxDecoration?,
           loadingBuilder: (context, event) {
-            // This is to make sure the hero anitmation animates and fits in the
-            //dimensions of the image on screen.
+            // Match the loading state to the image's on-screen size during the
+            // hero animation.
             final screenDimensions = MediaQuery.sizeOf(context);
             late final double screenRelativeImageWidth;
             late final double screenRelativeImageHeight;
@@ -305,69 +286,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
           };
     return GestureDetector(
       onVerticalDragUpdate: verticalDragCallback,
-      child: widget.showCaption && (widget.photo.caption?.isNotEmpty ?? false)
-          ? Stack(
-              clipBehavior: Clip.none,
-              children: [
-                content,
-                Positioned(
-                  bottom: 72 + MediaQuery.paddingOf(context).bottom,
-                  left: 0,
-                  right: 0,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable:
-                        InheritedDetailPageState.maybeOf(
-                          context,
-                        )?.enableFullScreenNotifier ??
-                        ValueNotifier(false),
-                    builder: (context, doNotShowCaption, _) {
-                      return AnimatedOpacity(
-                        opacity: doNotShowCaption ? 0.0 : 1.0,
-                        duration: const Duration(milliseconds: 200),
-                        child: IgnorePointer(
-                          ignoring: doNotShowCaption,
-                          child: GestureDetector(
-                            onTap: () {
-                              showDetailsSheet(context, widget.photo);
-                            },
-                            child: Container(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              width: double.infinity,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 4.0,
-                                      horizontal: 8.0,
-                                    ),
-                                    child: SizedBox(
-                                      width:
-                                          MediaQuery.sizeOf(context).width - 16,
-                                      child: Center(
-                                        child: Text(
-                                          widget.photo.caption!,
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: getEnteTextTheme(
-                                            context,
-                                          ).mini.copyWith(color: textBaseDark),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            )
-          : content,
+      child: content,
     );
   }
 
@@ -378,9 +297,8 @@ class _ZoomableImageState extends State<ZoomableImage> {
         : const EnteLoadingWidget(color: Colors.white);
   }
 
-  // Deferred via microtask so synchronous callers inside build() (the
-  // cached-thumbnail branches of _loadNetworkImage / _loadLocalImage) don't
-  // mutate parent state during the current build phase.
+  // Cached images can call this during build. Defer the parent callback until
+  // the build is complete.
   void _notifyReadyOnce() {
     if (_firedOnReady) return;
     _firedOnReady = true;
@@ -436,10 +354,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
             if (file != null) {
               _onFileLoaded(file);
             } else {
-              // getFileFromServer resolves null (not throw) on most network
-              // failures because downloadAndDecrypt is called with
-              // throwOnFailure=false here — route through the same helper as
-              // catchError below.
+              // Most network failures return null; retry them like exceptions.
               _onFinalImageFetchFailed();
             }
           })
@@ -534,10 +449,8 @@ class _ZoomableImageState extends State<ZoomableImage> {
   }
 
   void _onFileLoaded(File file) {
-    // On Android, the platform HEIC decoder can silently produce glitched
-    // output without throwing an error. Use Rust when dimensions are known
-    // and safely under the large-image guard.
-
+    // Android's HEIC decoder can produce a glitched image without throwing.
+    // Use Rust when the image dimensions make it safe.
     if (_isAndroidHeic()) {
       unawaited(_loadAndroidHeic(file));
       return;
@@ -556,11 +469,8 @@ class _ZoomableImageState extends State<ZoomableImage> {
       return;
     }
 
-    // Image.file -> Android BitmapFactory does not apply EXIF orientation
-    // for HEIC. If the file declares a non-trivial orientation, route through
-    // _loadInSupportedFormat which uses FlutterImageCompress with
-    // autoCorrectionAngle=true (reads EXIF via ExifInterface and rotates the
-    // bitmap before returning bytes).
+    // Android's HEIC decoder ignores EXIF orientation. Rotate through
+    // FlutterImageCompress when needed.
     if (await _heicNeedsExifRotation(file)) {
       await _loadInSupportedFormat(file, "HEIC requires EXIF rotation");
       return;
@@ -708,12 +618,10 @@ class _ZoomableImageState extends State<ZoomableImage> {
         _initialScale = null;
       }
       _subscribeToZoomStream();
-      // Fix for auto-zooming when final image is loaded after double tapping
-      //twice.
+      // Prevent auto-zoom when the original loads after two double taps.
       _scaleStateController.scaleState = PhotoViewScaleState.zoomedIn;
     }
     final bool canUpdateMetadata = _photo.canEditMetaInfo;
-    // forcefully get finalImageInfo is dimensions are not available in metadata
     if (finalImageInfo == null && canUpdateMetadata && !_photo.hasDimensions) {
       finalImageInfo = await getImageInfo(finalImageProvider);
     }
@@ -805,8 +713,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
     Object unsupportedErr, {
     bool skipRustDecoder = false,
   }) async {
-    // Skip compression for RAW files - FlutterImageCompress cannot process them
-    // and will crash. Go directly to thumbnail fallback.
+    // FlutterImageCompress crashes on RAW files. Show the thumbnail instead.
     if (_isRawFile()) {
       _logger.info(
         "Skipping compression for RAW file ${_photo.displayName}, using thumbnail fallback",
@@ -845,7 +752,6 @@ class _ZoomableImageState extends State<ZoomableImage> {
       }
     }
 
-    // Fallback to FlutterImageCompress (platform-based decoder).
     Uint8List? compressedFile;
     if (isTooLargeImage) {
       _logger.info(
@@ -911,8 +817,7 @@ class _ZoomableImageState extends State<ZoomableImage> {
   }
 }
 
-// Suppresses the spinner for a short window so fast loads (common in the
-// memory viewer thanks to prefetch) never paint a flash between advances.
+// Delay the spinner so prefetched memory images do not flash it between slides.
 class _DelayedLoadingIndicator extends StatefulWidget {
   const _DelayedLoadingIndicator();
 

@@ -12,6 +12,7 @@ import "package:photos/models/search/generic_search_result.dart";
 import "package:photos/models/search/index_of_indexed_stack.dart";
 import "package:photos/models/search/search_result.dart";
 import "package:photos/services/search_service.dart";
+import "package:photos/ui/viewer/search/search_query_utils.dart";
 import "package:photos/ui/viewer/search/search_suffix_icon_widget.dart";
 import "package:photos/utils/pending_translation.dart";
 
@@ -30,14 +31,12 @@ class SearchWidget extends StatefulWidget {
 }
 
 class SearchWidgetState extends State<SearchWidget> {
+  static const _uploadedFileIDsSearchPrefix = "uploaded_ids:";
   static final ValueNotifier<Stream<List<SearchResult>>?>
   searchResultsStreamNotifier = ValueNotifier(null);
 
-  ///This stores the query that is being searched for. When going to other tabs
-  ///when searching, this state gets disposed and when coming back to the
-  ///search tab, this query is used to populate the search bar.
+  // The search widget is disposed when switching tabs. Preserve its query.
   static String query = "";
-  //Debouncing + querying
   static final isLoading = ValueNotifier(false);
   final _searchService = SearchService.instance;
   final _debouncer = Debouncer(const Duration(milliseconds: 314));
@@ -82,8 +81,6 @@ class SearchWidgetState extends State<SearchWidget> {
 
     textController.addListener(textControllerListener);
 
-    //Populate the serach tab with the latest query when coming back
-    //to the serach tab.
     textController.text = query;
     _syncSearchBackNotifier();
 
@@ -203,16 +200,29 @@ class SearchWidgetState extends State<SearchWidget> {
     BuildContext context,
     String query,
   ) {
-    int resultCount = 0;
-    final maxResultCount = _isYearValid(query) ? 13 : 12;
-    final streamController = StreamController<List<SearchResult>>();
-
     if (query.isEmpty) {
       return Stream<List<SearchResult>>.multi((controller) {
         controller.add([]);
         controller.close();
       });
     }
+
+    if (query.startsWith(_uploadedFileIDsSearchPrefix)) {
+      final uploadedFileIDs = query
+          .substring(_uploadedFileIDsSearchPrefix.length)
+          .split(",")
+          .map((value) => int.tryParse(value.trim()))
+          .whereType<int>()
+          .where((id) => id > 0)
+          .toSet();
+      return Stream.fromFuture(
+        _searchService.getUploadedFileIDsSearchResults(query, uploadedFileIDs),
+      );
+    }
+
+    int resultCount = 0;
+    final maxResultCount = isYearSearchQuery(query) ? 13 : 12;
+    final streamController = StreamController<List<SearchResult>>();
 
     void onResultsReceived(List<SearchResult> results) {
       streamController.sink.add(results);
@@ -227,7 +237,7 @@ class SearchWidgetState extends State<SearchWidget> {
       }
     }
 
-    if (_isYearValid(query)) {
+    if (isYearSearchQuery(query)) {
       _searchService.getYearSearchResults(query).then((yearSearchResults) {
         onResultsReceived(yearSearchResults);
       });
@@ -296,10 +306,5 @@ class SearchWidgetState extends State<SearchWidget> {
     });
 
     return streamController.stream.asBroadcastStream();
-  }
-
-  bool _isYearValid(String year) {
-    final yearAsInt = int.tryParse(year); //returns null if cannot be parsed
-    return yearAsInt != null && yearAsInt <= currentYear;
   }
 }

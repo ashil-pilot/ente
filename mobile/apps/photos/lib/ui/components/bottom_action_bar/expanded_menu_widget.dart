@@ -1,6 +1,6 @@
+import 'package:ente_ui/components/divider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:photos/ui/components/blur_menu_item_widget.dart';
-import 'package:photos/ui/components/divider_widget.dart';
 
 class ExpandedMenuWidget extends StatelessWidget {
   final List<List<BlurMenuItemWidget>> items;
@@ -21,7 +21,6 @@ class ExpandedMenuWidget extends StatelessWidget {
     double combinedHeightOfItems = 0.0;
 
     for (List<BlurMenuItemWidget> group in items) {
-      //no divider if there is only one item in the section/group
       if (group.length != 1) {
         numberOfDividers += (group.length - 1);
       }

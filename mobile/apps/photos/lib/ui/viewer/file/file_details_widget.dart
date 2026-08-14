@@ -4,6 +4,7 @@ import "dart:io";
 
 import "package:ente_components/ente_components.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/divider_widget.dart";
 import "package:exif_reader/exif_reader.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -24,7 +25,6 @@ import "package:photos/module/metadata/exif.dart";
 import "package:photos/module/metadata/video.dart";
 import "package:photos/service_locator.dart";
 import "package:photos/services/file_magic_service.dart";
-import "package:photos/ui/components/divider_widget.dart";
 import 'package:photos/ui/viewer/file/file_caption_widget.dart';
 import "package:photos/ui/viewer/file_details/added_by_widget.dart";
 import "package:photos/ui/viewer/file_details/albums_item_widget.dart";
@@ -153,8 +153,6 @@ class _FileDetailsWidgetState extends State<FileDetailsWidget> {
     final bool isFileOwner =
         file.ownerID == null || file.ownerID == _currentUserID;
 
-    //Make sure the bottom most tile is always the same one, that is it should
-    //not be rendered only if a condition is met.
     final fileDetailsTiles = <Widget>[];
     final bool canEditCaption = isFileOwner && !file.isTrash;
     fileDetailsTiles.add(
@@ -220,46 +218,6 @@ class _FileDetailsWidgetState extends State<FileDetailsWidget> {
                   ],
                 )
               : const SizedBox.shrink();
-
-          ///To be used when state issues are fixed when location is updated.
-          //
-          //  file.fileType != FileType.video &&
-          //         file.ownerID == _currentUserID
-          //     ? Column(
-          //         children: [
-          //           InfoItemWidget(
-          //             leadingIcon: Icons.pin_drop_outlined,
-          //             title: "No location data",
-          //             subtitleSection: Future.value(
-          //               [
-          //                 Text(
-          //                   "Add location data",
-          //                   style: getEnteTextTheme(context).miniBoldMuted,
-          //                 ),
-          //               ],
-          //             ),
-          //             hasChipButtons: false,
-          //             onTap: () async {
-          //               await showBarModalBottomSheet(
-          //                 shape: const RoundedRectangleBorder(
-          //                   borderRadius: BorderRadius.vertical(
-          //                     top: Radius.circular(5),
-          //                   ),
-          //                 ),
-          //                 backgroundColor: getEnteColorScheme(context)
-          //                     .backgroundElevated,
-          //                 barrierColor: backdropFaintDark,
-          //                 context: context,
-          //                 builder: (context) {
-          //                   return UpdateLocationDataWidget([file]);
-          //                 },
-          //               );
-          //             },
-          //           ),
-          //           const FileDetailsDivider(),
-          //         ],
-          //       )
-          //     : const SizedBox.shrink();
         },
       ),
     ]);
@@ -369,12 +327,8 @@ class _FileDetailsWidgetState extends State<FileDetailsWidget> {
     );
   }
 
-  //This code is for updating the location of files in which location data is
-  //missing and the EXIF has location data. This is only happens for a
-  //certain specific minority of devices.
+  // Some devices leave file location empty even when EXIF contains it.
   Future<void> _updateLocationFromExif(Location? locationDataFromExif) async {
-    // If the file is not uploaded or the file is not owned by the current user
-    // then we don't need to update the location.
     if (!widget.file.isUploaded || widget.file.ownerID == null) {
       return;
     }
@@ -401,15 +355,15 @@ class _FileDetailsWidgetState extends State<FileDetailsWidget> {
 
   void _generateExifForDetails(Map<String, IfdTag> exif) {
     if (exif["EXIF FocalLength"] != null) {
-      _exifData["focalLength"] =
-          (exif["EXIF FocalLength"]!.values.toList()[0] as Ratio).numerator /
-          (exif["EXIF FocalLength"]!.values.toList()[0] as Ratio).denominator;
+      _exifData["focalLength"] = _formatExifRatio(
+        exif["EXIF FocalLength"]!.values.toList()[0] as Ratio,
+      );
     }
 
     if (exif["EXIF FNumber"] != null) {
-      _exifData["fNumber"] =
-          (exif["EXIF FNumber"]!.values.toList()[0] as Ratio).numerator /
-          (exif["EXIF FNumber"]!.values.toList()[0] as Ratio).denominator;
+      _exifData["fNumber"] = _formatExifRatio(
+        exif["EXIF FNumber"]!.values.toList()[0] as Ratio,
+      );
     }
     final imageWidth = _firstPositiveDimensionTag(exif, const [
       "EXIF ExifImageWidth",
@@ -444,10 +398,14 @@ class _FileDetailsWidgetState extends State<FileDetailsWidget> {
     }
   }
 
-  /// Formats exposure time from EXIF data into a human-readable string.
-  ///
-  /// For shutter speeds >= 1 second, displays as decimal with 's' suffix (e.g., "1.3s")
-  /// For shutter speeds < 1 second, displays as a fraction (e.g., "1/100")
+  String _formatExifRatio(Ratio ratio) {
+    if (ratio.denominator == 0) {
+      return ratio.toString();
+    }
+    final value = ratio.numerator / ratio.denominator;
+    return value.toStringAsFixed(2).replaceFirst(RegExp(r"\.?0+$"), "");
+  }
+
   String _formatExposureTime(IfdTag exposureTimeTag) {
     final values = exposureTimeTag.values.toList();
     if (values.isEmpty) {
@@ -469,14 +427,11 @@ class _FileDetailsWidgetState extends State<FileDetailsWidget> {
     final double seconds = numerator / denominator;
 
     if (seconds >= 1) {
-      // For exposures >= 1 second, show as decimal seconds
       if (seconds == seconds.roundToDouble()) {
         return "${seconds.toInt()}s";
       }
       return "${seconds.toStringAsFixed(1)}s";
     } else {
-      // For exposures < 1 second, always convert to 1/x format
-      // e.g., 529/200000 → 1/378
       final reciprocal = (1 / seconds).round();
       return "1/$reciprocal";
     }

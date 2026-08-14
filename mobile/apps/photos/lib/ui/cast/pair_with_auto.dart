@@ -2,6 +2,7 @@ import "dart:io";
 
 import "package:ente_components/ente_components.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/loading_widget.dart";
 import "package:flutter/material.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:logging/logging.dart";
@@ -10,11 +11,9 @@ import "package:photos/models/collection/collection.dart";
 import "package:photos/service_locator.dart";
 import "package:photos/services/auto_cast_service.dart";
 import "package:photos/theme/ente_theme.dart";
-import "package:photos/ui/common/loading_widget.dart";
 import "package:photos/ui/notification/toast.dart";
 import "package:photos/utils/dialog_util.dart";
 
-/// Shows the auto-pairing sheet for Cast devices.
 Future<void> showPairWithAutoSheet(
   BuildContext context,
   Collection collection,

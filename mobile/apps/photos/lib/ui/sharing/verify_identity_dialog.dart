@@ -3,13 +3,13 @@ import "dart:convert";
 import 'package:bip39/bip39.dart' as bip39;
 import "package:crypto/crypto.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:ente_ui/components/loading_widget.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
 import "package:photos/services/account/user_service.dart";
 import "package:photos/theme/ente_theme.dart";
-import "package:photos/ui/common/loading_widget.dart";
 import "package:photos/ui/components/base_bottom_sheet.dart";
 import 'package:photos/ui/components/buttons/button_widget.dart';
 import "package:photos/ui/components/models/button_type.dart";
@@ -30,11 +30,8 @@ Future<void> showVerifyIdentitySheet(
 }
 
 class _VerifyIdentitySheetContent extends StatefulWidget {
-  // email id of the user who's verification ID is being displayed for
-  // verification
   final String email;
 
-  // self is true when the user is viewing their own verification ID
   final bool self;
 
   _VerifyIdentitySheetContent({required this.self, this.email = ''}) {
@@ -129,7 +126,6 @@ class _VerifyIdentitySheetContentState
       widget.email,
     );
     if (userPublicKey == null) {
-      // user not found
       return "";
     }
     return userPublicKey;

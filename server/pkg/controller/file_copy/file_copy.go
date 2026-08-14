@@ -81,7 +81,7 @@ func (fc *FileCopyController) CopyFiles(c *gin.Context, req ente.CopyFileSyncReq
 	if err != nil {
 		return nil, err
 	}
-	// note: this assumes that preview existingFilesToCopy for videos are not tracked inside the object_keys table
+	// Video previews are not tracked in object_keys.
 	if len(s3ObjectsToCopy) != 2*len(fileIDs) {
 		return nil, ente.NewInternalError(fmt.Sprintf("expected %d objects, got %d", 2*len(fileIDs), len(s3ObjectsToCopy)))
 	}
@@ -92,7 +92,7 @@ func (fc *FileCopyController) CopyFiles(c *gin.Context, req ente.CopyFileSyncReq
 	}
 	logger.WithField("totalSize", totalSize).Info("total size of existingFilesToCopy to copy")
 
-	// request the uploadUrls using existing method. This is to ensure that orphan objects are automatically cleaned up
+	// Reuse upload URLs so abandoned copies are cleaned up as orphan objects.
 	// todo:(neeraj) optimize this method by removing the need for getting a signed url for each object
 	uploadUrls, err := fc.FileController.GetUploadURLs(c, userID, len(s3ObjectsToCopy), app, true)
 	if err != nil {
@@ -157,10 +157,8 @@ func (fc *FileCopyController) CopyFiles(c *gin.Context, req ente.CopyFileSyncReq
 		})
 	}
 
-	// Wait for all goroutines to finish
 	wg.Wait()
 
-	// Close the error channel and check if there were any errors
 	close(errChan)
 	if err, ok := <-errChan; ok {
 		return nil, err
@@ -169,7 +167,6 @@ func (fc *FileCopyController) CopyFiles(c *gin.Context, req ente.CopyFileSyncReq
 }
 
 func (fc *FileCopyController) createCopy(c *gin.Context, fcInternal fileCopyInternal, userID int64, app ente.App) (*ente.File, error) {
-	// using HotS3Client copy the File and Thumbnail
 	s3Client := fc.S3Config.GetHotS3Client()
 	hotBucket := fc.S3Config.GetHotBucket()
 	g := new(errgroup.Group)
@@ -190,7 +187,6 @@ func (fc *FileCopyController) createCopy(c *gin.Context, fcInternal fileCopyInte
 	return &newFile, nil
 }
 
-// Helper function for S3 object copying.
 func copyS3Object(s3Client *s3.S3, bucket *string, req *copyS3ObjectReq) error {
 	copySource := fmt.Sprintf("%s/%s", *bucket, req.SourceS3Object.ObjectKey)
 	copyInput := &s3.CopyObjectInput{

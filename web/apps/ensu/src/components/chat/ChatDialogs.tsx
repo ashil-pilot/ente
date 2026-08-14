@@ -75,6 +75,11 @@ export interface ChatDialogsProps {
     openModelSettings: () => void;
     openSystemPromptSettings: () => void;
     isSmall: boolean;
+    renameSessionId: string | null;
+    renameSessionTitle: string;
+    setRenameSessionTitle: (title: string) => void;
+    handleCancelRenameSession: () => void;
+    handleConfirmRenameSession: () => void | Promise<void>;
     deleteSessionId: string | null;
     deleteSessionLabel: string;
     handleCancelDeleteSession: () => void;
@@ -122,6 +127,11 @@ export const ChatDialogs = memo(
         openModelSettings,
         openSystemPromptSettings,
         isSmall,
+        renameSessionId,
+        renameSessionTitle,
+        setRenameSessionTitle,
+        handleCancelRenameSession,
+        handleConfirmRenameSession,
         deleteSessionId,
         deleteSessionLabel,
         handleCancelDeleteSession,
@@ -185,6 +195,7 @@ export const ChatDialogs = memo(
             React.useState(false);
 
         const [draftSystemPrompt, setDraftSystemPrompt] = React.useState("");
+        const wasSystemPromptSettingsOpen = React.useRef(false);
 
         const modelOptions = React.useMemo(
             () => [
@@ -214,12 +225,13 @@ export const ChatDialogs = memo(
             showModelSettings,
         ]);
 
-        // The draft resyncs only when the dialog opens, hence the deps
-        // suppression below.
         React.useEffect(() => {
-            if (!showSystemPromptSettings) return;
-            setDraftSystemPrompt(systemPrompt);
-        }, [showSystemPromptSettings]); // eslint-disable-line react-hooks/exhaustive-deps
+            const didOpen =
+                showSystemPromptSettings &&
+                !wasSystemPromptSettingsOpen.current;
+            wasSystemPromptSettingsOpen.current = showSystemPromptSettings;
+            if (didOpen) setDraftSystemPrompt(systemPrompt);
+        }, [showSystemPromptSettings, systemPrompt]);
 
         const validateModelSettings = React.useCallback(() => {
             const contextErrorValue =
@@ -623,6 +635,53 @@ export const ChatDialogs = memo(
                             onClick={() => setShowBackupComingSoon(false)}
                         >
                             Got it
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog
+                    open={Boolean(renameSessionId)}
+                    onClose={handleCancelRenameSession}
+                    fullScreen={isSmall}
+                    maxWidth="xs"
+                    fullWidth
+                    slotProps={{ paper: { sx: dialogPaperSx } }}
+                >
+                    <DialogTitle sx={dialogTitleSx}>Rename chat</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            value={renameSessionTitle}
+                            onChange={(event) =>
+                                setRenameSessionTitle(event.target.value)
+                            }
+                            autoFocus
+                            fullWidth
+                            label="Chat name"
+                            slotProps={{ htmlInput: { maxLength: 40 } }}
+                            onKeyDown={(event) => {
+                                if (
+                                    event.key === "Enter" &&
+                                    !event.nativeEvent.isComposing
+                                ) {
+                                    void handleConfirmRenameSession();
+                                }
+                            }}
+                        />
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button
+                            onClick={handleCancelRenameSession}
+                            color="secondary"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="accent"
+                            disabled={!renameSessionTitle.trim()}
+                            onClick={() => void handleConfirmRenameSession()}
+                        >
+                            Rename
                         </Button>
                     </DialogActions>
                 </Dialog>

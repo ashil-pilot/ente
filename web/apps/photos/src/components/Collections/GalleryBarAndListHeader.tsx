@@ -7,6 +7,12 @@ import {
     type CollectionShareProps,
 } from "@/components/Collections/CollectionShare";
 import type { FileListHeaderOrFooter } from "@/components/FileList";
+import {
+    GalleryBarImpl,
+    type GalleryBarImplProps,
+} from "@/components/gallery/BarImpl";
+import { PeopleHeader } from "@/components/gallery/PeopleHeader";
+import { sortPeople, type PeopleSortBy } from "@/utils/people-sort";
 import { useModalVisibility } from "ente-base/components/utils/modal";
 import {
     isSaveCancelled,
@@ -15,18 +21,9 @@ import {
 } from "ente-gallery/components/utils/save-groups";
 import type { Collection } from "ente-media/collection";
 import {
-    GalleryBarImpl,
-    type GalleryBarImplProps,
-} from "ente-new/photos/components/gallery/BarImpl";
-import {
     GalleryItemsHeaderAdapter,
     GalleryItemsSummary,
 } from "ente-new/photos/components/gallery/ListHeader";
-import { PeopleHeader } from "ente-new/photos/components/gallery/PeopleHeader";
-import {
-    sortPeople,
-    type PeopleSortBy,
-} from "ente-new/photos/components/people-sort";
 import {
     collectionsSortBy,
     haveOnlySystemCollections,
@@ -55,9 +52,6 @@ type GalleryBarAndListHeaderProps = Omit<
     | "onShowAllAlbums"
     | "onShowAllPeople"
 > & {
-    /**
-     * When `true`, the bar is be hidden altogether.
-     */
     shouldHide: boolean;
     barCollectionSummaries: CollectionSummaries;
     allPeople: Person[];
@@ -69,44 +63,14 @@ type GalleryBarAndListHeaderProps = Omit<
     canCreateAlbum: boolean;
 } & Pick<
         CollectionHeaderProps,
-        | "files"
-        | "mapFileSource"
-        | "onRemotePull"
-        | "onAddSaveGroup"
-        | "onMarkTempDeleted"
-        | "onAddFileToCollection"
-        | "onRemoteFilesPull"
-        | "onVisualFeedback"
-        | "fileNormalCollectionIDs"
-        | "collectionNameByID"
-        | "onSelectCollection"
-        | "onSelectPerson"
-        | "canSetAlbumCover"
-        | "onSetAlbumCover"
+        "onRemotePull" | "onAddSaveGroup" | "onEditAlbumDetails" | "onShowMap"
     > &
     Pick<
         CollectionShareProps,
         "user" | "emailByUserID" | "shareSuggestionEmails" | "setBlockingLoad"
     >;
 
-/**
- * The gallery bar, the header for the list items, and state for any associated
- * dialogs that might be triggered by actions on either the bar or the header..
- *
- * This component manages the sticky horizontally scrollable bar shown at the
- * top of the gallery, AND the (non-sticky) header shown below the bar, at the
- * top of the actual list of items.
- *
- * These are disparate views - indeed, the list header is not even a child of
- * this component but is instead proxied via {@link setFileListHeader}. Still,
- * having this intermediate wrapper component allows us to move some of the
- * common concerns shared by both the gallery bar and list header (e.g. some
- * dialogs that can be invoked from both places) into this file instead of
- * cluttering the already big gallery component.
- *
- * TODO: Once the gallery code is better responsibilitied out, consider moving
- * this code back inline into the gallery.
- */
+// TODO: Move this back into the gallery once its responsibilities are split.
 export const GalleryBarAndListHeader: React.FC<
     GalleryBarAndListHeaderProps
 > = ({
@@ -120,27 +84,18 @@ export const GalleryBarAndListHeader: React.FC<
     setActiveCollectionID,
     setBlockingLoad,
     people,
+    onSelectPerson,
     allPeople,
     saveGroups,
     canCreateAlbum,
     hasActiveFileSelection,
-    files,
-    mapFileSource,
     activePerson,
     emailByUserID,
     shareSuggestionEmails,
     onRemotePull,
-    canSetAlbumCover,
-    onSetAlbumCover,
+    onEditAlbumDetails,
     onAddSaveGroup,
-    onMarkTempDeleted,
-    onAddFileToCollection,
-    onRemoteFilesPull,
-    onVisualFeedback,
-    fileNormalCollectionIDs,
-    collectionNameByID,
-    onSelectCollection,
-    onSelectPerson,
+    onShowMap,
     setFileListHeader,
 }) => {
     const { show: showAllAlbums, props: allAlbumsVisibilityProps } =
@@ -202,14 +157,17 @@ export const GalleryBarAndListHeader: React.FC<
         return !!group && !isSaveComplete(group) && !isSaveCancelled(group);
     }, [saveGroups, activeCollectionID]);
 
+    const albumDescription =
+        activeCollection?.pubMagicMetadata?.data.caption?.trim();
+    const [descriptionHeight, setDescriptionHeight] = useState(0);
+
     useEffect(() => {
         if (shouldHide) return;
 
         const collectionSummary = toShowCollectionSummaries.get(
             activeCollectionID!,
         );
-        // Render the full CollectionHeader for pseudo-collections (e.g. trash)
-        // so header actions/menus are available even without a real collection.
+        // Pseudo-collections need header actions despite having no Collection.
         const shouldRenderCollectionHeader =
             mode != "people" &&
             collectionSummary &&
@@ -221,29 +179,19 @@ export const GalleryBarAndListHeader: React.FC<
                 <CollectionHeader
                     {...{
                         activeCollection,
-                        files,
-                        mapFileSource,
                         setActiveCollectionID,
                         isActiveCollectionDownloadInProgress,
                         onRemotePull,
                         onAddSaveGroup,
-                        onMarkTempDeleted,
-                        onAddFileToCollection,
-                        onRemoteFilesPull,
-                        onVisualFeedback,
-                        fileNormalCollectionIDs,
-                        collectionNameByID,
-                        emailByUserID,
-                        onSelectCollection,
-                        onSelectPerson,
+                        onShowMap,
                     }}
                     collectionSummary={collectionSummary}
                     onCollectionShare={openCollectionShare}
                     onCollectionManageLink={openCollectionManageLink}
                     onCollectionCast={showCollectionCast}
-                    canSetAlbumCover={canSetAlbumCover}
-                    onSetAlbumCover={onSetAlbumCover}
+                    onEditAlbumDetails={onEditAlbumDetails}
                     hasActiveFileSelection={hasActiveFileSelection}
+                    onDescriptionHeightChange={setDescriptionHeight}
                 />
             ) : mode != "people" && collectionSummary ? (
                 <GalleryItemsHeaderAdapter>
@@ -260,7 +208,7 @@ export const GalleryBarAndListHeader: React.FC<
             ) : (
                 <></>
             ),
-            height: 68,
+            height: 68 + (albumDescription ? descriptionHeight : 0),
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
@@ -270,8 +218,6 @@ export const GalleryBarAndListHeader: React.FC<
         activeCollection,
         activeCollectionID,
         isActiveCollectionDownloadInProgress,
-        files,
-        mapFileSource,
         activePerson,
         showCollectionShare,
         openCollectionShare,
@@ -280,17 +226,10 @@ export const GalleryBarAndListHeader: React.FC<
         hasActiveFileSelection,
         onRemotePull,
         onAddSaveGroup,
-        onMarkTempDeleted,
-        onAddFileToCollection,
-        onRemoteFilesPull,
-        onVisualFeedback,
-        fileNormalCollectionIDs,
-        collectionNameByID,
-        emailByUserID,
-        onSelectCollection,
-        onSelectPerson,
-        canSetAlbumCover,
-        onSetAlbumCover,
+        onShowMap,
+        onEditAlbumDetails,
+        albumDescription,
+        descriptionHeight,
         // TODO: Cluster
         // This causes a loop since it is an array dep
         // people,
@@ -321,6 +260,7 @@ export const GalleryBarAndListHeader: React.FC<
                 collectionSummaries={sortedCollectionSummaries.filter(
                     (cs) =>
                         !cs.attributes.has("hideFromCollectionBar") &&
+                        !cs.attributes.has("quickLink") &&
                         (mode != "albums" || !cs.attributes.has("archived")),
                 )}
             />
@@ -373,10 +313,6 @@ export const GalleryBarAndListHeader: React.FC<
     );
 };
 
-/**
- * A hook that maintains the collections sort order both as in-memory and local
- * storage state.
- */
 const useCollectionsSortByLocalState = (initialValue: CollectionsSortBy) => {
     const key = "collectionsSortBy";
 

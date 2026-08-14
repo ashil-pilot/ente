@@ -13,15 +13,16 @@ import (
 	"github.com/ente/stacktrace"
 )
 
-// FileLinkRepository defines the methods for inserting, updating and
-// retrieving entities related to public file
 type FileLinkRepository struct {
 	DB         *sql.DB
 	photoHost  string
 	lockerHost string
 }
 
-// NewFileLinkRepo ..
+type fileLinkUpdater interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
 func NewFileLinkRepo(db *sql.DB) *FileLinkRepository {
 	albumHost := viper.GetString("apps.public-albums")
 	if albumHost == "" {
@@ -95,7 +96,6 @@ func (pcr *FileLinkRepository) Insert(
 	return id, nil
 }
 
-// UpdateLinkSecretIfEmpty updates link key metadata if it hasn't been set already.
 func (pcr *FileLinkRepository) UpdateLinkSecretIfEmpty(
 	ctx context.Context,
 	linkID string,
@@ -129,8 +129,7 @@ func (pcr *FileLinkRepository) UpdateLinkSecretIfEmpty(
 	return stacktrace.Propagate(err, "failed to update link secret metadata")
 }
 
-// GetActiveFileUrlToken will return ente.CollectionLinkRow for given collection ID
-// Note: The token could be expired or deviceLimit is already reached
+// "Active" only means not disabled; the link may be expired or over its limit.
 func (pcr *FileLinkRepository) GetActiveFileUrlToken(ctx context.Context, fileID int64) (*ente.FileLinkRow, error) {
 	row := pcr.DB.QueryRowContext(ctx, `SELECT id, file_id, owner_id, access_token, valid_till, device_limit, 
        is_disabled, pw_hash, pw_nonce, mem_limit, ops_limit, enable_download,
@@ -178,18 +177,25 @@ func (pcr *FileLinkRepository) GetFileUrls(ctx context.Context, userID int64, si
 }
 
 func (pcr *FileLinkRepository) DisableLinkForFiles(ctx context.Context, fileIDs []int64) error {
+	return disableLinkForFiles(ctx, pcr.DB, fileIDs)
+}
+
+func (pcr *FileLinkRepository) DisableLinkForFilesTx(ctx context.Context, tx *sql.Tx, fileIDs []int64) error {
+	return disableLinkForFiles(ctx, tx, fileIDs)
+}
+
+func disableLinkForFiles(ctx context.Context, updater fileLinkUpdater, fileIDs []int64) error {
 	if len(fileIDs) == 0 {
 		return nil
 	}
-	query := `UPDATE public_file_tokens SET is_disabled = TRUE WHERE file_id = ANY($1)`
-	_, err := pcr.DB.ExecContext(ctx, query, pq.Array(fileIDs))
+	query := `UPDATE public_file_tokens SET is_disabled = TRUE WHERE file_id = ANY($1) AND is_disabled IS FALSE`
+	_, err := updater.ExecContext(ctx, query, pq.Array(fileIDs))
 	if err != nil {
 		return stacktrace.Propagate(err, "failed to disable public file links")
 	}
 	return nil
 }
 
-// DisableLinksForUser will disable all public file links for the given user
 func (pcr *FileLinkRepository) DisableLinksForUser(ctx context.Context, userID int64) error {
 	_, err := pcr.DB.ExecContext(ctx, `UPDATE public_file_tokens SET is_disabled = TRUE WHERE owner_id = $1`, userID)
 	if err != nil {
@@ -263,7 +269,6 @@ func (pcr *FileLinkRepository) GetFileUrlRowByFileID(ctx context.Context, fileID
 	return &result, nil
 }
 
-// UpdateLink will update the row for corresponding public file token
 func (pcr *FileLinkRepository) UpdateLink(ctx context.Context, pct ente.FileLinkRow) error {
 	_, err := pcr.DB.ExecContext(ctx, `UPDATE public_file_tokens SET valid_till = $1, device_limit = $2, 
                                     pw_hash = $3, pw_nonce = $4, mem_limit = $5, ops_limit = $6, enable_download = $7  
@@ -290,7 +295,6 @@ func (pcr *FileLinkRepository) RecordAccessHistory(ctx context.Context, shareID 
 	return stacktrace.Propagate(err, "failed to record access history")
 }
 
-// AccessedInPast returns true if the given ip, ua agent combination has accessed the url in the past
 func (pcr *FileLinkRepository) AccessedInPast(ctx context.Context, shareID string, ip string, ua string) (bool, error) {
 	row := pcr.DB.QueryRowContext(ctx, `select id from public_file_tokens_access_history where id =$1 and ip = $2 and user_agent = $3`,
 		shareID, ip, ua)
@@ -302,7 +306,6 @@ func (pcr *FileLinkRepository) AccessedInPast(ctx context.Context, shareID strin
 	return true, stacktrace.Propagate(err, "failed to record access history")
 }
 
-// CleanupAccessHistory public_file_tokens_access_history where public_collection_tokens is disabled and the last updated time is older than 30 days
 func (pcr *FileLinkRepository) CleanupAccessHistory(ctx context.Context) error {
 	_, err := pcr.DB.ExecContext(ctx, `DELETE FROM public_file_tokens_access_history WHERE id IN (SELECT id FROM public_file_tokens WHERE is_disabled = TRUE AND updated_at < (now_utc_micro_seconds() - (24::BIGINT * 30 * 60 * 60 * 1000 * 1000)))`)
 	if err != nil {

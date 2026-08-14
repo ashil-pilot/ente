@@ -17,7 +17,6 @@ import "package:photos/ui/sharing/verify_identity_dialog.dart";
 enum ActionTypesToShow { addViewer, addCollaborator, addAdmin }
 
 class AddParticipantPage extends StatefulWidget {
-  /// Cannot be empty
   final List<ActionTypesToShow> actionTypesToShow;
   final List<Collection> collections;
 
@@ -34,9 +33,8 @@ class _AddParticipantPage extends State<AddParticipantPage> {
   bool _emailIsValid = false;
   bool isKeypadOpen = false;
   late CollectionActions collectionActions;
-  late List<User> _suggestedUsers;
+  late List<UserSuggestion> _suggestedUsers;
 
-  // Focus nodes are necessary
   final textFieldFocusNode = FocusNode();
   final _textController = TextEditingController();
 
@@ -58,7 +56,7 @@ class _AddParticipantPage extends State<AddParticipantPage> {
   Widget build(BuildContext context) {
     final filterSuggestedUsers = _suggestedUsers
         .where(
-          (element) => _matchesUserQuery(
+          (element) => matchesResolvedSuggestionQuery(
             element,
             _textController.text.trim().toLowerCase(),
           ),
@@ -75,7 +73,7 @@ class _AddParticipantPage extends State<AddParticipantPage> {
     );
   }
 
-  List<Widget> _slivers(List<User> filterSuggestedUsers) {
+  List<Widget> _slivers(List<UserSuggestion> filterSuggestedUsers) {
     final footerDescriptions = [
       if (filterSuggestedUsers.isNotEmpty)
         ShareSectionDescription(
@@ -180,7 +178,7 @@ class _AddParticipantPage extends State<AddParticipantPage> {
     ];
   }
 
-  Widget _suggestedUserItem(List<User> users, int index) {
+  Widget _suggestedUserItem(List<UserSuggestion> users, int index) {
     final currentUser = users[index];
     final borderRadius = MenuGroupComponent.itemBorderRadius(
       index: index,
@@ -196,11 +194,14 @@ class _AddParticipantPage extends State<AddParticipantPage> {
         ),
         child: ShareMenuItem(
           key: ValueKey(
-            '${currentUser.email}-${resolveDisplayName(currentUser)}',
+            '${currentUser.email}-${resolveSuggestionDisplayName(currentUser)}',
           ),
-          title: resolveDisplayName(currentUser),
+          title: resolveSuggestionDisplayName(currentUser),
           titleColor: context.componentColors.textLight,
-          leading: UserAvatarWidget(currentUser, type: AvatarType.medium),
+          leading: UserAvatarWidget.suggestion(
+            currentUser,
+            type: AvatarType.medium,
+          ),
           trailing: _selectedEmails.contains(currentUser.email)
               ? shareCheck(context)
               : null,
@@ -424,7 +425,7 @@ class _AddParticipantPage extends State<AddParticipantPage> {
             return;
           }
         }
-        _suggestedUsers.insert(0, User(email: _newEmail));
+        _suggestedUsers.insert(0, UserSuggestion(_newEmail));
         _selectedEmails.add(_newEmail);
         _clearEmailField();
         textFieldFocusNode.unfocus();
@@ -432,7 +433,7 @@ class _AddParticipantPage extends State<AddParticipantPage> {
     }
   }
 
-  List<User> _getSuggestedUser() {
+  List<UserSuggestion> _getSuggestedUser() {
     final Set<String> existingEmails = {};
     final collections = widget.collections;
     if (collections.isEmpty) {
@@ -442,7 +443,7 @@ class _AddParticipantPage extends State<AddParticipantPage> {
 
     for (final Collection collection in collections) {
       for (final User u in collection.sharees) {
-        if (u.id != null && u.email.isNotEmpty) {
+        if (u.email.isNotEmpty) {
           existingEmails.add(u.email);
         }
       }
@@ -453,12 +454,12 @@ class _AddParticipantPage extends State<AddParticipantPage> {
       }
     }
 
-    final List<User> suggestedUsers = UserService.instance.getRelevantContacts()
+    final suggestedUsers = UserService.instance.getRelevantContacts()
       ..removeWhere((element) => existingEmails.contains(element.email));
 
     if (_textController.text.trim().isNotEmpty) {
       suggestedUsers.removeWhere(
-        (element) => !_matchesUserQuery(
+        (element) => !matchesResolvedSuggestionQuery(
           element,
           _textController.text.trim().toLowerCase(),
         ),
@@ -500,15 +501,5 @@ class _AddParticipantPage extends State<AddParticipantPage> {
       case ActionTypesToShow.addViewer:
         return null;
     }
-  }
-
-  bool _matchesUserQuery(User user, String lowerCaseQuery) {
-    if (lowerCaseQuery.isEmpty) {
-      return true;
-    }
-    final resolvedName = resolveDisplayName(user).toLowerCase();
-    final resolvedEmail = (resolveKnownEmail(user) ?? user.email).toLowerCase();
-    return resolvedName.contains(lowerCaseQuery) ||
-        resolvedEmail.contains(lowerCaseQuery);
   }
 }

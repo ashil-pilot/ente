@@ -207,7 +207,10 @@
   "after1Month": "After 1 month",
   "after1Week": "After 1 week",
   "after1Year": "After 1 year",
+  "albumDescriptionHint": "Enter a description for this album",
+  "albumEditsWillNotBeSaved": "Your edits to this album won't be saved.",
   "albumLayout": "Album layout",
+  "albumName": "Album name",
   "albumOwner": "Owner",
   "@albumOwner": {
     "description": "Role of the album owner"
@@ -1235,6 +1238,7 @@
   "editAutoAddPeople": "Edit auto-add people",
   "editCodeAuthMessage": "Authenticate to edit code",
   "editContact": "Edit contact",
+  "editDetails": "Edit details",
   "editEmailAlreadyLinked": "This email is already linked to {name}.",
   "@editEmailAlreadyLinked": {
     "placeholders": {
@@ -1875,6 +1879,15 @@
   "ignore": "Ignore",
   "ignored": "ignored",
   "ignorePerson": "Ignore person",
+  "imageEditorBrightness": "Brightness",
+  "imageEditorContrast": "Contrast",
+  "imageEditorExposure": "Exposure",
+  "imageEditorFade": "Fade",
+  "imageEditorHue": "Hue",
+  "imageEditorLuminance": "Luminance",
+  "imageEditorSaturation": "Saturation",
+  "imageEditorSharpness": "Sharpness",
+  "imageEditorTemperature": "Temperature",
   "imageNotAnalyzed": "Image not analyzed",
   "immediate": "Immediate",
   "immediately": "Immediately",
@@ -2380,6 +2393,7 @@
       }
     }
   },
+  "menubarMode": "Menubar mode",
   "message": "Message",
   "minimizeAppOnCopy": "Minimize app on copy",
   "minimizeToTrayOnClose": "Minimize to tray on close",
@@ -2614,8 +2628,6 @@
   "ocrModelsNetworkRequiredError": "Network connection required to download OCR models on first use",
   "ocrModelsPrepareFailed": "Could not prepare OCR models",
   "ocrNoTextDetected": "No text detected",
-  "ocrProcessingOverlayMessage": "Detecting text...",
-  "ocrSelectionHint": "Swipe or double tap to select just what you need",
   "of_": "of",
   "offlineEnableBackupTagLabel": "10 GB FREE!",
   "offlineFacesBannerSubtitle": "Sign up to tag people and easily find them later.",
@@ -3278,6 +3290,7 @@
     "description": "Reset password title"
   },
   "resetToDefault": "Reset to default",
+  "restartAppToApplyChanges": "Restart the app to apply this change",
   "@resetToDefault": {
     "description": "Button text to reset cover photo to default"
   },
@@ -3374,6 +3387,8 @@
   "ritualSendReminderLabel": "Send reminder",
   "ritualSetAlbumToLaunchCamera": "Set an album for this ritual to launch the camera.",
   "ritualShareUnavailable": "Unable to share right now. Please try again.",
+  "ritualStartNew": "Start new ritual",
+  "ritualStartNewDescription": "Create a ritual, build streaks, and share your progress.",
   "ritualsTitle": "Rituals",
   "ritualUntitled": "Untitled ritual",
   "ritualUpdate": "Update ritual",
@@ -3391,6 +3406,7 @@
     "description": "Label for save button"
   },
   "saveAsAnotherPerson": "Save as another person",
+  "saveChanges": "Save changes",
   "saveChangesBeforeLeavingQuestion": "Save changes before leaving?",
   "saveCode": "Save code",
   "saveCollage": "Save collage",
@@ -4246,6 +4262,7 @@
   },
   "unpinPerson": "Unpin person",
   "unpinText": "Unpin",
+  "unsavedChangesDescription": "You have unsaved changes. If you go back now, they will be lost.",
   "unsavedNoteChangesDescription": "You have unsaved changes in this note. If you go back now, they will be lost.",
   "unsavedNoteChangesTitle": "Discard changes?",
   "unselectAll": "Unselect all",

@@ -7,12 +7,12 @@ use std::{
 use anyhow::{Context, Result, bail};
 use ente_assets::{Asset, AssetFile, AssetStore, download};
 use ente_photos::ml::{
+    ModelPaths,
     error::MlError,
     indexing::{
         AnalyzeImageRequest, AnalyzeImageResult, ImageSource, analyze_image, init_ml_runtime,
         release_ml_runtime,
     },
-    runtime::ModelPaths,
     types::FaceResult as RustFaceResult,
 };
 use flate2::read::GzDecoder;
@@ -356,16 +356,12 @@ impl MlIndexingTestContext {
     }
 }
 
-/// A downloaded production model together with its content hash as pinned in
-/// the asset lock, for embedding into generated golden entries.
 #[allow(dead_code)]
 pub(crate) struct GoldenModelAsset {
     pub(crate) path: PathBuf,
     pub(crate) sha256: String,
 }
 
-/// Downloaded production model assets for the golden self-test tooling, with
-/// ONNX Runtime already initialized. Used by the ml_goldens developer tool only.
 #[allow(dead_code)]
 pub(crate) struct GoldenTestAssets {
     pub(crate) face_detection: GoldenModelAsset,
@@ -405,7 +401,7 @@ impl GoldenTestAssets {
     }
 
     pub(crate) fn golden_data_path() -> Result<PathBuf> {
-        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/ml/golden_data.rs"))
+        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/ml/onnx/golden_test/data.rs"))
     }
 }
 
@@ -461,7 +457,6 @@ struct ModelAssets {
     face_detection: ModelAsset,
     face_embedding: ModelAsset,
     clip_image: ModelAsset,
-    // Used by the ml_goldens developer tool only.
     #[allow(dead_code)]
     clip_text: ModelAsset,
     #[allow(dead_code)]

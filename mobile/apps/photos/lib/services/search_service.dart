@@ -90,7 +90,7 @@ class SearchService {
     _localPhotosUpdatedSubscription = Bus.instance
         .on<LocalPhotosUpdatedEvent>()
         .listen((event) {
-          // only invalidate, let the load happen on demand
+          // Invalidate only; reload on demand.
           _cachedFilesFuture = null;
           _cachedFilesForSearch = null;
           _cachedFilesForHierarchicalSearch = null;
@@ -109,7 +109,7 @@ class SearchService {
     List<Collection> collections,
   ) {
     final contactUserId = user.id;
-    if (contactUserId == null || contactUserId <= 0) {
+    if (contactUserId <= 0) {
       throw ArgumentError.value(
         contactUserId,
         "user.id",
@@ -163,7 +163,7 @@ class SearchService {
     final contactsByUserId = <int, User>{};
     for (final contact in directContacts) {
       contactsToFiles[contact] = [];
-      contactsByUserId[contact.id!] = contact;
+      contactsByUserId[contact.id] = contact;
     }
 
     for (final file in allFiles) {
@@ -195,7 +195,7 @@ class SearchService {
         continue;
       }
       final contactUserId = collection.owner.id;
-      if (contactUserId != null && contactUserId > 0) {
+      if (contactUserId > 0) {
         collectionsByUserId
             .putIfAbsent(contactUserId, () => [])
             .add(collection);
@@ -232,7 +232,7 @@ class SearchService {
     User user,
   ) async {
     final userId = user.id;
-    if (userId == null || userId <= 0) {
+    if (userId <= 0) {
       return null;
     }
 
@@ -269,7 +269,7 @@ class SearchService {
   bool _isSameContactUser(User source, User target) {
     final sourceId = source.id;
     final targetId = target.id;
-    if (sourceId != null && targetId != null && sourceId > 0 && targetId > 0) {
+    if (sourceId > 0 && targetId > 0) {
       return sourceId == targetId;
     }
     return source.email == target.email;
@@ -301,6 +301,44 @@ class SearchService {
     }
 
     return FilesDB.instance.hasAnyFile();
+  }
+
+  Future<List<GenericSearchResult>> getUploadedFileIDsSearchResults(
+    String query,
+    Set<int> uploadedFileIDs,
+  ) async {
+    if (uploadedFileIDs.isEmpty) {
+      return [];
+    }
+
+    try {
+      final files = await FilesDB.instance.getFilesFromIDs(
+        uploadedFileIDs.toList(),
+        dedupeByUploadId: true,
+        collectionsToIgnore: ignoreCollections(),
+      );
+      if (files.isEmpty) {
+        return [];
+      }
+
+      final matchedUploadedFileIDs = filesToUploadedFileIDs(files);
+      return [
+        GenericSearchResult(
+          ResultType.file,
+          query.trim(),
+          files,
+          hierarchicalSearchFilter: TopLevelGenericFilter(
+            filterName: query.trim(),
+            occurrence: kMostRelevantFilter,
+            filterResultType: ResultType.file,
+            matchedUploadedIDs: matchedUploadedFileIDs,
+          ),
+        ),
+      ];
+    } catch (e, s) {
+      _logger.severe("Failed to search by uploaded file IDs", e, s);
+      return [];
+    }
   }
 
   Future<List<EnteFile>> getAllFilesForHierarchicalSearch() async {
@@ -403,8 +441,6 @@ class SearchService {
     unawaited(memoriesCacheService.clearMemoriesCache());
   }
 
-  // getFilteredCollectionsWithThumbnail removes deleted or archived or
-  // collections which don't have a file from search result
   Future<List<AlbumSearchResult>> getCollectionSearchResults(
     String query,
   ) async {
@@ -994,8 +1030,6 @@ class SearchService {
     }
     if (showNoLocationTag) {
       _logger.info("finding photos with no location tag");
-      // find files that have location but the file's location is not inside
-      // any location tag
       final noLocationTagFiles = allFiles.where((file) {
         if (!file.hasLocation) {
           return false;
@@ -1054,8 +1088,8 @@ class SearchService {
         );
       }
     }
-    //todo: remove this later, this hack is for interval+external evaluation
-    // for suggestions
+    // TODO: Remove the __city override used by interval and external
+    // suggestion evaluation.
     final allCitiesSearch = query == '__city';
     if (allCitiesSearch) {
       query = '';
@@ -1064,7 +1098,6 @@ class SearchService {
     final List<City> sortedByResultCount = results.keys.toList()
       ..sort((a, b) => results[b]!.length.compareTo(results[a]!.length));
     for (final city in sortedByResultCount) {
-      // If the location tag already exists for a city, don't add it again
       if (!locationTagNames.contains(city.city)) {
         final a =
             (defaultCityRadius * scaleFactor(city.lat)) / kilometersPerDegree;
@@ -1347,7 +1380,6 @@ class SearchService {
         }
       }
 
-      // get sorted personId by files count
       final sortedPersonIds = personIdToFiles.keys.toList()
         ..sort(
           (a, b) =>
@@ -1434,7 +1466,6 @@ class SearchService {
             final String personID = clusterIDToPersonID[clusterId]!;
             final PersonEntity? p = personIdToPerson[personID];
             if (p != null) {
-              // This should not be possible since it should be handled in the above loop, logging just in case
               _logger.severe(
                 "`getAllFace`: Something unexpected happened, Cluster $clusterId should not have person id $personID",
                 Exception(
@@ -1442,8 +1473,6 @@ class SearchService {
                 ),
               );
             } else {
-              // This should not happen, means a clusterID is still assigned to a personID of a person that no longer exists
-              // Logging the error and deleting the clusterID to personID mapping
               _logger.severe(
                 "`getAllFace`: Cluster $clusterId should not have person id ${clusterIDToPersonID[clusterId]}, deleting the mapping",
                 Exception(
@@ -1547,8 +1576,6 @@ class SearchService {
               tagToItemsMap[tag]!.add(file);
             }
           }
-          // If the location tag already exists for a city, do not consider
-          // it for the city suggestions
           if (!hasLocationTag) {
             filesWithNoLocTag.add(file);
           }
@@ -1569,7 +1596,6 @@ class SearchService {
                   LocationScreenStateProvider(
                     entry.key,
                     LocationScreen(
-                      //this is SearchResult.heroTag()
                       tagPrefix:
                           "${ResultType.location.toString()}_${entry.key.item.name}",
                     ),
@@ -1585,41 +1611,7 @@ class SearchService {
           );
         }
       }
-      // Add the found base locations from the location/memories service
       // TODO: lau: Add base location names
-      // if (limit == null || tagSearchResults.length < limit) {
-      //   for (final BaseLocation base in locationService.baseLocations) {
-      //     final a = (baseRadius * scaleFactor(base.location.latitude!)) /
-      //         kilometersPerDegree;
-      //     const b = baseRadius / kilometersPerDegree;
-      //     tagSearchResults.add(
-      //       GenericSearchResult(
-      //         ResultType.location,
-      //         "Base",
-      //         base.files,
-      //         onResultTap: (ctx) {
-      //           showAddLocationSheet(
-      //             ctx,
-      //             base.location,
-      //             name: "Base",
-      //             radius: baseRadius,
-      //           );
-      //         },
-      //         hierarchicalSearchFilter: LocationFilter(
-      //           locationTag: LocationTag(
-      //             name: "Base",
-      //             radius: baseRadius,
-      //             centerPoint: base.location,
-      //             aSquare: a * a,
-      //             bSquare: b * b,
-      //           ),
-      //           occurrence: kMostRelevantFilter,
-      //           matchedUploadedIDs: filesToUploadedFileIDs(base.files),
-      //         ),
-      //       ),
-      //     );
-      //   }
-      // }
 
       if (limit == null || tagSearchResults.length < limit) {
         final results = await locationService.getFilesInCity(
@@ -1682,7 +1674,6 @@ class SearchService {
     if (parsedDate.isEmpty) {
       return searchResults;
     }
-    // Handle month-year queries
     if (parsedDate.day == null &&
         parsedDate.month != null &&
         parsedDate.year != null) {
@@ -1712,9 +1703,7 @@ class SearchService {
           ),
         );
       }
-    }
-    // Handle day-month queries (with or without year)
-    else if (parsedDate.day != null && parsedDate.month != null) {
+    } else if (parsedDate.day != null && parsedDate.month != null) {
       final int day = parsedDate.day!;
       final int month = parsedDate.month!;
       final int? year = parsedDate.year; // nullable for generic dates
@@ -1804,7 +1793,7 @@ class SearchService {
     return searchResults;
   }
 
-  /// For debug purposes only, don't use this in production!
+  // Debug only; do not use in production.
   Future<List<GenericSearchResult>> smartMemories(
     BuildContext context,
     int? limit,
@@ -1814,7 +1803,6 @@ class SearchService {
     if (limit != null) {
       memories = await memoriesCacheService.getMemories();
     } else {
-      // await two seconds to let new page load first
       await Future.delayed(const Duration(seconds: 1));
       if (!context.mounted) return const [];
       final DateTime? pickedTime = await showDatePicker(
@@ -1840,7 +1828,6 @@ class SearchService {
         );
       }
       cache.baseLocations.addAll(memoriesResult.baseLocations);
-      // memories = memoriesResult.memories;
       final tempCachePath =
           (await getTemporaryDirectory()).path +
           "/cache/test/memories_cache_test";
@@ -1930,9 +1917,9 @@ class SearchService {
         return aName.compareTo(bName);
       });
 
-      final limitedEntries = limit != null
-          ? _preserveEmailOnlyContactsWithinLimit(sortedEntries, limit)
-          : sortedEntries;
+      final limitedEntries = limit == null
+          ? sortedEntries
+          : sortedEntries.take(limit).toList();
 
       return _toContactSearchResults(limitedEntries, peopleToSharedAlbums);
     } catch (e) {
@@ -1948,37 +1935,6 @@ class SearchService {
               monthData.name.toLowerCase().startsWith(query.toLowerCase()),
         )
         .toList();
-  }
-
-  List<MapEntry<User, List<EnteFile>>> _preserveEmailOnlyContactsWithinLimit(
-    List<MapEntry<User, List<EnteFile>>> sortedEntries,
-    int limit,
-  ) {
-    if (limit <= 0) {
-      return const [];
-    }
-    final limitedEntries = sortedEntries.take(limit).toList();
-    if (limitedEntries.length < limit ||
-        limitedEntries.any((entry) => entry.key.id == null)) {
-      return limitedEntries;
-    }
-
-    final includedEmails = limitedEntries
-        .map((entry) => entry.key.email)
-        .toSet();
-    MapEntry<User, List<EnteFile>>? overflowEmailOnly;
-    for (final entry in sortedEntries.skip(limit)) {
-      if (entry.key.id == null && !includedEmails.contains(entry.key.email)) {
-        overflowEmailOnly = entry;
-        break;
-      }
-    }
-    if (overflowEmailOnly == null) {
-      return limitedEntries;
-    }
-
-    limitedEntries[limitedEntries.length - 1] = overflowEmailOnly;
-    return limitedEntries;
   }
 
   Future<List<EnteFile>> _getFilesInYear(List<int> durationOfYear) async {

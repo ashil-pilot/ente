@@ -114,7 +114,7 @@ class MemoryViewerCloseButton extends StatelessWidget {
         icon: const HugeIcon(
           icon: HugeIcons.strokeRoundedCancel01,
           color: Colors.white,
-          size: 32,
+          size: 24,
         ),
       ),
     );

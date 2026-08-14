@@ -16,8 +16,6 @@ import (
 	"time"
 )
 
-// StartReplication starts the replication process for file data.
-// If
 func (c *Controller) StartReplication() error {
 	workerURL := viper.GetString("replication.worker-url")
 	if workerURL == "" {
@@ -67,20 +65,14 @@ func (c *Controller) startWorkers(n int) {
 
 	for i := 0; i < n; i++ {
 		go c.replicate(i)
-		// Stagger the workers
 		time.Sleep(time.Duration(2*i+1) * time.Second)
 	}
 }
 
-// Entry point for the replication worker (goroutine)
-//
-// i is an arbitrary index of the current routine.
 func (c *Controller) replicate(i int) {
 	for {
 		err := c.tryReplicate()
 		if err != nil {
-			// Sleep in proportion to the (arbitrary) index to space out the
-			// workers further.
 			time.Sleep(time.Duration(i+1) * time.Minute)
 		}
 	}
@@ -108,7 +100,6 @@ func (c *Controller) tryReplicate() error {
 		}).Errorf("Could not replicate file data: %s", err)
 		return err
 	} else {
-		// If the replication was completed without any errors, we can reset the lock time
 		return c.Repo.ResetSyncLock(ctx, *row, newLockTime)
 	}
 }

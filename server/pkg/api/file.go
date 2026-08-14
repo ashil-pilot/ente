@@ -25,7 +25,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// FileHandler exposes request handlers for all encrypted file related requests
 type FileHandler struct {
 	Controller   *controller.FileController
 	FileUrlCtrl  *public.FileLinkController
@@ -33,11 +32,9 @@ type FileHandler struct {
 	FileDataCtrl *filedata.Controller
 }
 
-// DefaultMaxBatchSize is the default maximum API batch size unless specified otherwise
 const DefaultMaxBatchSize = 1000
 const DefaultCopyBatchSize = 100
 
-// CreateOrUpdate creates an entry for a file
 func (h *FileHandler) CreateOrUpdate(c *gin.Context) {
 	userID := auth.GetUserID(c.Request.Header)
 	var file ente.File
@@ -47,7 +44,6 @@ func (h *FileHandler) CreateOrUpdate(c *gin.Context) {
 	}
 	file.UpdationTime = time.Microseconds()
 
-	// get an ente.App from the ?app= query parameter with a default of photos
 	enteApp := auth.GetApp(c)
 
 	if file.ID == 0 {
@@ -69,7 +65,6 @@ func (h *FileHandler) CreateOrUpdate(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// CreateMetaFile creates an entry for a file
 func (h *FileHandler) CreateMetaFile(c *gin.Context) {
 	userID := auth.GetUserID(c.Request.Header)
 	var file ente.MetaFile
@@ -94,7 +89,6 @@ func (h *FileHandler) CreateMetaFile(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// CopyFiles copies files that are owned by another user
 func (h *FileHandler) CopyFiles(c *gin.Context) {
 	var req ente.CopyFileSyncRequest
 	if err := handler.BindJSON(c, &req); err != nil {
@@ -113,7 +107,6 @@ func (h *FileHandler) CopyFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// Update updates already existing file
 func (h *FileHandler) Update(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 
@@ -136,7 +129,6 @@ func (h *FileHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// GetUploadURLs returns a bunch of urls where in the user can upload objects
 func (h *FileHandler) GetUploadURLs(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 
@@ -152,7 +144,6 @@ func (h *FileHandler) GetUploadURLs(c *gin.Context) {
 	})
 }
 
-// ValidateUploadEligibility verifies that the user can upload without minting upload URLs.
 func (h *FileHandler) ValidateUploadEligibility(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 	userID := auth.GetUserID(c.Request.Header)
@@ -163,7 +154,6 @@ func (h *FileHandler) ValidateUploadEligibility(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// GetUploadURLV2 returns a single upload URL that enforces checksum + content-length headers
 func (h *FileHandler) GetUploadURLV2(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 	userID := auth.GetUserID(c.Request.Header)
@@ -180,7 +170,6 @@ func (h *FileHandler) GetUploadURLV2(c *gin.Context) {
 	c.JSON(http.StatusOK, url)
 }
 
-// GetMultipartUploadURLs returns an array of PartUpload PresignedURLs
 func (h *FileHandler) GetMultipartUploadURLs(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 
@@ -196,7 +185,6 @@ func (h *FileHandler) GetMultipartUploadURLs(c *gin.Context) {
 	})
 }
 
-// GetMultipartUploadURLV2 returns multipart upload URLs for a single object with enforced metadata
 func (h *FileHandler) GetMultipartUploadURLV2(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 	userID := auth.GetUserID(c.Request.Header)
@@ -213,7 +201,6 @@ func (h *FileHandler) GetMultipartUploadURLV2(c *gin.Context) {
 	c.JSON(http.StatusOK, upload)
 }
 
-// Get redirects the request to the file location
 func (h *FileHandler) Get(c *gin.Context) {
 	userID, fileID := getUserAndFileIDs(c)
 	url, err := h.Controller.GetFileURL(c, userID, fileID)
@@ -225,7 +212,6 @@ func (h *FileHandler) Get(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-// GetURL returns the URL of the file to the client.
 func (h *FileHandler) GetURL(c *gin.Context) {
 	userID, fileID := getUserAndFileIDs(c)
 	url, err := h.Controller.GetFileURL(c, userID, fileID)
@@ -236,14 +222,12 @@ func (h *FileHandler) GetURL(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"url": url})
 }
 
-// GetURLV3 returns the URL of the file and reserves HTTP 404 for an unavailable endpoint.
 func (h *FileHandler) GetURLV3(c *gin.Context) {
 	userID, fileID := getUserAndFileIDs(c)
 	url, err := h.Controller.GetFileURL(c, userID, fileID)
 	writeFileURLV3(c, url, err)
 }
 
-// GetThumbnail redirects the request to the file's thumbnail location
 func (h *FileHandler) GetThumbnail(c *gin.Context) {
 	userID, fileID := getUserAndFileIDs(c)
 	url, err := h.Controller.GetThumbnailURL(c, userID, fileID)
@@ -255,7 +239,6 @@ func (h *FileHandler) GetThumbnail(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-// GetThumbnailURL returns the URL of the thumbnail to the client.
 func (h *FileHandler) GetThumbnailURL(c *gin.Context) {
 	userID, fileID := getUserAndFileIDs(c)
 	url, err := h.Controller.GetThumbnailURL(c, userID, fileID)
@@ -266,7 +249,6 @@ func (h *FileHandler) GetThumbnailURL(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"url": url})
 }
 
-// GetThumbnailURLV3 returns the thumbnail URL and reserves HTTP 404 for an unavailable endpoint.
 func (h *FileHandler) GetThumbnailURLV3(c *gin.Context) {
 	userID, fileID := getUserAndFileIDs(c)
 	url, err := h.Controller.GetThumbnailURL(c, userID, fileID)
@@ -281,6 +263,7 @@ func writeFileURLV3(c *gin.Context, url string, err error) {
 	c.JSON(http.StatusOK, gin.H{"url": url})
 }
 
+// V3 uses 400 for missing objects so 404 can signal endpoint unavailability.
 func fileURLV3Error(err error) error {
 	var apiErr *ente.ApiError
 	if errors.Is(err, sql.ErrNoRows) ||
@@ -294,7 +277,6 @@ func fileURLV3Error(err error) error {
 	return err
 }
 
-// Trash moves the given files to the trash bin
 func (h *FileHandler) Trash(c *gin.Context) {
 	var request ente.TrashRequest
 	if err := handler.BindJSON(c, &request); err != nil {
@@ -315,7 +297,6 @@ func (h *FileHandler) Trash(c *gin.Context) {
 	}
 }
 
-// GetSize returns the size of files indicated by fileIDs
 func (h *FileHandler) GetSize(c *gin.Context) {
 	var request ente.FileIDsRequest
 	if err := handler.BindJSON(c, &request); err != nil {
@@ -343,7 +324,6 @@ func (h *FileHandler) GetSize(c *gin.Context) {
 	}
 }
 
-// GetInfo returns the FileInfo of files indicated by fileIDs
 func (h *FileHandler) GetInfo(c *gin.Context) {
 	var request ente.FileIDsRequest
 	if err := handler.BindJSON(c, &request); err != nil {
@@ -385,12 +365,10 @@ func shouldRejectRequest(c *gin.Context) (bool, error) {
 	}
 	minorVersion, err := strconv.Atoi(versionSplit[1])
 	if err != nil {
-		// avoid reject when parsing fails
 		return false, nil
 	}
 	patchVersion, err := strconv.Atoi(versionSplit[2])
 	if err != nil {
-		// avoid reject when parsing fails
 		return false, nil
 	}
 	shouldReject := minorVersion <= 5 && patchVersion <= 35
@@ -400,7 +378,6 @@ func shouldRejectRequest(c *gin.Context) (bool, error) {
 	return shouldReject, nil
 }
 
-// GetDuplicates returns the list of files of the same size
 func (h *FileHandler) GetDuplicates(c *gin.Context) {
 	userID := auth.GetUserID(c.Request.Header)
 	dupes, err := h.Controller.GetDuplicates(userID)
@@ -413,7 +390,6 @@ func (h *FileHandler) GetDuplicates(c *gin.Context) {
 	})
 }
 
-// UpdateMagicMetadata updates magic metadata for a list of files.
 func (h *FileHandler) UpdateMagicMetadata(c *gin.Context) {
 	var request ente.UpdateMultipleMagicMetadataRequest
 	if err := handler.BindJSON(c, &request); err != nil {
@@ -432,7 +408,6 @@ func (h *FileHandler) UpdateMagicMetadata(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// UpdatePublicMagicMetadata updates public magic metadata for a list of files.
 func (h *FileHandler) UpdatePublicMagicMetadata(c *gin.Context) {
 	var request ente.UpdateMultipleMagicMetadataRequest
 	if err := handler.BindJSON(c, &request); err != nil {
@@ -447,7 +422,6 @@ func (h *FileHandler) UpdatePublicMagicMetadata(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// UpdateThumbnail updates thumbnail of a file
 func (h *FileHandler) UpdateThumbnail(c *gin.Context) {
 	enteApp := auth.GetApp(c)
 
@@ -481,7 +455,6 @@ func getUserAndFileIDs(c *gin.Context) (int64, int64) {
 	return userID, fileID
 }
 
-// logBadRedirect will log the request id if we are redirecting to another url with the auth-token in header
 func (h *FileHandler) logBadRedirect(c *gin.Context) {
 	if len(c.GetHeader("X-Auth-Token")) != 0 && os.Getenv("ENVIRONMENT") != "" {
 		log.WithField("req_id", requestid.Get(c)).Error("critical: sending token to another service")

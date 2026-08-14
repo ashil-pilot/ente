@@ -150,7 +150,7 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
       showShortToast(context, l10n.editsSaved);
       _logger.info("Original file " + widget.originalFile.toString());
       _logger.info("Saved edits to file " + newFile.toString());
-      final files = widget.detailPageConfig.files;
+      final files = List<ente.EnteFile>.of(widget.detailPageConfig.files);
 
       // the index could be -1 if the files fetched doesn't contain the newly
       // edited files
@@ -158,8 +158,17 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
         (file) => file.generatedID == newFile.generatedID,
       );
       if (selectionIndex == -1) {
-        files.add(newFile);
-        selectionIndex = files.length - 1;
+        final fallbackIndex = min(
+          max(widget.detailPageConfig.selectedIndex, 0),
+          files.length,
+        );
+        final originalIndex = widget.originalFile.generatedID == null
+            ? -1
+            : files.indexWhere(
+                (file) => file.generatedID == widget.originalFile.generatedID,
+              );
+        selectionIndex = originalIndex == -1 ? fallbackIndex : originalIndex;
+        files.insert(selectionIndex, newFile);
       }
       await dialog.hide();
       if (!mounted) return;
@@ -252,6 +261,19 @@ class _ImageEditorPageState extends State<ImageEditorPage> {
             ),
           ),
           configs: ProImageEditorConfigs(
+            i18n: I18n(
+              tuneEditor: I18nTuneEditor(
+                brightness: context.strings.imageEditorBrightness,
+                contrast: context.strings.imageEditorContrast,
+                saturation: context.strings.imageEditorSaturation,
+                exposure: context.strings.imageEditorExposure,
+                hue: context.strings.imageEditorHue,
+                temperature: context.strings.imageEditorTemperature,
+                sharpness: context.strings.imageEditorSharpness,
+                fade: context.strings.imageEditorFade,
+                luminance: context.strings.imageEditorLuminance,
+              ),
+            ),
             imageGeneration: const ImageGenerationConfigs(
               jpegQuality: 100,
               enableIsolateGeneration: true,

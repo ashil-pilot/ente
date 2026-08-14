@@ -1,5 +1,4 @@
 import "package:ente_strings/ente_strings.dart";
-import "package:ente_ui/components/buttons/button_widget.dart";
 import "package:ente_ui/utils/dialog_util.dart";
 import "package:ente_ui/utils/toast_util.dart";
 import "package:flutter/material.dart";
@@ -26,11 +25,9 @@ import "package:locker/utils/bottom_sheet_illustration.dart";
 import "package:locker/utils/error_sheet.dart";
 import "package:logging/logging.dart";
 
-/// Utility class for common file actions like edit, share, delete, and favorites
 class FileActions {
   static final _logger = Logger("FileActions");
 
-  /// Shows edit dialog for a file to update title
   static Future<void> editFile(
     BuildContext context,
     EnteFile file, {
@@ -244,7 +241,6 @@ class FileActions {
     ).push(MaterialPageRoute(builder: (context) => page));
   }
 
-  /// Creates and shows a shareable link for a file
   static Future<void> shareFileLink(BuildContext context, EnteFile file) async {
     final dialog = createProgressDialog(
       context,
@@ -280,7 +276,6 @@ class FileActions {
     }
   }
 
-  /// Deletes a single file after confirmation
   static Future<void> deleteFile(
     BuildContext context,
     EnteFile file, {
@@ -294,7 +289,7 @@ class FileActions {
       illustration: LockerBottomSheetIllustration.fileDelete,
     );
 
-    if (confirmation?.buttonResult.action != ButtonAction.first) {
+    if (confirmation == null) {
       return;
     }
 
@@ -331,7 +326,6 @@ class FileActions {
     }
   }
 
-  /// Deletes multiple files after confirmation
   static Future<void> deleteMultipleFiles(
     BuildContext context,
     List<EnteFile> files, {
@@ -349,7 +343,7 @@ class FileActions {
       illustration: LockerBottomSheetIllustration.fileDelete,
     );
 
-    if (confirmation?.buttonResult.action != ButtonAction.first) {
+    if (confirmation == null) {
       return;
     }
 
@@ -398,12 +392,10 @@ class FileActions {
     }
   }
 
-  /// Checks if a file is marked as important using cache
   static bool isImportant(EnteFile file) {
     return FavoritesService.instance.isFavoriteCache(file);
   }
 
-  /// Toggles important status of a single file
   static Future<void> markImportant(
     BuildContext context,
     EnteFile file, {
@@ -449,7 +441,6 @@ class FileActions {
     }
   }
 
-  /// Marks multiple files as important
   static Future<void> markMultipleImportant(
     BuildContext context,
     List<EnteFile> files, {
