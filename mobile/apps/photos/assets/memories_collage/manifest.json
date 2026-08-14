@@ -8,32 +8,27 @@
     {
       "id": "paper-washi",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     },
     {
       "id": "paper-cream-fiber",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     },
     {
       "id": "paper-blush-stripe",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     },
     {
       "id": "paper-sage-stripe",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     },
     {
       "id": "paper-terracotta-mottle",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     },
     {
       "id": "paper-torn",
@@ -216,14 +211,12 @@
     {
       "id": "editorial-sand",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     },
     {
       "id": "editorial-sage",
       "width": 1080,
-      "height": 1920,
-      "role": "background"
+      "height": 1920
     }
   ],
   "defaultTemplateId": "calm-film-trio",

@@ -22,7 +22,6 @@ void main() {
     expect(manifest.canvas.width, 1080);
     expect(manifest.canvas.height, 1920);
     expect(manifest.assets, hasLength(24));
-    expect(manifest.backgroundAssets, hasLength(7));
     expect(manifest.defaultTemplateID, "calm-film-trio");
     expect(manifest.templates.map((template) => template.id), [
       "scrapbook-maximal",
@@ -68,7 +67,6 @@ void main() {
         "id",
         "width",
         "height",
-        "role",
         "emptyWindowColor",
         "photoWindows",
       });
@@ -191,12 +189,6 @@ void main() {
     for (final template in manifest.templates) {
       expect(template.background.layerID, "bg", reason: template.id);
       expect(template.background.assetIDs, backgroundIDs, reason: template.id);
-    }
-    for (final assetID in backgroundIDs) {
-      expect(
-        manifest.assetFor(assetID).role,
-        MemoryCollageAssetRole.background,
-      );
     }
   });
 
@@ -834,12 +826,15 @@ void main() {
         throwsFormatException,
       );
 
-      final nonBackground = _copyJson(sourceJson);
-      final nonBackgroundConfig =
-          _firstTemplate(nonBackground)["background"]! as Map<String, dynamic>;
-      (nonBackgroundConfig["assetIds"]! as List<dynamic>).add("paper-torn");
+      final wrongSizedBackground = _copyJson(sourceJson);
+      final wrongSizedBackgroundConfig =
+          _firstTemplate(wrongSizedBackground)["background"]!
+              as Map<String, dynamic>;
+      (wrongSizedBackgroundConfig["assetIds"]! as List<dynamic>).add(
+        "paper-torn",
+      );
       expect(
-        () => MemoryCollageManifest.fromJson(nonBackground),
+        () => MemoryCollageManifest.fromJson(wrongSizedBackground),
         throwsFormatException,
       );
 

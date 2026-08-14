@@ -67,10 +67,6 @@ class MemoryCollageManifest {
 
   MemoryCollageTemplate get defaultTemplate => templateFor(defaultTemplateID);
 
-  List<MemoryCollageAsset> get backgroundAssets => List.unmodifiable(
-    assets.where((asset) => asset.role == MemoryCollageAssetRole.background),
-  );
-
   MemoryCollageAsset assetFor(String id) {
     final asset = _assetsByID[id];
     if (asset == null) {
@@ -322,12 +318,6 @@ class MemoryCollageManifest {
           "Template ${template.id} references unknown background $assetID",
         );
       }
-      if (asset.role != MemoryCollageAssetRole.background) {
-        throw FormatException(
-          "Template ${template.id} background $assetID must have the "
-          "background role",
-        );
-      }
       if (asset.width != canvas.width || asset.height != canvas.height) {
         throw FormatException(
           "Template ${template.id} background $assetID must match the canvas",
@@ -531,13 +521,10 @@ class MemoryCollageCanvas {
   }
 }
 
-enum MemoryCollageAssetRole { background }
-
 class MemoryCollageAsset {
   final String id;
   final int width;
   final int height;
-  final MemoryCollageAssetRole? role;
   final String? emptyWindowColor;
   final List<MemoryCollagePhotoWindow> photoWindows;
 
@@ -545,22 +532,15 @@ class MemoryCollageAsset {
     required this.id,
     required this.width,
     required this.height,
-    required this.role,
     required this.emptyWindowColor,
     required List<MemoryCollagePhotoWindow> photoWindows,
   }) : photoWindows = List.unmodifiable(photoWindows);
 
   factory MemoryCollageAsset.fromJson(Map<String, dynamic> json) {
-    final role = _optionalString(json, "role");
     return MemoryCollageAsset(
       id: _jsonString(json, "id"),
       width: _jsonInt(json, "width"),
       height: _jsonInt(json, "height"),
-      role: switch (role) {
-        "background" => MemoryCollageAssetRole.background,
-        null => null,
-        _ => throw FormatException("Unknown memory collage asset role: $role"),
-      },
       emptyWindowColor: _optionalString(json, "emptyWindowColor"),
       photoWindows: _optionalJsonList(
         json,

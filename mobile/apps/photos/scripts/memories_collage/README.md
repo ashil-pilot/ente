@@ -98,7 +98,7 @@ Run it twice and compare sorted file SHA-256 inventories before accepting a
 source or toolchain change. The 72 PNG variants combined with the seven-style
 manifest form a 73-file inventory.
 The normalized staging manifest is byte-identical to the runtime manifest,
-SHA-256 `e142a93a1ec7b07e16d6dafe21ecb057b63d8f6eb17d857ca6923c96adf817e1`.
+SHA-256 `6e2d5e9d5eaf78591359938bdc27f9c222a7922374a7fa36c8d101b6a3ed8c0e`.
 
 When packages are not installed in the active Node environment, point at
 existing package directories explicitly:
@@ -139,7 +139,7 @@ The 24 assets produce 72 variants totaling 9,815,736 bytes (9.36 MiB):
 - two deterministic editorial solid assets / 6 variants: 37,780 bytes
   (0.04 MiB)
 
-Flutter packages the 24 `3.0x` PNGs plus the runtime manifest: 6,197,158 raw
+Flutter packages the 24 `3.0x` PNGs plus the runtime manifest: 6,196,962 raw
 bytes (5.91 MiB). The lower-scale repository copies remain available to the
 exporter but are excluded from `AssetManifest`.
 

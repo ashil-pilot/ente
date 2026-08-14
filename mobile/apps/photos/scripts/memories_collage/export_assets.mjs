@@ -591,7 +591,6 @@ function cleanAsset(asset) {
     id: asset.id,
     width: asset.width,
     height: asset.height,
-    ...(asset.role ? { role: asset.role } : {}),
     ...(asset.emptyWindowColor
       ? { emptyWindowColor: asset.emptyWindowColor }
       : {}),
@@ -785,7 +784,6 @@ function assertRuntimeManifestShape(manifest) {
         "id",
         "width",
         "height",
-        "role",
         "emptyWindowColor",
         "photoWindows",
       ),
