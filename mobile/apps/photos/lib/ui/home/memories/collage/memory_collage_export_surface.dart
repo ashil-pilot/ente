@@ -144,6 +144,7 @@ class _MemoryCollageExportSurfaceState
   @override
   Widget build(BuildContext context) {
     final snapshot = widget.snapshot;
+    final template = widget.manifest.templateFor(snapshot.templateID);
     return IgnorePointer(
       child: ExcludeSemantics(
         child: SizedBox.fromSize(
@@ -161,6 +162,11 @@ class _MemoryCollageExportSurfaceState
                   key: ValueKey("memory-collage-export-${snapshot._id}-$slot"),
                   file: file,
                   tagPrefix: "memory-collage-export-${snapshot._id}-$slot-",
+                  targetPixelSize: memoryCollageExportTargetPixelSize(
+                    widget.manifest,
+                    template,
+                    slot,
+                  ),
                   testPhotoBuilder: widget.testPhotoBuilder,
                   onFinalImageLoaded: () =>
                       snapshot.markPhotoLoaded(file: file, slot: slot),
@@ -172,4 +178,32 @@ class _MemoryCollageExportSurfaceState
       ),
     );
   }
+}
+
+/// Returns the authored pixel size occupied by a photo slot on the 1080 x
+/// 1920 export canvas.
+@visibleForTesting
+Size memoryCollageExportTargetPixelSize(
+  MemoryCollageManifest manifest,
+  MemoryCollageTemplate template,
+  int slot,
+) {
+  final photoSlot = template.photoSlots.singleWhere(
+    (photoSlot) => photoSlot.slot == slot,
+  );
+  return switch (photoSlot) {
+    MemoryCollageAssetWindowPhotoSlot() => () {
+      final layer = template.layerFor(photoSlot.layerID);
+      final asset = manifest.assetFor(layer.assetID);
+      final window = asset.photoWindows[photoSlot.windowIndex];
+      return Size(
+        window.width / asset.width * layer.width,
+        window.height / asset.height * layer.height,
+      );
+    }(),
+    MemoryCollageMattedRectPhotoSlot() => Size(
+      photoSlot.photoRect.width,
+      photoSlot.photoRect.height,
+    ),
+  };
 }

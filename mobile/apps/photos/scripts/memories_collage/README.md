@@ -6,6 +6,12 @@ resolution-aware Flutter PNG assets. The generated files live in
 `../../assets/memories_collage/`; rotation, layer and mat shadows, titles, mats,
 rules, and photo placement remain compositor-owned.
 
+The repository intentionally retains the base, `2.0x`, and `3.0x` variants so
+the design/export pipeline can verify every authored scale. The Flutter app
+bundle includes only `manifest.json` and the explicitly addressed `3.0x`
+directory; the base and `2.0x` copies are tooling artifacts and must not be
+deleted from the repository.
+
 Empty photo windows use the material colors authored into the source contract:
 warm emulsion browns for instant prints and film, and a pale warm aperture for
 the minimal mats. These fills remain visible only until each photo fades in.
@@ -56,13 +62,31 @@ node mobile/apps/photos/scripts/memories_collage/export_assets.mjs
 ```
 
 Use a staging directory for a complete 24-asset verification render and a
-normalized runtime manifest:
+normalized runtime manifest. Run this from the repository root:
 
 ```sh
 collage_stage_dir=$(mktemp -d)
 COLLAGE_OUTPUT="$collage_stage_dir" COLLAGE_WRITE_MANIFEST=1 \
 node mobile/apps/photos/scripts/memories_collage/export_assets.mjs
 ```
+
+Run the full staging export twice into separate temporary directories and
+compare their sorted SHA-256 inventories. After reviewing intentional source,
+toolchain, and digest changes, copy all three PNG scales and the normalized
+manifest back together; never update only the scale shipped by Flutter:
+
+```sh
+collage_asset_dir=mobile/apps/photos/assets/memories_collage
+for variant in "" 2.0x 3.0x; do
+  cp "$collage_stage_dir/${variant:+$variant/}"*.png \
+    "$collage_asset_dir/${variant:+$variant/}"
+done
+cp "$collage_stage_dir/manifest.json" "$collage_asset_dir/manifest.json"
+```
+
+Then rerun the staging export and compare its manifest byte-for-byte with the
+checked-in copy. The exporter refuses to overwrite retained assets or the
+manifest in the real output tree so this review/copy-back step stays explicit.
 
 The complete staging render must reproduce the retained legacy inventory digest
 `b71bdd5fba23b3be64a5c3523b4e58d68ec29133f93f6419b978795f392acfc7`.
@@ -74,7 +98,7 @@ Run it twice and compare sorted file SHA-256 inventories before accepting a
 source or toolchain change. The 72 PNG variants combined with the seven-style
 manifest form a 73-file inventory.
 The normalized staging manifest is byte-identical to the runtime manifest,
-SHA-256 `ab64d0ee418b2082070c60ab65ecde9335d323def8b1d3893c530b271a7bc3b7`.
+SHA-256 `e142a93a1ec7b07e16d6dafe21ecb057b63d8f6eb17d857ca6923c96adf817e1`.
 
 When packages are not installed in the active Node environment, point at
 existing package directories explicitly:
@@ -115,6 +139,19 @@ The 24 assets produce 72 variants totaling 9,815,736 bytes (9.36 MiB):
 - two deterministic editorial solid assets / 6 variants: 37,780 bytes
   (0.04 MiB)
 
+Flutter packages the 24 `3.0x` PNGs plus the runtime manifest: 6,197,158 raw
+bytes (5.91 MiB). The lower-scale repository copies remain available to the
+exporter but are excluded from `AssetManifest`.
+
+A measured PNG follow-up found that blanket `adaptiveFiltering: true` grows
+the palette exports. A hybrid policy (adaptive filtering only for truecolor)
+was decoded-pixel-identical and 1,613,837 bytes (16.44%) smaller across all 72
+PNGs, but remains intentionally deferred: the current headless Chrome reports
+the `film-strip-four-horizontal` window alpha fraction as 0.1211823 against the
+0.12 ceiling and writes pHYs 2834 px/m instead of the retained 2835 px/m. Do not
+re-encode or re-pin the inventories until both source-export reproducibility
+issues are resolved.
+
 The obsolete `film-strip.png`, retired `banner.png`, and retired notebook and
 `editorial-paper` backgrounds are intentionally absent at every resolution.
 
@@ -125,11 +162,11 @@ shipped artwork. Review intentional changes and update both invariants and
 hashes in the exporter. `ALLOW_COLLAGE_SOURCE_DRIFT=1` is only for a reviewed
 local probe; structural and contract checks still run.
 
-- The approved downloaded Claude Design handoff
-  `/Users/ashilmacmini/Downloads/Memory Collage.dc.html` has SHA-256
+- The original Claude Design handoff named `Memory Collage.dc.html` (an
+  external review artifact, not a repository path) has SHA-256
   `47ec9f40479c74a50660b69463264e0488e78e4b941324390e71bf18c1e79118`.
-- The approved downloaded Claude Design 3b handoff
-  `/Users/ashilmacmini/Downloads/Memory Collage 3b.dc.html` has SHA-256
+- The approved Claude Design 3b handoff named `Memory Collage 3b.dc.html` (also
+  retained outside the repository) has SHA-256
   `cdd9c2855bd8fe035d84a1eb0217cdbc6d9ddb162e46cc46227772c3636536b6`.
 - The canonical integrated `Memory Collage.dc.html` has SHA-256
   `54a02ed673afbc920f37bde50fb9d391c0cdeab144d44c1283c93710b4b1623f`.
@@ -151,6 +188,8 @@ local probe; structural and contract checks still run.
   `a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81`.
 - `fonts/Lora-Italic.ttf` has SHA-256
   `22d8d8854b53807aa664ca34f2031a9ed57a1d0dea296b8b96cdd3aad937a2b3`.
+  It remains available to the authoring/export pipeline but is not declared as
+  a Flutter runtime font because none of the frozen templates uses it.
 - `fonts/Inter-Medium.ttf` has SHA-256
   `6df88fcb83ac96582350f801355c6eff55f15710093e9627fb431caa40521151`.
 - Both Lora faces are distributed under the SIL Open Font License 1.1 in

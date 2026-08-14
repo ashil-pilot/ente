@@ -129,8 +129,7 @@ void main() {
             child: MemoryCollageExportSurface(
               manifest: manifest,
               snapshot: snapshot,
-              testPhotoBuilder: (_, _, _) =>
-                  const ColoredBox(color: Colors.red),
+              testPhotoBuilder: (_, _) => const ColoredBox(color: Colors.red),
             ),
           ),
         ),
@@ -179,6 +178,10 @@ void main() {
         );
         expect(originalIndex, isNonNegative);
         expect(renderedFileIndices.add(originalIndex), isTrue);
+        expect(
+          photo.targetPixelSize,
+          memoryCollageExportTargetPixelSize(manifest, template, originalIndex),
+        );
         photo.onFinalImageLoaded();
       }
       expect(snapshot.readySlotCount, files.length);
@@ -213,7 +216,7 @@ void main() {
         home: MemoryCollageExportSurface(
           manifest: manifest,
           snapshot: snapshot,
-          testPhotoBuilder: (_, _, _) => const SizedBox.expand(),
+          testPhotoBuilder: (_, _) => const SizedBox.expand(),
         ),
       ),
     );

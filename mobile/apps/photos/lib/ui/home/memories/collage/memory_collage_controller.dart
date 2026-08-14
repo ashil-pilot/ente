@@ -63,7 +63,7 @@ class MemoryCollageController extends ChangeNotifier {
   List<String> get backgroundIDs => template.background.assetIDs;
 
   bool get canCreate =>
-      MemoryCollageSelector.isSupportedPhotoCount(_selectedFiles.length);
+      MemoryCollageSelector.hasRequiredPhotoCount(_selectedFiles.length);
 
   int get shuffleRevision => _shuffleRevision;
 

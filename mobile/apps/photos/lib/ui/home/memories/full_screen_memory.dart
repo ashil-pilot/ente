@@ -74,6 +74,50 @@ bool _isValidMemoryIndex(int index, int length) {
   return index >= 0 && index < length;
 }
 
+enum MemoryViewerForwardAction {
+  nextItem,
+  enterCollage,
+  nextMemory,
+  dismissViewer,
+  stay,
+}
+
+enum MemoryViewerBackAction { previousItem, leaveCollage, previousMemory, stay }
+
+MemoryViewerForwardAction memoryViewerForwardAction({
+  required int currentIndex,
+  required int itemCount,
+  required bool collageEligible,
+  required bool showingCollage,
+  required bool hasNextMemory,
+}) {
+  if (itemCount <= 0) return MemoryViewerForwardAction.stay;
+  if (showingCollage) {
+    return hasNextMemory
+        ? MemoryViewerForwardAction.nextMemory
+        : MemoryViewerForwardAction.dismissViewer;
+  }
+  if (currentIndex < itemCount - 1) {
+    return MemoryViewerForwardAction.nextItem;
+  }
+  if (collageEligible) return MemoryViewerForwardAction.enterCollage;
+  if (hasNextMemory) return MemoryViewerForwardAction.nextMemory;
+  return MemoryViewerForwardAction.stay;
+}
+
+MemoryViewerBackAction memoryViewerBackAction({
+  required int currentIndex,
+  required int itemCount,
+  required bool showingCollage,
+  required bool hasPreviousMemory,
+}) {
+  if (itemCount <= 0) return MemoryViewerBackAction.stay;
+  if (showingCollage) return MemoryViewerBackAction.leaveCollage;
+  if (currentIndex > 0) return MemoryViewerBackAction.previousItem;
+  if (hasPreviousMemory) return MemoryViewerBackAction.previousMemory;
+  return MemoryViewerBackAction.stay;
+}
+
 class FullScreenMemoryDataUpdater extends StatefulWidget {
   final List<Memory> memories;
   final int initialIndex;
@@ -541,32 +585,37 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     _isMediaZoomed = false;
     hasFinalFileLoaded = false;
 
-    if (_showCollageEndCard) {
-      if (widget.onNextMemory != null) {
-        _leaveCollageEndCard();
-        widget.onNextMemory!();
-      } else {
-        unawaited(Navigator.maybePop(context));
-      }
-      return;
-    }
-
     final currentIndex = _clampedMemoryIndex(
       inheritedData.indexNotifier.value,
       inheritedData.memories.length,
     )!;
     inheritedData.indexNotifier.value = currentIndex;
-    if (currentIndex < inheritedData.memories.length - 1) {
-      _onPageChange(inheritedData, currentIndex + 1);
-    } else if (_isCollageEligible(inheritedData)) {
-      _enterCollageEndCard();
-    } else if (widget.onNextMemory != null) {
-      _resetAnimation();
-      _setSocialControlsVisible(false);
-      widget.onNextMemory!();
-    } else {
-      isAtFirstOrLastFile = true;
-      _toggleAnimation(pause: false);
+    final action = memoryViewerForwardAction(
+      currentIndex: currentIndex,
+      itemCount: inheritedData.memories.length,
+      collageEligible:
+          !_showCollageEndCard && _isCollageEligible(inheritedData),
+      showingCollage: _showCollageEndCard,
+      hasNextMemory: widget.onNextMemory != null,
+    );
+    switch (action) {
+      case MemoryViewerForwardAction.nextItem:
+        _onPageChange(inheritedData, currentIndex + 1);
+      case MemoryViewerForwardAction.enterCollage:
+        _enterCollageEndCard();
+      case MemoryViewerForwardAction.nextMemory:
+        if (_showCollageEndCard) {
+          _leaveCollageEndCard();
+        } else {
+          _resetAnimation();
+          _setSocialControlsVisible(false);
+        }
+        widget.onNextMemory!();
+      case MemoryViewerForwardAction.dismissViewer:
+        unawaited(Navigator.maybePop(context));
+      case MemoryViewerForwardAction.stay:
+        isAtFirstOrLastFile = true;
+        _toggleAnimation(pause: false);
     }
   }
 
@@ -575,38 +624,39 @@ class _FullScreenMemoryState extends State<FullScreenMemory> {
     _isMediaZoomed = false;
     hasFinalFileLoaded = false;
 
-    if (_showCollageEndCard) {
-      _autoAdvanceTransition = false;
-      isAtFirstOrLastFile = false;
-      _leaveCollageEndCard();
-      return;
-    }
-
     final currentIndex = _clampedMemoryIndex(
       inheritedData.indexNotifier.value,
       inheritedData.memories.length,
     )!;
     inheritedData.indexNotifier.value = currentIndex;
-    if (currentIndex > 0) {
-      _onPageChange(inheritedData, currentIndex - 1);
-    } else if (widget.onPreviousMemory != null) {
-      _resetAnimation();
-      _setSocialControlsVisible(false);
-      widget.onPreviousMemory!();
-    } else {
-      isAtFirstOrLastFile = true;
-      _resetAnimation();
-      _toggleAnimation(pause: false);
+    final action = memoryViewerBackAction(
+      currentIndex: currentIndex,
+      itemCount: inheritedData.memories.length,
+      showingCollage: _showCollageEndCard,
+      hasPreviousMemory: widget.onPreviousMemory != null,
+    );
+    switch (action) {
+      case MemoryViewerBackAction.previousItem:
+        _onPageChange(inheritedData, currentIndex - 1);
+      case MemoryViewerBackAction.leaveCollage:
+        _autoAdvanceTransition = false;
+        isAtFirstOrLastFile = false;
+        _leaveCollageEndCard();
+      case MemoryViewerBackAction.previousMemory:
+        _resetAnimation();
+        _setSocialControlsVisible(false);
+        widget.onPreviousMemory!();
+      case MemoryViewerBackAction.stay:
+        isAtFirstOrLastFile = true;
+        _resetAnimation();
+        _toggleAnimation(pause: false);
     }
   }
 
   bool _isCollageEligible(FullScreenMemoryData inheritedData) {
-    final selectedFiles = MemoryCollageSelector.select(
-      memoryID: widget.memoryID,
-      shuffleRevision: 0,
-      files: inheritedData.memories.map((memory) => memory.file),
+    return MemoryCollageSelector.hasEnoughEligiblePhotos(
+      inheritedData.memories.map((memory) => memory.file),
     );
-    return MemoryCollageSelector.isSupportedPhotoCount(selectedFiles.length);
   }
 
   void _enterCollageEndCard() {

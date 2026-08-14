@@ -10,8 +10,26 @@ class MemoryCollageSelector {
 
   const MemoryCollageSelector._();
 
-  static bool isSupportedPhotoCount(int candidateCount) =>
+  static bool hasRequiredPhotoCount(int candidateCount) =>
       candidateCount == photoCount;
+
+  /// Checks whether [files] can populate a collage without ranking them.
+  ///
+  /// Unlike [select], this does no hashing or sorting and stops as soon as the
+  /// seven unique renderable photos required by the shipped layouts are found.
+  static bool hasEnoughEligiblePhotos(Iterable<EnteFile> files) {
+    final eligibleKeys = <String>{};
+    for (final file in files) {
+      if (!_isPhotoCapable(file)) continue;
+      final key = _stableFileKey(file);
+      if (key != null &&
+          eligibleKeys.add(key) &&
+          eligibleKeys.length == photoCount) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /// Returns the photo-capable files selected for a memory.
   ///
@@ -27,7 +45,7 @@ class MemoryCollageSelector {
     final eligibleByKey = <String, EnteFile>{};
     for (final file in files) {
       if (!_isPhotoCapable(file)) continue;
-      final key = stableFileKey(file);
+      final key = _stableFileKey(file);
       if (key != null) eligibleByKey.putIfAbsent(key, () => file);
     }
     if (eligibleByKey.length < photoCount) return const [];
@@ -48,12 +66,8 @@ class MemoryCollageSelector {
     );
   }
 
-  static List<EnteFile> eligibleFiles(Iterable<EnteFile> files) {
-    return List.unmodifiable(files.where(_isPhotoCapable));
-  }
-
   /// Returns the strongest stable identity available for [file].
-  static String? stableFileKey(EnteFile file) {
+  static String? _stableFileKey(EnteFile file) {
     final uploadedFileID = file.uploadedFileID;
     if (uploadedFileID != null) return "uploaded:$uploadedFileID";
 

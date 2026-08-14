@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "scale": "3x (1 CSS px in the approved 360×640 comp = 3 asset px)",
   "canvas": {
     "width": 1080,
     "height": 1920
@@ -10,43 +9,36 @@
       "id": "paper-washi",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     },
     {
       "id": "paper-cream-fiber",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     },
     {
       "id": "paper-blush-stripe",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     },
     {
       "id": "paper-sage-stripe",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     },
     {
       "id": "paper-terracotta-mottle",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     },
     {
       "id": "paper-torn",
       "width": 1098,
-      "height": 1734,
-      "safetyMarginPx": 24,
-      "note": "torn cream sheet; transparent margin baked in for the displaced edge"
+      "height": 1734
     },
     {
       "id": "polaroid-frame",
@@ -60,8 +52,7 @@
           "width": 414,
           "height": 420
         }
-      ],
-      "note": "window pixels transparent except a thin baked alpha seam shadow at the window edge"
+      ]
     },
     {
       "id": "film-strip-four",
@@ -98,39 +89,32 @@
     {
       "id": "banner-wide",
       "width": 900,
-      "height": 150,
-      "safetyMarginPx": 18,
-      "note": "wider rust ribbon with no baked text; title is typeset by the app in its asymmetric safe rect"
+      "height": 150
     },
     {
       "id": "tape-mustard",
       "width": 336,
-      "height": 72,
-      "note": "semi-transparent by design"
+      "height": 72
     },
     {
       "id": "tape-blush",
       "width": 228,
-      "height": 66,
-      "note": "semi-transparent by design"
+      "height": 66
     },
     {
       "id": "tape-sage",
       "width": 210,
-      "height": 63,
-      "note": "semi-transparent by design"
+      "height": 63
     },
     {
       "id": "stamp-postmark",
       "width": 240,
-      "height": 270,
-      "note": "stamp + tilted postmark ring as one composition"
+      "height": 270
     },
     {
       "id": "star",
       "width": 282,
-      "height": 282,
-      "safetyMarginPx": 18
+      "height": 282
     },
     {
       "id": "fern",
@@ -140,30 +124,22 @@
     {
       "id": "coffee-ring",
       "width": 192,
-      "height": 192,
-      "safetyMarginPx": 6,
-      "note": "border-only ring with baked blur; interior remains transparent"
+      "height": 192
     },
     {
       "id": "sun-streak",
       "width": 1080,
-      "height": 1920,
-      "note": "flat-alpha overlay; apply the template layer blend mode at runtime"
+      "height": 1920
     },
     {
       "id": "vignette",
       "width": 1080,
-      "height": 1920,
-      "note": "flat-alpha overlay; apply the template layer blend mode at runtime"
+      "height": 1920
     },
     {
       "id": "grain-overlay",
       "width": 1080,
-      "height": 1920,
-      "bakedOpacity": 0.3,
-      "recommendedBlendMode": "overlay",
-      "recommendedOpacity": 0.55,
-      "note": "flat-alpha approximation; composite with overlay blend to match the approved look"
+      "height": 1920
     },
     {
       "id": "film-strip-four-horizontal",
@@ -195,8 +171,7 @@
           "width": 210,
           "height": 174
         }
-      ],
-      "note": "calm umber film stock with four live horizontal windows"
+      ]
     },
     {
       "id": "film-strip-three-horizontal",
@@ -222,8 +197,7 @@
           "width": 288,
           "height": 270
         }
-      ],
-      "note": "calm umber film stock with three live horizontal windows"
+      ]
     },
     {
       "id": "print-frame-hero",
@@ -237,21 +211,18 @@
           "width": 834,
           "height": 546
         }
-      ],
-      "note": "even-border cream print frame with a baked alpha seam"
+      ]
     },
     {
       "id": "editorial-sand",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     },
     {
       "id": "editorial-sage",
       "width": 1080,
       "height": 1920,
-      "opaque": true,
       "role": "background"
     }
   ],
@@ -259,8 +230,6 @@
   "templates": [
     {
       "id": "scrapbook-maximal",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
         "defaultAssetId": "paper-washi",
@@ -273,17 +242,6 @@
           "editorial-sand",
           "editorial-sage"
         ]
-      },
-      "shadowSchema": {
-        "kind": "dropShadow",
-        "units": "1080x1920 canvas pixels",
-        "fields": [
-          "dx",
-          "dy",
-          "blur",
-          "color"
-        ],
-        "application": "cast from the rotated layer silhouette and rendered under the art"
       },
       "layers": [
         {
@@ -636,7 +594,6 @@
           "windowIndex": 3
         }
       ],
-      "appRendered": "banner title text is typeset by the app in the explicit safe rect over banner-wide",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -647,9 +604,7 @@
           "z": 20,
           "rotation": -2.5
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Lora",
-        "fontAsset": "fonts/Lora-SemiBold.ttf",
         "fontWeight": 600,
         "fontStyle": "normal",
         "fontSize": 45,
@@ -660,9 +615,6 @@
         "color": "#f4e7cf",
         "textAlign": "center",
         "verticalAlign": "center",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "uppercase",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 3,
@@ -673,8 +625,6 @@
     },
     {
       "id": "calm-classic",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "minimumPhotoShortSide": 174,
       "background": {
         "layerId": "bg",
@@ -955,7 +905,6 @@
           "windowIndex": 3
         }
       ],
-      "appRendered": "title text is typeset directly by the app",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -966,9 +915,7 @@
           "z": 20,
           "rotation": -1.5
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Lora",
-        "fontAsset": "fonts/Lora-SemiBold.ttf",
         "fontWeight": 600,
         "fontStyle": "normal",
         "fontSize": 96,
@@ -979,9 +926,6 @@
         "color": "#6f5642",
         "textAlign": "left",
         "verticalAlign": "top",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "preserve",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 0,
@@ -992,8 +936,6 @@
     },
     {
       "id": "calm-film-trio",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
@@ -1299,7 +1241,6 @@
           "windowIndex": 2
         }
       ],
-      "appRendered": "title text is typeset directly by the app",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -1310,9 +1251,7 @@
           "z": 20,
           "rotation": -1.5
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Lora",
-        "fontAsset": "fonts/Lora-SemiBold.ttf",
         "fontWeight": 600,
         "fontStyle": "normal",
         "fontSize": 96,
@@ -1323,9 +1262,6 @@
         "color": "#6f5642",
         "textAlign": "left",
         "verticalAlign": "top",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "preserve",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 0,
@@ -1336,8 +1272,6 @@
     },
     {
       "id": "calm-accent-print",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
@@ -1624,7 +1558,6 @@
           "windowIndex": 0
         }
       ],
-      "appRendered": "title text is typeset directly by the app",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -1635,9 +1568,7 @@
           "z": 20,
           "rotation": -1.5
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Lora",
-        "fontAsset": "fonts/Lora-SemiBold.ttf",
         "fontWeight": 600,
         "fontStyle": "normal",
         "fontSize": 96,
@@ -1648,9 +1579,6 @@
         "color": "#6f5642",
         "textAlign": "left",
         "verticalAlign": "top",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "preserve",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 0,
@@ -1661,8 +1589,6 @@
     },
     {
       "id": "minimal-classic",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "minimumPhotoShortSide": 183,
       "background": {
         "layerId": "bg",
@@ -1877,7 +1803,6 @@
           "rotation": 0
         }
       ],
-      "appRendered": "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -1888,9 +1813,7 @@
           "z": 20,
           "rotation": 0
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Inter",
-        "fontAsset": "fonts/Inter-Medium.ttf",
         "fontWeight": 500,
         "fontStyle": "normal",
         "fontSize": 102,
@@ -1901,9 +1824,6 @@
         "color": "#24201a",
         "textAlign": "left",
         "verticalAlign": "top",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "preserve",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 0,
@@ -1914,8 +1834,6 @@
     },
     {
       "id": "minimal-rows",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
@@ -2129,7 +2047,6 @@
           "rotation": 0
         }
       ],
-      "appRendered": "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -2140,9 +2057,7 @@
           "z": 20,
           "rotation": 0
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Inter",
-        "fontAsset": "fonts/Inter-Medium.ttf",
         "fontWeight": 500,
         "fontStyle": "normal",
         "fontSize": 102,
@@ -2153,9 +2068,6 @@
         "color": "#24201a",
         "textAlign": "left",
         "verticalAlign": "top",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "preserve",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 0,
@@ -2166,8 +2078,6 @@
     },
     {
       "id": "minimal-grid",
-      "rotationOrigin": "layer center",
-      "overflow": "crop to canvas",
       "background": {
         "layerId": "bg",
         "defaultAssetId": "paper-cream-fiber",
@@ -2381,7 +2291,6 @@
           "rotation": 0
         }
       ],
-      "appRendered": "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
       "titleStyle": {
         "placement": {
           "kind": "rect",
@@ -2392,9 +2301,7 @@
           "z": 20,
           "rotation": 0
         },
-        "units": "1080x1920 canvas pixels",
         "fontFamily": "Inter",
-        "fontAsset": "fonts/Inter-Medium.ttf",
         "fontWeight": 500,
         "fontStyle": "normal",
         "fontSize": 102,
@@ -2405,9 +2312,6 @@
         "color": "#24201a",
         "textAlign": "left",
         "verticalAlign": "top",
-        "memoryTitleCasing": "preserve",
-        "generatedMonthLabelCasing": "preserve",
-        "glyphFallback": "platform",
         "shadow": {
           "dx": 0,
           "dy": 0,

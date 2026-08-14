@@ -7,7 +7,6 @@ const _minimumPhotoShortSide = 270.0;
 
 class MemoryCollageManifest {
   final int version;
-  final String scale;
   final MemoryCollageCanvas canvas;
   final List<MemoryCollageAsset> assets;
   final String defaultTemplateID;
@@ -17,7 +16,6 @@ class MemoryCollageManifest {
 
   MemoryCollageManifest._({
     required this.version,
-    required this.scale,
     required this.canvas,
     required List<MemoryCollageAsset> assets,
     required this.defaultTemplateID,
@@ -41,7 +39,6 @@ class MemoryCollageManifest {
 
     final manifest = MemoryCollageManifest._(
       version: version,
-      scale: _jsonString(json, "scale"),
       canvas: MemoryCollageCanvas.fromJson(_jsonMap(json, "canvas")),
       assets: _jsonList(
         json,
@@ -128,12 +125,6 @@ class MemoryCollageManifest {
         "Memory collage asset ${asset.id} must have positive dimensions",
       );
     }
-    _validateUnitInterval(asset.bakedOpacity, "${asset.id}.bakedOpacity");
-    _validateUnitInterval(
-      asset.recommendedOpacity,
-      "${asset.id}.recommendedOpacity",
-    );
-
     for (var index = 0; index < asset.photoWindows.length; index++) {
       final window = asset.photoWindows[index];
       final path = "${asset.id}.photoWindows[$index]";
@@ -228,11 +219,6 @@ class MemoryCollageManifest {
           "Template ${template.id} rule $index must declare a color",
         );
       }
-      if (rule.colorOnDark?.isEmpty ?? false) {
-        throw FormatException(
-          "Template ${template.id} rule $index colorOnDark cannot be empty",
-        );
-      }
       for (final entry in rule.colorsByBackground.entries) {
         if (!template.background.assetIDs.contains(entry.key)) {
           throw FormatException(
@@ -266,9 +252,7 @@ class MemoryCollageManifest {
       );
     }
     if (style == null) return;
-    if (style.fill.isEmpty ||
-        (style.fillOnDark?.isEmpty ?? false) ||
-        style.photoFill.isEmpty) {
+    if (style.fill.isEmpty || style.photoFill.isEmpty) {
       throw FormatException(
         "Template ${template.id} matStyle must declare valid mat and photo "
         "fill colors",
@@ -409,52 +393,11 @@ class MemoryCollageManifest {
             minimumShortSide: template.minimumPhotoShortSide,
             path: "Photo slot ${slot.slot} in template ${template.id}",
           );
-        case MemoryCollageRectPhotoSlot():
-          _validateCanvasRect(
-            slot.rect,
-            "Photo slot ${slot.slot} in template ${template.id}",
-          );
-          _validateFinite(
-            slot.rotation,
-            "${template.id}.photoSlots[${slot.slot}].rotation",
-          );
-          if (slot.radius != null && slot.radius! < 0) {
-            throw FormatException(
-              "Photo slot ${slot.slot} in template ${template.id} must have "
-              "a non-negative radius",
-            );
-          }
-          if (slot.border case final border?) {
-            if (border.width <= 0 || border.color.isEmpty) {
-              throw FormatException(
-                "Photo slot ${slot.slot} in template ${template.id} has an "
-                "invalid border",
-              );
-            }
-          }
-          for (var index = 0; index < slot.shadows.length; index++) {
-            _validateShadow(
-              slot.shadows[index],
-              "${template.id}.photoSlots[${slot.slot}].shadows[$index]",
-            );
-          }
-          _validatePhotoSize(
-            width: slot.rect.width,
-            height: slot.rect.height,
-            minimumShortSide: template.minimumPhotoShortSide,
-            path: "Photo slot ${slot.slot} in template ${template.id}",
-          );
         case MemoryCollageMattedRectPhotoSlot():
           final path = "${template.id}.photoSlots[${slot.slot}]";
           _validateCanvasRect(slot.matRect, "$path.mat");
           _validateCanvasRect(slot.photoRect, "$path.rect");
           _validateFinite(slot.rotation, "$path.rotation");
-          if (slot.radius != null && slot.radius! < 0) {
-            throw FormatException(
-              "Photo slot ${slot.slot} in template ${template.id} must have "
-              "a non-negative radius",
-            );
-          }
           final inset = template.matStyle!.photoInset;
           if (slot.photoRect.x != slot.matRect.x + inset ||
               slot.photoRect.y != slot.matRect.y + inset ||
@@ -546,28 +489,11 @@ class MemoryCollageManifest {
     _validateShadow(style.shadow, "${template.id}.titleStyle.shadow");
 
     final placement = style.placement;
-    switch (placement) {
-      case MemoryCollageTitleAnchor():
-        final layer = _layerOrNull(template, placement.layerID);
-        if (layer == null) {
-          throw FormatException(
-            "Template ${template.id} title references unknown layer "
-            "${placement.layerID}",
-          );
-        }
-        if (layer.backgroundAssetIDs != null) {
-          throw FormatException(
-            "Template ${template.id} title cannot reference a "
-            "background-conditional layer",
-          );
-        }
-      case MemoryCollageTitleRect():
-        _validateCanvasRect(placement.rect, "Title in template ${template.id}");
-        _validateFinite(
-          placement.rotation,
-          "${template.id}.titleStyle.placement.rotation",
-        );
-    }
+    _validateCanvasRect(placement.rect, "Title in template ${template.id}");
+    _validateFinite(
+      placement.rotation,
+      "${template.id}.titleStyle.placement.rotation",
+    );
   }
 
   MemoryCollageLayer? _layerOrNull(
@@ -611,31 +537,17 @@ class MemoryCollageAsset {
   final String id;
   final int width;
   final int height;
-  final bool opaque;
-  final bool dark;
   final MemoryCollageAssetRole? role;
-  final int? safetyMarginPx;
-  final String? note;
   final String? emptyWindowColor;
   final List<MemoryCollagePhotoWindow> photoWindows;
-  final double? bakedOpacity;
-  final String? recommendedBlendMode;
-  final double? recommendedOpacity;
 
   MemoryCollageAsset({
     required this.id,
     required this.width,
     required this.height,
-    required this.opaque,
-    required this.dark,
     required this.role,
-    required this.safetyMarginPx,
-    required this.note,
     required this.emptyWindowColor,
     required List<MemoryCollagePhotoWindow> photoWindows,
-    required this.bakedOpacity,
-    required this.recommendedBlendMode,
-    required this.recommendedOpacity,
   }) : photoWindows = List.unmodifiable(photoWindows);
 
   factory MemoryCollageAsset.fromJson(Map<String, dynamic> json) {
@@ -644,23 +556,16 @@ class MemoryCollageAsset {
       id: _jsonString(json, "id"),
       width: _jsonInt(json, "width"),
       height: _jsonInt(json, "height"),
-      opaque: _optionalBool(json, "opaque") ?? false,
-      dark: _optionalBool(json, "dark") ?? false,
       role: switch (role) {
         "background" => MemoryCollageAssetRole.background,
         null => null,
         _ => throw FormatException("Unknown memory collage asset role: $role"),
       },
-      safetyMarginPx: _optionalInt(json, "safetyMarginPx"),
-      note: _optionalString(json, "note"),
       emptyWindowColor: _optionalString(json, "emptyWindowColor"),
       photoWindows: _optionalJsonList(
         json,
         "photoWindows",
       ).map(MemoryCollagePhotoWindow.fromJson).toList(growable: false),
-      bakedOpacity: _optionalDouble(json, "bakedOpacity"),
-      recommendedBlendMode: _optionalString(json, "recommendedBlendMode"),
-      recommendedOpacity: _optionalDouble(json, "recommendedOpacity"),
     );
   }
 }
@@ -738,14 +643,12 @@ class MemoryCollageRule {
   final MemoryCollageRect rect;
   final int z;
   final String color;
-  final String? colorOnDark;
   final Map<String, String> colorsByBackground;
 
   MemoryCollageRule({
     required this.rect,
     required this.z,
     required this.color,
-    required this.colorOnDark,
     required Map<String, String> colorsByBackground,
   }) : colorsByBackground = Map.unmodifiable(colorsByBackground);
 
@@ -754,40 +657,32 @@ class MemoryCollageRule {
       rect: MemoryCollageRect.fromJson(json),
       z: _jsonInt(json, "z"),
       color: _jsonString(json, "color"),
-      colorOnDark: _optionalString(json, "colorOnDark"),
       colorsByBackground: _optionalStringMap(json, "colorsByBackground"),
     );
   }
 
-  String colorFor(String backgroundAssetID, {required bool isDark}) =>
-      colorsByBackground[backgroundAssetID] ??
-      (isDark ? colorOnDark ?? color : color);
+  String colorFor(String backgroundAssetID) =>
+      colorsByBackground[backgroundAssetID] ?? color;
 }
 
 class MemoryCollageTemplate {
   final String id;
   final double minimumPhotoShortSide;
-  final String rotationOrigin;
-  final String overflow;
   final MemoryCollageBackgroundConfig background;
   final List<MemoryCollageLayer> layers;
   final List<MemoryCollagePhotoSlot> photoSlots;
   final List<MemoryCollageRule> rules;
   final MemoryCollageMatStyle? matStyle;
-  final String? appRendered;
   final MemoryCollageTitleStyle titleStyle;
 
   MemoryCollageTemplate._({
     required this.id,
     required this.minimumPhotoShortSide,
-    required this.rotationOrigin,
-    required this.overflow,
     required this.background,
     required List<MemoryCollageLayer> layers,
     required List<MemoryCollagePhotoSlot> photoSlots,
     required List<MemoryCollageRule> rules,
     required this.matStyle,
-    required this.appRendered,
     required this.titleStyle,
   }) : layers = List.unmodifiable(layers),
        photoSlots = List.unmodifiable(photoSlots),
@@ -821,8 +716,6 @@ class MemoryCollageTemplate {
       minimumPhotoShortSide:
           _optionalDouble(json, "minimumPhotoShortSide") ??
           _minimumPhotoShortSide,
-      rotationOrigin: _optionalString(json, "rotationOrigin") ?? "layer center",
-      overflow: _optionalString(json, "overflow") ?? "crop to canvas",
       background: MemoryCollageBackgroundConfig.fromJson(
         _jsonMap(json, "background"),
       ),
@@ -835,7 +728,6 @@ class MemoryCollageTemplate {
       matStyle: json["matStyle"] == null
           ? null
           : MemoryCollageMatStyle.fromJson(_jsonMap(json, "matStyle")),
-      appRendered: _optionalString(json, "appRendered"),
       titleStyle: MemoryCollageTitleStyle.fromJson(
         _jsonMap(json, "titleStyle"),
       ),
@@ -950,7 +842,6 @@ class MemoryCollageShadow {
 
 class MemoryCollageMatStyle {
   final String fill;
-  final String? fillOnDark;
   final String photoFill;
   final MemoryCollageBorder border;
   final double photoInset;
@@ -958,7 +849,6 @@ class MemoryCollageMatStyle {
 
   MemoryCollageMatStyle({
     required this.fill,
-    required this.fillOnDark,
     required this.photoFill,
     required this.border,
     required this.photoInset,
@@ -968,7 +858,6 @@ class MemoryCollageMatStyle {
   factory MemoryCollageMatStyle.fromJson(Map<String, dynamic> json) {
     return MemoryCollageMatStyle(
       fill: _jsonString(json, "fill"),
-      fillOnDark: _optionalString(json, "fillOnDark"),
       photoFill: _jsonString(json, "photoFill"),
       border: MemoryCollageBorder.fromJson(_jsonMap(json, "border")),
       photoInset: _jsonDouble(json, "photoInset"),
@@ -988,7 +877,6 @@ sealed class MemoryCollagePhotoSlot {
   factory MemoryCollagePhotoSlot.fromJson(Map<String, dynamic> json) {
     return switch (_jsonString(json, "kind")) {
       "assetWindow" => MemoryCollageAssetWindowPhotoSlot.fromJson(json),
-      "rect" => MemoryCollageRectPhotoSlot.fromJson(json),
       "mattedRect" => MemoryCollageMattedRectPhotoSlot.fromJson(json),
       final kind => throw FormatException(
         "Unknown memory collage photo slot kind: $kind",
@@ -1018,48 +906,11 @@ class MemoryCollageAssetWindowPhotoSlot extends MemoryCollagePhotoSlot {
   }
 }
 
-class MemoryCollageRectPhotoSlot extends MemoryCollagePhotoSlot {
-  final MemoryCollageRect rect;
-  final int z;
-  final double rotation;
-  final MemoryCollageBorder? border;
-  final double? radius;
-  final List<MemoryCollageShadow> shadows;
-
-  MemoryCollageRectPhotoSlot({
-    required super.slot,
-    required this.rect,
-    required this.z,
-    required this.rotation,
-    required this.border,
-    required this.radius,
-    required List<MemoryCollageShadow> shadows,
-  }) : shadows = List.unmodifiable(shadows);
-
-  factory MemoryCollageRectPhotoSlot.fromJson(Map<String, dynamic> json) {
-    return MemoryCollageRectPhotoSlot(
-      slot: _jsonInt(json, "slot"),
-      rect: MemoryCollageRect.fromJson(json),
-      z: _jsonInt(json, "z"),
-      rotation: _optionalDouble(json, "rotation") ?? 0,
-      border: json["border"] == null
-          ? null
-          : MemoryCollageBorder.fromJson(_jsonMap(json, "border")),
-      radius: _optionalDouble(json, "radius"),
-      shadows: _optionalJsonList(
-        json,
-        "shadows",
-      ).map(MemoryCollageShadow.fromJson).toList(growable: false),
-    );
-  }
-}
-
 class MemoryCollageMattedRectPhotoSlot extends MemoryCollagePhotoSlot {
   final MemoryCollageRect matRect;
   final MemoryCollageRect photoRect;
   final int z;
   final double rotation;
-  final double? radius;
 
   const MemoryCollageMattedRectPhotoSlot({
     required super.slot,
@@ -1067,7 +918,6 @@ class MemoryCollageMattedRectPhotoSlot extends MemoryCollagePhotoSlot {
     required this.photoRect,
     required this.z,
     required this.rotation,
-    required this.radius,
   });
 
   factory MemoryCollageMattedRectPhotoSlot.fromJson(Map<String, dynamic> json) {
@@ -1077,7 +927,6 @@ class MemoryCollageMattedRectPhotoSlot extends MemoryCollagePhotoSlot {
       photoRect: MemoryCollageRect.fromJson(_jsonMap(json, "rect")),
       z: _jsonInt(json, "z"),
       rotation: _optionalDouble(json, "rotation") ?? 0,
-      radius: _optionalDouble(json, "radius"),
     );
   }
 }
@@ -1096,31 +945,7 @@ class MemoryCollageBorder {
   }
 }
 
-sealed class MemoryCollageTitlePlacement {
-  const MemoryCollageTitlePlacement();
-
-  factory MemoryCollageTitlePlacement.fromJson(Map<String, dynamic> json) {
-    return switch (_jsonString(json, "kind")) {
-      "layer" => MemoryCollageTitleAnchor.fromJson(json),
-      "rect" => MemoryCollageTitleRect.fromJson(json),
-      final kind => throw FormatException(
-        "Unknown memory collage title placement kind: $kind",
-      ),
-    };
-  }
-}
-
-class MemoryCollageTitleAnchor extends MemoryCollageTitlePlacement {
-  final String layerID;
-
-  const MemoryCollageTitleAnchor({required this.layerID});
-
-  factory MemoryCollageTitleAnchor.fromJson(Map<String, dynamic> json) {
-    return MemoryCollageTitleAnchor(layerID: _jsonString(json, "layerId"));
-  }
-}
-
-class MemoryCollageTitleRect extends MemoryCollageTitlePlacement {
+class MemoryCollageTitleRect {
   final MemoryCollageRect rect;
   final int z;
   final double rotation;
@@ -1132,6 +957,12 @@ class MemoryCollageTitleRect extends MemoryCollageTitlePlacement {
   });
 
   factory MemoryCollageTitleRect.fromJson(Map<String, dynamic> json) {
+    final kind = _jsonString(json, "kind");
+    if (kind != "rect") {
+      throw FormatException(
+        "Unknown memory collage title placement kind: $kind",
+      );
+    }
     return MemoryCollageTitleRect(
       rect: MemoryCollageRect.fromJson(json),
       z: _jsonInt(json, "z"),
@@ -1141,10 +972,8 @@ class MemoryCollageTitleRect extends MemoryCollageTitlePlacement {
 }
 
 class MemoryCollageTitleStyle {
-  final MemoryCollageTitlePlacement placement;
-  final String units;
+  final MemoryCollageTitleRect placement;
   final String fontFamily;
-  final String fontAsset;
   final int fontWeight;
   final String fontStyle;
   final double fontSize;
@@ -1153,19 +982,13 @@ class MemoryCollageTitleStyle {
   final int maxLines;
   final double letterSpacing;
   final String color;
-  final String? colorOnDark;
   final String textAlign;
   final String verticalAlign;
-  final String memoryTitleCasing;
-  final String generatedMonthLabelCasing;
-  final String glyphFallback;
   final MemoryCollageShadow shadow;
 
   const MemoryCollageTitleStyle({
     required this.placement,
-    required this.units,
     required this.fontFamily,
-    required this.fontAsset,
     required this.fontWeight,
     required this.fontStyle,
     required this.fontSize,
@@ -1174,23 +997,15 @@ class MemoryCollageTitleStyle {
     required this.maxLines,
     required this.letterSpacing,
     required this.color,
-    required this.colorOnDark,
     required this.textAlign,
     required this.verticalAlign,
-    required this.memoryTitleCasing,
-    required this.generatedMonthLabelCasing,
-    required this.glyphFallback,
     required this.shadow,
   });
 
   factory MemoryCollageTitleStyle.fromJson(Map<String, dynamic> json) {
     return MemoryCollageTitleStyle(
-      placement: MemoryCollageTitlePlacement.fromJson(
-        _jsonMap(json, "placement"),
-      ),
-      units: _jsonString(json, "units"),
+      placement: MemoryCollageTitleRect.fromJson(_jsonMap(json, "placement")),
       fontFamily: _jsonString(json, "fontFamily"),
-      fontAsset: _jsonString(json, "fontAsset"),
       fontWeight: _jsonInt(json, "fontWeight"),
       fontStyle: _jsonString(json, "fontStyle"),
       fontSize: _jsonDouble(json, "fontSize"),
@@ -1200,12 +1015,8 @@ class MemoryCollageTitleStyle {
       maxLines: _optionalInt(json, "maxLines") ?? 1,
       letterSpacing: _jsonDouble(json, "letterSpacing"),
       color: _jsonString(json, "color"),
-      colorOnDark: _optionalString(json, "colorOnDark"),
       textAlign: _jsonString(json, "textAlign"),
       verticalAlign: _jsonString(json, "verticalAlign"),
-      memoryTitleCasing: _jsonString(json, "memoryTitleCasing"),
-      generatedMonthLabelCasing: _jsonString(json, "generatedMonthLabelCasing"),
-      glyphFallback: _jsonString(json, "glyphFallback"),
       shadow: MemoryCollageShadow.fromJson(_jsonMap(json, "shadow")),
     );
   }
@@ -1336,13 +1147,6 @@ String? _optionalString(Map<String, dynamic> json, String key) {
   final value = json[key];
   if (value == null) return null;
   if (value is! String) throw FormatException("$key must be a string");
-  return value;
-}
-
-bool? _optionalBool(Map<String, dynamic> json, String key) {
-  final value = json[key];
-  if (value == null) return null;
-  if (value is! bool) throw FormatException("$key must be a boolean");
   return value;
 }
 

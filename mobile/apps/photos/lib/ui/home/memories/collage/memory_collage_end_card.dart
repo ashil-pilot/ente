@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:ui" show ImageFilter;
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
@@ -15,6 +16,7 @@ import "package:photos/services/memories/memory_collage_selector.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_editor_page.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_export_coordinator.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export_surface.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_preview_photo.dart";
 import "package:photos/ui/home/memories/custom_listener.dart";
@@ -59,29 +61,40 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   final _logger = Logger("MemoryCollageEndCard");
   final _shareButtonKey = GlobalKey();
   final _loadedSlots = <int>{};
+  final _exportCoordinator = MemoryCollageExportCoordinator();
 
   late List<EnteFile> _selectedFiles;
   Future<MemoryCollageManifest>? _manifestFuture;
+  MemoryCollageManifest? _manifest;
   int _selectionGeneration = 0;
   bool _assetsReady = false;
-  MemoryCollageExportAction? _exportAction;
-  MemoryCollageExportSnapshot? _exportSnapshot;
   bool _ineligibleContinueScheduled = false;
+  int _photoRecoveryAttempts = 0;
+  Timer? _photoRecoveryTimer;
+
+  static const _photoRecoveryDelay = Duration(seconds: 15);
+  static const _maximumPhotoRecoveryAttempts = 2;
 
   List<EnteFile> get _files => _selectedFiles;
 
   bool get _photosReady => _loadedSlots.length == _files.length;
 
-  bool get _contentReady => _assetsReady && _photosReady;
+  MemoryCollageExportAction? get _exportAction => _exportCoordinator.action;
 
-  bool get _isExporting => _exportAction != null;
+  MemoryCollageExportSnapshot? get _exportSnapshot =>
+      _exportCoordinator.snapshot;
 
-  bool get _isReadyToExport => _contentReady && !_isExporting;
+  bool get _isExporting => _exportCoordinator.isExporting;
+
+  // Preview thumbnails are deliberately not an export prerequisite. The
+  // transient export surface loads and verifies its own original photos.
+  bool get _isReadyToExport => _assetsReady && !_isExporting;
 
   @override
   void initState() {
     super.initState();
     _selectedFiles = _selectFiles();
+    _exportCoordinator.addListener(_onExportStateChanged);
   }
 
   @override
@@ -92,9 +105,11 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     _selectedFiles = nextFiles;
     _selectionGeneration++;
     _loadedSlots.clear();
-    _exportSnapshot?.cancel();
-    _exportSnapshot = null;
+    _photoRecoveryAttempts = 0;
+    _photoRecoveryTimer?.cancel();
+    _exportCoordinator.cancelCurrent();
     _ineligibleContinueScheduled = false;
+    _schedulePhotoRecovery();
   }
 
   @override
@@ -105,8 +120,15 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
 
   @override
   void dispose() {
-    _exportSnapshot?.cancel();
+    _photoRecoveryTimer?.cancel();
+    _exportCoordinator
+      ..removeListener(_onExportStateChanged)
+      ..dispose();
     super.dispose();
+  }
+
+  void _onExportStateChanged() {
+    if (mounted) setState(() {});
   }
 
   List<EnteFile> _selectFiles() => MemoryCollageSelector.select(
@@ -126,8 +148,9 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   Future<MemoryCollageManifest> _loadManifestAndAssets() async {
     final manifest = await MemoryCollageManifest.load();
     if (!mounted) return manifest;
+    _manifest = manifest;
     final files = _files;
-    if (!MemoryCollageSelector.isSupportedPhotoCount(files.length)) {
+    if (!MemoryCollageSelector.hasRequiredPhotoCount(files.length)) {
       return manifest;
     }
     final defaultTemplate = manifest.defaultTemplate;
@@ -142,6 +165,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     );
     if (mounted) {
       setState(() => _assetsReady = true);
+      _schedulePhotoRecovery();
     }
     return manifest;
   }
@@ -149,6 +173,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
   void _retryManifest() {
     setState(() {
       _assetsReady = false;
+      _manifest = null;
       _manifestFuture = _loadManifestAndAssets();
     });
   }
@@ -158,7 +183,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     _ineligibleContinueScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!MemoryCollageSelector.isSupportedPhotoCount(_files.length)) {
+      if (!MemoryCollageSelector.hasRequiredPhotoCount(_files.length)) {
         widget.onContinue();
       } else {
         _ineligibleContinueScheduled = false;
@@ -187,8 +212,38 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       return;
     }
     if (mounted && _loadedSlots.add(slot)) {
-      setState(() {});
+      setState(() {
+        if (_photosReady) {
+          _photoRecoveryTimer?.cancel();
+          _photoRecoveryAttempts = 0;
+        }
+      });
     }
+  }
+
+  void _schedulePhotoRecovery() {
+    if (!_assetsReady ||
+        _photosReady ||
+        _photoRecoveryAttempts >= _maximumPhotoRecoveryAttempts) {
+      return;
+    }
+    _photoRecoveryTimer?.cancel();
+    _photoRecoveryTimer = Timer(_photoRecoveryDelay, () {
+      if (!mounted || _photosReady || !_assetsReady) {
+        return;
+      }
+      _restartPreviewPhotos();
+    });
+  }
+
+  void _restartPreviewPhotos() {
+    if (_photosReady) return;
+    setState(() {
+      _selectionGeneration++;
+      _loadedSlots.clear();
+      _photoRecoveryAttempts++;
+    });
+    _schedulePhotoRecovery();
   }
 
   void _editCollage() {
@@ -203,84 +258,67 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
     );
   }
 
-  Future<void> _shareCollage() async {
-    if (!_isReadyToExport) return;
-    Object? failure;
-    setState(() => _exportAction = MemoryCollageExportAction.share);
-    try {
-      final bytes = await _capturePng();
-      if (!mounted) return;
-      await MemoryCollageExport.sharePng(
-        bytes,
-        sharePositionOrigin: shareButtonRect(context, _shareButtonKey),
-      );
-    } catch (error, stackTrace) {
-      _logger.severe("Failed to share memory collage", error, stackTrace);
-      failure = error;
-    } finally {
-      if (mounted) setState(() => _exportAction = null);
-    }
-    if (failure != null && mounted) {
-      await showGenericErrorDialog(context: context, error: failure);
-    }
-  }
-
-  Future<void> _saveCollage() async {
-    if (!_isReadyToExport) return;
-    Object? failure;
-    setState(() => _exportAction = MemoryCollageExportAction.save);
-    try {
-      final bytes = await _capturePng();
-      await MemoryCollageExport.savePng(bytes);
-      if (mounted) {
-        showShortToast(context, context.strings.collageSaved);
-      }
-    } catch (error, stackTrace) {
-      _logger.severe("Failed to save memory collage", error, stackTrace);
-      failure = error;
-    } finally {
-      if (mounted) setState(() => _exportAction = null);
-    }
-    if (failure != null && mounted) {
-      await showGenericErrorDialog(context: context, error: failure);
-    }
-  }
-
-  Future<Uint8List> _capturePng() async {
-    final manifest = await _manifestFuture;
-    if (!mounted || !_contentReady || manifest == null) {
+  MemoryCollageExportSnapshot _createExportSnapshot() {
+    final manifest = _manifest;
+    if (!_assetsReady || manifest == null) {
       throw StateError("Memory collage is not ready to export");
     }
-    if (_exportSnapshot != null) {
-      throw StateError("Memory collage export is already in progress");
-    }
     final template = manifest.defaultTemplate;
-    final snapshot = MemoryCollageExportSnapshot(
+    return MemoryCollageExportSnapshot(
       files: _files,
       title: widget.title,
       templateID: template.id,
       backgroundAssetID: template.background.defaultAssetID,
     );
-    setState(() => _exportSnapshot = snapshot);
+  }
+
+  Future<void> _runExport(MemoryCollageExportAction action) async {
+    if (!_isReadyToExport) return;
+    Object? failure;
     try {
-      await snapshot.waitUntilReady();
-      if (!mounted || !identical(_exportSnapshot, snapshot)) {
-        throw const MemoryCollageExportCancelledException();
-      }
-      await WidgetsBinding.instance.endOfFrame;
-      return await MemoryCollageExport.capturePng(snapshot.repaintKey);
-    } finally {
-      snapshot.cancel();
-      if (mounted && identical(_exportSnapshot, snapshot)) {
-        setState(() => _exportSnapshot = null);
-      }
+      await _exportCoordinator.run(
+        action: action,
+        createSnapshot: _createExportSnapshot,
+        usePng: (bytes) async {
+          if (!mounted) {
+            throw const MemoryCollageExportCancelledException();
+          }
+          switch (action) {
+            case MemoryCollageExportAction.share:
+              await MemoryCollageExport.sharePng(
+                bytes,
+                sharePositionOrigin: shareButtonRect(context, _shareButtonKey),
+              );
+              return;
+            case MemoryCollageExportAction.save:
+              await MemoryCollageExport.savePng(bytes);
+              if (mounted) {
+                showShortToast(context, context.strings.collageSaved);
+              }
+          }
+        },
+      );
+    } catch (error, stackTrace) {
+      _logger.severe(
+        "Failed to ${action.name} memory collage",
+        error,
+        stackTrace,
+      );
+      failure = error;
+    }
+    if (failure != null && mounted) {
+      await showGenericErrorDialog(context: context, error: failure);
     }
   }
+
+  Future<void> _shareCollage() => _runExport(MemoryCollageExportAction.share);
+
+  Future<void> _saveCollage() => _runExport(MemoryCollageExportAction.save);
 
   @override
   Widget build(BuildContext context) {
     final files = _files;
-    if (!MemoryCollageSelector.isSupportedPhotoCount(files.length)) {
+    if (!MemoryCollageSelector.hasRequiredPhotoCount(files.length)) {
       _continueIfStillIneligible();
       return const SizedBox.shrink();
     }
@@ -313,7 +351,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
               ),
               const MemoryViewerScrims(),
               MemoryCollageEndCardActions(
-                canExport: _contentReady,
+                canExport: _assetsReady,
                 isSharing: _exportAction == MemoryCollageExportAction.share,
                 isSaving: _exportAction == MemoryCollageExportAction.save,
                 shareButtonKey: _shareButtonKey,
@@ -344,19 +382,21 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
 
   Widget _buildBackdrop(MemoryCollageManifest manifest, List<EnteFile> files) {
     final defaultTemplate = manifest.defaultTemplate;
-    return ClipRect(
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-        child: FittedBox(
-          fit: BoxFit.cover,
-          clipBehavior: Clip.hardEdge,
-          child: MemoryCollageCanvasView(
-            manifest: manifest,
-            files: files,
-            title: widget.title,
-            backgroundAssetID: defaultTemplate.background.defaultAssetID,
-            templateID: defaultTemplate.id,
-            photoBuilder: _buildBackdropPhoto,
+    return MemoryCollageBackdrop(
+      child: ClipRect(
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+          child: FittedBox(
+            fit: BoxFit.cover,
+            clipBehavior: Clip.hardEdge,
+            child: MemoryCollageCanvasView(
+              manifest: manifest,
+              files: files,
+              title: widget.title,
+              backgroundAssetID: defaultTemplate.background.defaultAssetID,
+              templateID: defaultTemplate.id,
+              photoBuilder: _buildBackdropPhoto,
+            ),
           ),
         ),
       ),
@@ -444,6 +484,19 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       key: ValueKey("memory-collage-end-$generation-$slot"),
       onReady: () => _onFinalPhotoLoaded(file, generation, slot),
     );
+  }
+}
+
+/// Keeps the visual-only blurred collage from duplicating foreground
+/// semantics or intercepting pointer events.
+class MemoryCollageBackdrop extends StatelessWidget {
+  final Widget child;
+
+  const MemoryCollageBackdrop({required this.child, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(child: IgnorePointer(child: child));
   }
 }
 

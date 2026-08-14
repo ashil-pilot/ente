@@ -6,14 +6,10 @@ import "package:photos/services/memories/memory_collage_selector.dart";
 EnteFile _file(
   int id, {
   FileType fileType = FileType.image,
-  int? generatedID,
-  String? localID,
   String title = "photo.jpg",
 }) {
   return EnteFile()
     ..uploadedFileID = id
-    ..generatedID = generatedID
-    ..localID = localID
     ..title = title
     ..fileType = fileType;
 }
@@ -24,43 +20,67 @@ List<int?> _ids(Iterable<EnteFile> files) {
 
 void main() {
   group("MemoryCollageSelector", () {
-    test("supports only the seven-photo layout", () {
-      expect(MemoryCollageSelector.isSupportedPhotoCount(5), isFalse);
-      expect(MemoryCollageSelector.isSupportedPhotoCount(6), isFalse);
-      expect(MemoryCollageSelector.isSupportedPhotoCount(7), isTrue);
-      expect(MemoryCollageSelector.isSupportedPhotoCount(8), isFalse);
+    test("requires exactly seven selected photos", () {
+      expect(MemoryCollageSelector.hasRequiredPhotoCount(6), isFalse);
+      expect(MemoryCollageSelector.hasRequiredPhotoCount(7), isTrue);
+      expect(MemoryCollageSelector.hasRequiredPhotoCount(8), isFalse);
     });
 
-    test(
-      "stable key prefers uploaded, then generated, then local identity",
-      () {
-        final uploaded = _file(1, generatedID: 2, localID: "local");
-        final generated = EnteFile()
-          ..generatedID = 2
-          ..localID = "local"
-          ..fileType = FileType.image;
-        final local = EnteFile()
-          ..localID = "local"
-          ..fileType = FileType.image;
-        final unidentified = EnteFile()..fileType = FileType.image;
-
-        expect(MemoryCollageSelector.stableFileKey(uploaded), "uploaded:1");
-        expect(MemoryCollageSelector.stableFileKey(generated), "generated:2");
-        expect(MemoryCollageSelector.stableFileKey(local), "local:local");
-        expect(MemoryCollageSelector.stableFileKey(unidentified), isNull);
-      },
-    );
-
-    test("eligibleFiles includes renderable images and live photos only", () {
+    test("eligibility uses seven unique renderable photo identities", () {
       final files = [
         _file(1),
         _file(2, fileType: FileType.livePhoto),
         _file(3, fileType: FileType.video),
         _file(4, fileType: FileType.other),
         _file(5, title: "capture.dng"),
+        _file(1),
+        _file(6),
+        _file(7),
+        _file(8),
+        _file(9),
+        _file(10),
       ];
 
-      expect(_ids(MemoryCollageSelector.eligibleFiles(files)), [1, 2]);
+      expect(MemoryCollageSelector.hasEnoughEligiblePhotos(files), isTrue);
+      expect(
+        MemoryCollageSelector.hasEnoughEligiblePhotos(files.take(9)),
+        isFalse,
+      );
+    });
+
+    test("eligibility stops after finding the seventh photo", () {
+      Iterable<EnteFile> files() sync* {
+        yield* List.generate(7, _file);
+        throw StateError("eligibility scanned beyond the required photos");
+      }
+
+      expect(MemoryCollageSelector.hasEnoughEligiblePhotos(files()), isTrue);
+    });
+
+    test("generated and local identities can complete the seven photos", () {
+      final generated = EnteFile()
+        ..generatedID = 20
+        ..fileType = FileType.image;
+      final local = EnteFile()
+        ..localID = "local-photo"
+        ..fileType = FileType.image;
+      final unidentified = EnteFile()..fileType = FileType.image;
+      final files = [
+        ...List.generate(5, _file),
+        generated,
+        local,
+        unidentified,
+      ];
+
+      expect(MemoryCollageSelector.hasEnoughEligiblePhotos(files), isTrue);
+      expect(
+        MemoryCollageSelector.select(
+          memoryID: "memory",
+          shuffleRevision: 0,
+          files: files,
+        ),
+        hasLength(7),
+      );
     });
 
     test("returns empty when fewer than seven eligible files exist", () {

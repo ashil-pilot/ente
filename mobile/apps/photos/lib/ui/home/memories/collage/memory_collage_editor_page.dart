@@ -11,6 +11,7 @@ import "package:photos/models/memories/memory_collage_manifest.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_canvas.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_controller.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export.dart";
+import "package:photos/ui/home/memories/collage/memory_collage_export_coordinator.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export_surface.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_preview_photo.dart";
 import "package:photos/ui/home/memories/memory_viewer_chrome.dart";
@@ -39,16 +40,15 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   final _logger = Logger("MemoryCollageEditorPage");
   final _shareButtonKey = GlobalKey();
   final _photoReadiness = MemoryCollageRendererReadiness();
+  final _exportCoordinator = MemoryCollageExportCoordinator();
 
   MemoryCollageController? _controller;
   Future<MemoryCollageManifest>? _manifestFuture;
   bool _assetsReady = false;
   bool _backgroundReady = true;
-  MemoryCollageExportAction? _exportAction;
-  MemoryCollageExportSnapshot? _exportSnapshot;
   bool _showPhotoRetry = false;
   bool _isControlActionPending = false;
-  int _photoLoadTimeoutToken = 0;
+  Timer? _photoRetryOfferTimer;
 
   bool get _photosReady {
     final controller = _controller;
@@ -60,9 +60,20 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     return _assetsReady && _backgroundReady && _photosReady;
   }
 
-  bool get _isExporting => _exportAction != null;
+  MemoryCollageExportAction? get _exportAction => _exportCoordinator.action;
+
+  MemoryCollageExportSnapshot? get _exportSnapshot =>
+      _exportCoordinator.snapshot;
+
+  bool get _isExporting => _exportCoordinator.isExporting;
 
   bool get _isReadyToExport => _contentReady && !_isExporting;
+
+  @override
+  void initState() {
+    super.initState();
+    _exportCoordinator.addListener(_onExportStateChanged);
+  }
 
   @override
   void didChangeDependencies() {
@@ -72,11 +83,18 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
 
   @override
   void dispose() {
-    _exportSnapshot?.cancel();
+    _photoRetryOfferTimer?.cancel();
+    _exportCoordinator
+      ..removeListener(_onExportStateChanged)
+      ..dispose();
     _controller
       ?..removeListener(_onControllerChanged)
       ..dispose();
     super.dispose();
+  }
+
+  void _onExportStateChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<MemoryCollageManifest> _loadManifestAndAssets() async {
@@ -147,7 +165,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     }
     setState(() {
       if (_photosReady) {
-        _photoLoadTimeoutToken++;
+        _photoRetryOfferTimer?.cancel();
         _showPhotoRetry = false;
         _isControlActionPending = false;
       }
@@ -155,9 +173,9 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
   }
 
   void _schedulePhotoRetryOffer() {
-    final token = ++_photoLoadTimeoutToken;
-    Future<void>.delayed(const Duration(seconds: 15), () {
-      if (!mounted || token != _photoLoadTimeoutToken || _photosReady) return;
+    _photoRetryOfferTimer?.cancel();
+    _photoRetryOfferTimer = Timer(const Duration(seconds: 15), () {
+      if (!mounted || _photosReady) return;
       setState(() => _showPhotoRetry = true);
     });
   }
@@ -167,6 +185,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     setState(() {
       _photoReadiness.invalidate();
       _showPhotoRetry = false;
+      _isControlActionPending = false;
     });
     _schedulePhotoRetryOffer();
   }
@@ -280,78 +299,64 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     controller.shuffle();
   }
 
-  Future<Uint8List> _capturePng() async {
+  MemoryCollageExportSnapshot _createExportSnapshot() {
     if (!_contentReady) {
       throw StateError("Memory collage is not ready to export");
     }
     final controller = _controller;
-    if (controller == null || _exportSnapshot != null) {
-      throw StateError("Memory collage export is already in progress");
+    if (controller == null) {
+      throw StateError("Memory collage controller is unavailable");
     }
-    final snapshot = MemoryCollageExportSnapshot(
+    return MemoryCollageExportSnapshot(
       files: controller.selectedFiles,
       title: widget.title,
       templateID: controller.templateID,
       backgroundAssetID: controller.backgroundAssetID,
     );
-    setState(() => _exportSnapshot = snapshot);
-    try {
-      await snapshot.waitUntilReady();
-      if (!mounted || !identical(_exportSnapshot, snapshot)) {
-        throw const MemoryCollageExportCancelledException();
-      }
-      await WidgetsBinding.instance.endOfFrame;
-      return await MemoryCollageExport.capturePng(snapshot.repaintKey);
-    } finally {
-      snapshot.cancel();
-      if (mounted && identical(_exportSnapshot, snapshot)) {
-        setState(() => _exportSnapshot = null);
-      }
-    }
   }
 
-  Future<void> _shareCollage() async {
+  Future<void> _runExport(MemoryCollageExportAction action) async {
     if (!_isReadyToExport) return;
     Object? failure;
-    setState(() => _exportAction = MemoryCollageExportAction.share);
     try {
-      final bytes = await _capturePng();
-      if (!mounted) return;
-      await MemoryCollageExport.sharePng(
-        bytes,
-        sharePositionOrigin: shareButtonRect(context, _shareButtonKey),
+      await _exportCoordinator.run(
+        action: action,
+        createSnapshot: _createExportSnapshot,
+        usePng: (bytes) async {
+          if (!mounted) {
+            throw const MemoryCollageExportCancelledException();
+          }
+          switch (action) {
+            case MemoryCollageExportAction.share:
+              await MemoryCollageExport.sharePng(
+                bytes,
+                sharePositionOrigin: shareButtonRect(context, _shareButtonKey),
+              );
+              return;
+            case MemoryCollageExportAction.save:
+              await MemoryCollageExport.savePng(bytes);
+              if (mounted) {
+                showShortToast(context, context.strings.collageSaved);
+              }
+          }
+        },
       );
     } catch (error, stackTrace) {
-      _logger.severe("Failed to share memory collage", error, stackTrace);
+      _logger.severe(
+        "Failed to ${action.name} memory collage",
+        error,
+        stackTrace,
+      );
       failure = error;
-    } finally {
-      if (mounted) setState(() => _exportAction = null);
     }
     if (failure != null && mounted) {
       await showGenericErrorDialog(context: context, error: failure);
     }
   }
 
-  Future<void> _saveCollage() async {
-    if (!_isReadyToExport) return;
-    Object? failure;
-    setState(() => _exportAction = MemoryCollageExportAction.save);
-    try {
-      final bytes = await _capturePng();
-      await MemoryCollageExport.savePng(bytes);
-      if (mounted) {
-        showShortToast(context, context.strings.collageSaved);
-      }
-    } catch (error, stackTrace) {
-      _logger.severe("Failed to save memory collage", error, stackTrace);
-      failure = error;
-    } finally {
-      if (mounted) setState(() => _exportAction = null);
-    }
-    if (failure != null && mounted) {
-      await showGenericErrorDialog(context: context, error: failure);
-    }
-  }
+  Future<void> _shareCollage() => _runExport(MemoryCollageExportAction.share);
+
+  Future<void> _saveCollage() => _runExport(MemoryCollageExportAction.save);
 
   @override
   Widget build(BuildContext context) {

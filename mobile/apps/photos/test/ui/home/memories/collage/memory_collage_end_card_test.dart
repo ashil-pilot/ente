@@ -31,6 +31,58 @@ void main() {
     expect(topSpace, closeTo(79.67, 0.01));
   });
 
+  testWidgets("keeps the blurred backdrop decorative and noninteractive", (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      var taps = 0;
+
+      await tester.pumpWidget(
+        _testApp(
+          MemoryCollageBackdrop(
+            child: Semantics(
+              label: "Decorative collage",
+              child: GestureDetector(
+                onTap: () => taps++,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel("Decorative collage"), findsNothing);
+      final backdrop = find.byType(MemoryCollageBackdrop);
+      expect(
+        tester
+            .widget<ExcludeSemantics>(
+              find.descendant(
+                of: backdrop,
+                matching: find.byType(ExcludeSemantics),
+              ),
+            )
+            .excluding,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<IgnorePointer>(
+              find.descendant(
+                of: backdrop,
+                matching: find.byType(IgnorePointer),
+              ),
+            )
+            .ignoring,
+        isTrue,
+      );
+      await tester.tap(find.byType(GestureDetector), warnIfMissed: false);
+      expect(taps, 0);
+    } finally {
+      semantics.dispose();
+    }
+  });
+
   testWidgets("shows share, edit, and save as the three collage actions", (
     tester,
   ) async {

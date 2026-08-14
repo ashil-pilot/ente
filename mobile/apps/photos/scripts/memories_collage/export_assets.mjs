@@ -587,25 +587,16 @@ function readManifest(source) {
 }
 
 function cleanAsset(asset) {
-  if (generatedColorAssetIdSet.has(asset.id)) {
-    return {
-      id: asset.id,
-      width: asset.width,
-      height: asset.height,
-      opaque: true,
-      role: "background",
-    };
-  }
-  const noteOverrides = {
-    "film-strip-four-horizontal":
-      "calm umber film stock with four live horizontal windows",
-    "film-strip-three-horizontal":
-      "calm umber film stock with three live horizontal windows",
-    "print-frame-hero": "even-border cream print frame with a baked alpha seam",
+  return {
+    id: asset.id,
+    width: asset.width,
+    height: asset.height,
+    ...(asset.role ? { role: asset.role } : {}),
+    ...(asset.emptyWindowColor
+      ? { emptyWindowColor: asset.emptyWindowColor }
+      : {}),
+    ...(asset.photoWindows ? { photoWindows: asset.photoWindows } : {}),
   };
-  return noteOverrides[asset.id]
-    ? { ...asset, note: noteOverrides[asset.id] }
-    : { ...asset };
 }
 
 function cleanLayers(layers) {
@@ -621,15 +612,13 @@ function assetWindowSlots(slots) {
   }));
 }
 
-function runtimeTitleStyle(source, { z, layerId } = {}) {
-  const placement = layerId
-    ? { kind: "layer", layerId }
-    : {
-        kind: "rect",
-        ...source.box,
-        z,
-        rotation: source.rotation,
-      };
+function runtimeTitleStyle(source, { z }) {
+  const placement = {
+    kind: "rect",
+    ...source.box,
+    z,
+    rotation: source.rotation,
+  };
   const fontFamily = source.fontFamily
     .split(",")[0]
     .trim()
@@ -654,9 +643,7 @@ function runtimeTitleStyle(source, { z, layerId } = {}) {
   }
   return {
     placement,
-    units: "1080x1920 canvas pixels",
     fontFamily,
-    fontAsset,
     fontWeight: source.fontWeight,
     fontStyle: source.fontStyle,
     fontSize: source.fontSize,
@@ -665,15 +652,10 @@ function runtimeTitleStyle(source, { z, layerId } = {}) {
     maxLines: source.maxLines ?? 1,
     letterSpacing: source.letterSpacing,
     color: source.color,
-    ...(source.colorOnDark ? { colorOnDark: source.colorOnDark } : {}),
     textAlign: source.textAlign ?? source.align,
     verticalAlign: (source.verticalAlign ?? source.vAlign) === "middle"
       ? "center"
       : source.verticalAlign ?? source.vAlign,
-    memoryTitleCasing: "preserve",
-    generatedMonthLabelCasing:
-      source.generatedMonthLabelCasing ?? "preserve",
-    glyphFallback: "platform",
     shadow: source.shadow ?? {
       dx: 0,
       dy: 0,
@@ -685,10 +667,6 @@ function runtimeTitleStyle(source, { z, layerId } = {}) {
 
 function normalizeRuntimeManifest(source) {
   const maximal = source.templates["scrapbook-maximal"];
-  const common = {
-    rotationOrigin: source.rotationOrigin,
-    overflow: source.overflow,
-  };
   const background = (template) => ({
     layerId: "bg",
     defaultAssetId: template.defaultBackgroundId,
@@ -698,14 +676,12 @@ function normalizeRuntimeManifest(source) {
     const template = source.templates[id];
     return {
       id,
-      ...common,
       ...(template.minimumPhotoShortSide === undefined
         ? {}
         : { minimumPhotoShortSide: template.minimumPhotoShortSide }),
       background: background(template),
       layers: cleanLayers(template.layers),
       photoSlots: assetWindowSlots(template.photoSlots),
-      appRendered: "title text is typeset directly by the app",
       titleStyle: runtimeTitleStyle(template.titleStyle, { z: 20 }),
     };
   };
@@ -713,7 +689,6 @@ function normalizeRuntimeManifest(source) {
     const template = source.templates[id];
     return {
       id,
-      ...common,
       ...(template.minimumPhotoShortSide === undefined
         ? {}
         : { minimumPhotoShortSide: template.minimumPhotoShortSide }),
@@ -757,33 +732,21 @@ function normalizeRuntimeManifest(source) {
         z: 4,
         rotation: slot.rotation,
       })),
-      appRendered:
-        "background, shadowed photo mats, hairlines, and title are app-rendered; the grain overlay is composited only on flat editorial backgrounds",
       titleStyle: runtimeTitleStyle(template.titleStyle, { z: 20 }),
     };
   };
 
   return {
     version: source.version,
-    scale: source.scale,
     canvas: source.canvas,
     assets: source.assets.map(cleanAsset),
     defaultTemplateId: source.defaultTemplateId,
     templates: [
       {
         id: "scrapbook-maximal",
-        ...common,
         background: background(maximal),
-        shadowSchema: {
-          kind: "dropShadow",
-          units: "1080x1920 canvas pixels",
-          fields: ["dx", "dy", "blur", "color"],
-          application:
-            "cast from the rotated layer silhouette and rendered under the art",
-        },
         layers: cleanLayers(maximal.layers),
         photoSlots: assetWindowSlots(maximal.photoSlots),
-        appRendered: maximal.appRendered,
         titleStyle: runtimeTitleStyle(maximal.titleStyle, { z: 20 }),
       },
       normalizeCalm("calm-classic"),
@@ -794,6 +757,166 @@ function normalizeRuntimeManifest(source) {
       normalizeMinimal("minimal-grid"),
     ],
   };
+}
+
+function assertOnlyKeys(value, allowed, path) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${path} must be an object.`);
+  }
+  const unexpected = Object.keys(value).filter((key) => !allowed.has(key));
+  if (unexpected.length > 0) {
+    fail(`${path} contains authoring-only fields: ${unexpected.join(", ")}.`);
+  }
+}
+
+function assertRuntimeManifestShape(manifest) {
+  const keys = (...values) => new Set(values);
+  assertOnlyKeys(
+    manifest,
+    keys("version", "canvas", "assets", "defaultTemplateId", "templates"),
+    "runtime manifest",
+  );
+  assertOnlyKeys(manifest.canvas, keys("width", "height"), "runtime canvas");
+
+  for (const asset of manifest.assets) {
+    assertOnlyKeys(
+      asset,
+      keys(
+        "id",
+        "width",
+        "height",
+        "role",
+        "emptyWindowColor",
+        "photoWindows",
+      ),
+      `runtime asset ${asset.id}`,
+    );
+    for (const [index, window] of (asset.photoWindows ?? []).entries()) {
+      assertOnlyKeys(
+        window,
+        keys("x", "y", "width", "height"),
+        `runtime asset ${asset.id} window ${index}`,
+      );
+    }
+  }
+
+  for (const template of manifest.templates) {
+    const templatePath = `runtime template ${template.id}`;
+    assertOnlyKeys(
+      template,
+      keys(
+        "id",
+        "minimumPhotoShortSide",
+        "background",
+        "layers",
+        "photoSlots",
+        "rules",
+        "matStyle",
+        "titleStyle",
+      ),
+      templatePath,
+    );
+    assertOnlyKeys(
+      template.background,
+      keys("layerId", "defaultAssetId", "assetIds"),
+      `${templatePath} background`,
+    );
+    for (const layer of template.layers) {
+      assertOnlyKeys(
+        layer,
+        keys(
+          "layerId",
+          "asset",
+          "x",
+          "y",
+          "width",
+          "height",
+          "z",
+          "rotation",
+          "shadows",
+          "backgroundAssetIds",
+          "blendMode",
+          "opacity",
+        ),
+        `${templatePath} layer ${layer.layerId}`,
+      );
+    }
+    for (const slot of template.photoSlots) {
+      const allowed = slot.kind === "assetWindow"
+        ? keys("slot", "kind", "layerId", "windowIndex")
+        : slot.kind === "mattedRect"
+          ? keys("slot", "kind", "mat", "rect", "z", "rotation")
+          : null;
+      if (!allowed) fail(`${templatePath} has unsupported slot kind ${slot.kind}.`);
+      assertOnlyKeys(slot, allowed, `${templatePath} slot ${slot.slot}`);
+      if (slot.kind === "mattedRect") {
+        assertOnlyKeys(
+          slot.mat,
+          keys("x", "y", "width", "height"),
+          `${templatePath} slot ${slot.slot} mat`,
+        );
+        assertOnlyKeys(
+          slot.rect,
+          keys("x", "y", "width", "height"),
+          `${templatePath} slot ${slot.slot} rect`,
+        );
+      }
+    }
+    for (const [index, rule] of (template.rules ?? []).entries()) {
+      assertOnlyKeys(
+        rule,
+        keys(
+          "x",
+          "y",
+          "width",
+          "height",
+          "z",
+          "color",
+          "colorsByBackground",
+        ),
+        `${templatePath} rule ${index}`,
+      );
+    }
+    if (template.matStyle) {
+      assertOnlyKeys(
+        template.matStyle,
+        keys("fill", "photoFill", "border", "photoInset", "shadows"),
+        `${templatePath} matStyle`,
+      );
+      assertOnlyKeys(
+        template.matStyle.border,
+        keys("width", "color"),
+        `${templatePath} matStyle border`,
+      );
+    }
+    assertOnlyKeys(
+      template.titleStyle,
+      keys(
+        "placement",
+        "fontFamily",
+        "fontWeight",
+        "fontStyle",
+        "fontSize",
+        "minFontSize",
+        "lineHeight",
+        "maxLines",
+        "letterSpacing",
+        "color",
+        "textAlign",
+        "verticalAlign",
+        "shadow",
+      ),
+      `${templatePath} titleStyle`,
+    );
+    assertOnlyKeys(
+      template.titleStyle.placement,
+      keys("kind", "x", "y", "width", "height", "z", "rotation"),
+      `${templatePath} title placement`,
+    );
+    if (template.titleStyle.placement.kind !== "rect") {
+      fail(`${templatePath} must use the frozen rect title placement.`);
+    }
+  }
 }
 
 function dimensionsAtScale(asset, numerator) {
@@ -1161,6 +1284,7 @@ async function main() {
   }
   const manifest = readManifest(source.bytes.toString("utf8"));
   const runtimeManifest = normalizeRuntimeManifest(manifest);
+  assertRuntimeManifestShape(runtimeManifest);
   if (process.env.COLLAGE_WRITE_MANIFEST === "1") {
     if (writesRealTree) {
       fail(

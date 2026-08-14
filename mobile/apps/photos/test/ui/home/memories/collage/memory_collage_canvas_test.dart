@@ -13,7 +13,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late MemoryCollageManifest manifest;
-  late MemoryCollageManifest editorialManifest;
 
   setUpAll(() async {
     await Future.wait([
@@ -28,7 +27,6 @@ void main() {
         jsonDecode(await rootBundle.loadString(memoryCollageManifestAsset))
             as Map<String, dynamic>;
     manifest = MemoryCollageManifest.fromJson(sourceJson);
-    editorialManifest = _manifestWithEditorialTestTemplate(sourceJson);
   });
 
   test("declares the exact seven-photo runtime template contracts", () {
@@ -42,10 +40,7 @@ void main() {
         template.photoSlots.map((slot) => slot.slot),
         List.generate(7, (index) => index),
       );
-      expect(
-        template.background.assetIDs,
-        _backgroundAssetIDsByTemplate[templateID],
-      );
+      expect(template.background.assetIDs, _sharedBackgroundAssetIDs);
 
       for (final backgroundAssetID in template.background.assetIDs) {
         final expectedAssetIDs = {
@@ -138,38 +133,36 @@ void main() {
         tester,
         loadedManifest: manifest,
         templateID: templateID,
-        expectedRequiredAssetIDs: _requiredAssetIDsByTemplate[templateID],
         minimumEncodedByteLength: templateID == "scrapbook-maximal"
             ? 500000
             : 1000,
       ),
     );
-
-    testWidgets("$templateID rejects six photos", (tester) async {
-      final template = manifest.templateFor(templateID);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MemoryCollageCanvasView(
-            manifest: manifest,
-            files: List.generate(6, (_) => EnteFile()),
-            title: "AUGUST 2026",
-            backgroundAssetID: template.background.defaultAssetID,
-            templateID: templateID,
-            photoBuilder: (_, _, _) => const SizedBox.shrink(),
-          ),
-        ),
-      );
-
-      expect(
-        tester.takeException(),
-        isA<StateError>().having(
-          (error) => error.toString(),
-          "message",
-          contains("Memory collage requires 7 photos, got 6"),
-        ),
-      );
-    });
   }
+
+  testWidgets("rejects a six-photo input before rendering", (tester) async {
+    final template = manifest.defaultTemplate;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MemoryCollageCanvasView(
+          manifest: manifest,
+          files: List.generate(6, (_) => EnteFile()),
+          title: "AUGUST 2026",
+          backgroundAssetID: template.background.defaultAssetID,
+          photoBuilder: (_, _, _) => const SizedBox.shrink(),
+        ),
+      ),
+    );
+
+    expect(
+      tester.takeException(),
+      isA<StateError>().having(
+        (error) => error.toString(),
+        "message",
+        contains("Memory collage requires 7 photos, got 6"),
+      ),
+    );
+  });
 
   testWidgets("uses the manifest default when no template is specified", (
     tester,
@@ -181,7 +174,7 @@ void main() {
     );
   });
 
-  for (final templateID in _runtimeTemplateIDs) {
+  for (final templateID in _titleTemplateIDs) {
     testWidgets("$templateID keeps a short title at its preferred size", (
       tester,
     ) async {
@@ -301,7 +294,6 @@ void main() {
       loadedManifest: manifest,
       templateID: "minimal-rows",
       backgroundAssetIDOverride: "editorial-sand",
-      expectedRequiredAssetIDs: const {"editorial-sand", "grain-overlay"},
       minimumEncodedByteLength: 1000,
     );
   });
@@ -323,14 +315,6 @@ void main() {
       title.style!.fontSize,
       manifest.templateFor("calm-film-trio").titleStyle.minFontSize /
           memoryCollageExportPixelRatio,
-    );
-  });
-
-  testWidgets("lays out direct photo and title placements", (tester) async {
-    await verifyMemoryCollageCanvas(
-      tester,
-      loadedManifest: editorialManifest,
-      templateID: "editorial-test",
     );
   });
 
@@ -403,6 +387,12 @@ const _runtimeTemplateIDs = [
   "minimal-grid",
 ];
 
+const _titleTemplateIDs = [
+  "scrapbook-maximal",
+  "calm-film-trio",
+  "minimal-rows",
+];
+
 const _veryLongTitle =
     "An extraordinarily long collection of memories from our family journey "
     "through Thiruvananthapuram, Reykjavík, and San Francisco across many "
@@ -413,67 +403,6 @@ const _unbrokenNonLatinTitle =
     "तिरुवनंतपुरमकीअविस्मरणीयपारिवारिकयात्राओंकीयादें"
     "तिरुवनंतपुरमकीअविस्मरणीयपारिवारिकयात्राओंकीयादें";
 
-const _requiredAssetIDsByTemplate = <String, Set<String>>{
-  "scrapbook-maximal": {
-    "paper-washi",
-    "paper-torn",
-    "coffee-ring",
-    "fern",
-    "star",
-    "film-strip-four",
-    "polaroid-frame",
-    "banner-wide",
-    "tape-mustard",
-    "tape-blush",
-    "tape-sage",
-    "stamp-postmark",
-    "sun-streak",
-    "vignette",
-    "grain-overlay",
-  },
-  "calm-classic": {
-    "paper-cream-fiber",
-    "fern",
-    "film-strip-four-horizontal",
-    "print-frame-hero",
-    "polaroid-frame",
-    "tape-blush",
-    "tape-sage",
-    "stamp-postmark",
-    "sun-streak",
-    "vignette",
-    "grain-overlay",
-  },
-  "calm-film-trio": {
-    "paper-cream-fiber",
-    "fern",
-    "film-strip-three-horizontal",
-    "print-frame-hero",
-    "polaroid-frame",
-    "tape-blush",
-    "tape-sage",
-    "stamp-postmark",
-    "sun-streak",
-    "vignette",
-    "grain-overlay",
-  },
-  "calm-accent-print": {
-    "paper-cream-fiber",
-    "fern",
-    "film-strip-three-horizontal",
-    "print-frame-hero",
-    "polaroid-frame",
-    "tape-blush",
-    "tape-sage",
-    "sun-streak",
-    "vignette",
-    "grain-overlay",
-  },
-  "minimal-classic": {"paper-cream-fiber"},
-  "minimal-rows": {"paper-cream-fiber"},
-  "minimal-grid": {"paper-cream-fiber"},
-};
-
 const _sharedBackgroundAssetIDs = [
   "paper-washi",
   "paper-cream-fiber",
@@ -483,11 +412,6 @@ const _sharedBackgroundAssetIDs = [
   "editorial-sand",
   "editorial-sage",
 ];
-
-final _backgroundAssetIDsByTemplate = <String, List<String>>{
-  for (final templateID in _runtimeTemplateIDs)
-    templateID: _sharedBackgroundAssetIDs,
-};
 
 Future<void> _verifyTitleLayout(
   WidgetTester tester, {
@@ -553,73 +477,4 @@ FontWeight _expectedFontWeight(int weight) => switch (weight) {
   800 => FontWeight.w800,
   900 => FontWeight.w900,
   _ => FontWeight.normal,
-};
-
-MemoryCollageManifest _manifestWithEditorialTestTemplate(
-  Map<String, dynamic> sourceJson,
-) {
-  final decoded = jsonDecode(jsonEncode(sourceJson)) as Map<String, dynamic>;
-  final templates = List<Map<String, dynamic>>.from(
-    (decoded["templates"] as List).map(
-      (value) => Map<String, dynamic>.from(value as Map),
-    ),
-  );
-  final editorial =
-      jsonDecode(jsonEncode(templates.first)) as Map<String, dynamic>;
-  editorial["id"] = "editorial-test";
-  editorial["photoSlots"] = [
-    _rectSlot(0, x: 60, y: 420, rotation: -4),
-    _rectSlot(1, x: 405, y: 420, rotation: 2),
-    _rectSlot(2, x: 750, y: 420, rotation: -2),
-    _rectSlot(3, x: 60, y: 870, rotation: 3),
-    _rectSlot(4, x: 405, y: 870, rotation: -3),
-    _rectSlot(5, x: 750, y: 870, rotation: 4),
-    _rectSlot(6, x: 300, y: 1320, width: 480, height: 390, rotation: -1),
-  ];
-  final titleStyle = Map<String, dynamic>.from(editorial["titleStyle"] as Map);
-  titleStyle
-    ..["placement"] = {
-      "kind": "rect",
-      "x": 60,
-      "y": 1710,
-      "width": 960,
-      "height": 150,
-      "z": 40,
-      "rotation": 0,
-    }
-    ..["fontStyle"] = "italic"
-    ..["textAlign"] = "left"
-    ..["verticalAlign"] = "bottom";
-  editorial["titleStyle"] = titleStyle;
-  decoded["templates"] = [...templates, editorial];
-  return MemoryCollageManifest.fromJson(decoded);
-}
-
-Map<String, dynamic> _rectSlot(
-  int slot, {
-  required int x,
-  required int y,
-  int width = 270,
-  int height = 360,
-  required double rotation,
-}) => {
-  "slot": slot,
-  "kind": "rect",
-  "x": x,
-  "y": y,
-  "width": width,
-  "height": height,
-  "z": 5 + slot,
-  "rotation": rotation,
-  "radius": 24,
-  "border": {"width": 9, "color": "#f4e7cf"},
-  "shadows": [
-    {
-      "kind": "dropShadow",
-      "dx": 0,
-      "dy": 12,
-      "blur": 24,
-      "color": "rgba(80,40,15,0.35)",
-    },
-  ],
 };

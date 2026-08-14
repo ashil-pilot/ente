@@ -1,98 +1,94 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:photos/models/file/file.dart";
+import "package:photos/models/metadata/file_magic.dart";
 import "package:photos/ui/home/memories/collage/memory_collage_export_photo.dart";
 
 void main() {
-  testWidgets("waits for the photo fade before reporting export readiness", (
-    tester,
-  ) async {
-    late VoidCallback showFirstFrame;
-    late VoidCallback showFinalImage;
-    var readyNotifications = 0;
+  testWidgets(
+    "renders transparently without a hidden fade or loading indicator",
+    (tester) async {
+      late VoidCallback reportFinalImage;
+      var readyNotifications = 0;
 
-    await tester.pumpWidget(
-      _testApp(
-        MemoryCollageExportPhoto(
-          file: EnteFile(),
-          tagPrefix: "test-",
-          onFinalImageLoaded: () => readyNotifications++,
-          testPhotoBuilder: (context, onFirstFrame, onFinalImageLoaded) {
-            showFirstFrame = onFirstFrame;
-            showFinalImage = onFinalImageLoaded;
-            return const ColoredBox(color: Colors.red);
-          },
+      await tester.pumpWidget(
+        _testApp(
+          MemoryCollageExportPhoto(
+            file: EnteFile(),
+            tagPrefix: "test-",
+            targetPixelSize: const Size(300, 400),
+            onFinalImageLoaded: () => readyNotifications++,
+            testPhotoBuilder: (context, onFinalImageLoaded) {
+              reportFinalImage = onFinalImageLoaded;
+              return const ColoredBox(color: Colors.red);
+            },
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(
-      tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
-      0,
-    );
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(
-      find.descendant(
-        of: find.byType(AnimatedOpacity),
-        matching: find.byWidgetPredicate(
+      expect(find.byType(AnimatedOpacity), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(
+        find.byWidgetPredicate(
           (widget) => widget is ColoredBox && widget.color == Colors.black,
         ),
-      ),
-      findsOneWidget,
-    );
-
-    showFinalImage();
-    await tester.pump();
-    expect(readyNotifications, 0);
-
-    showFirstFrame();
-    await tester.pump();
-    expect(
-      tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
-      1,
-    );
-    expect(readyNotifications, 0);
-
-    await tester.pump(const Duration(milliseconds: 350));
-    expect(readyNotifications, 1);
-
-    showFirstFrame();
-    showFinalImage();
-    await tester.pump();
-    expect(readyNotifications, 1);
-  });
-
-  testWidgets("reports readiness when the final image follows the fade", (
-    tester,
-  ) async {
-    late VoidCallback showFirstFrame;
-    late VoidCallback showFinalImage;
-    var readyNotifications = 0;
-
-    await tester.pumpWidget(
-      _testApp(
-        MemoryCollageExportPhoto(
-          file: EnteFile(),
-          tagPrefix: "test-",
-          onFinalImageLoaded: () => readyNotifications++,
-          testPhotoBuilder: (context, onFirstFrame, onFinalImageLoaded) {
-            showFirstFrame = onFirstFrame;
-            showFinalImage = onFinalImageLoaded;
-            return const ColoredBox(color: Colors.red);
-          },
+        findsNothing,
+      );
+      final ignorePointer = tester.widget<IgnorePointer>(
+        find.descendant(
+          of: find.byType(MemoryCollageExportPhoto),
+          matching: find.byType(IgnorePointer),
         ),
-      ),
-    );
+      );
+      expect(ignorePointer.ignoring, isTrue);
 
-    showFirstFrame();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 350));
-    expect(readyNotifications, 0);
+      reportFinalImage();
+      expect(readyNotifications, 1);
+    },
+  );
 
-    showFinalImage();
-    await tester.pump();
-    expect(readyNotifications, 1);
+  group("export decode target", () {
+    test("covers authored slots for landscape originals", () {
+      final file = _fileWithDimensions(width: 4000, height: 2000);
+
+      expect(memoryCollageExportDecodeTarget(file, const Size(894, 768)), (
+        cacheWidth: null,
+        cacheHeight: 768,
+      ));
+      expect(memoryCollageExportDecodeTarget(file, const Size(894, 300)), (
+        cacheWidth: null,
+        cacheHeight: 447,
+      ));
+    });
+
+    test("covers authored slots for portrait originals", () {
+      final file = _fileWithDimensions(width: 2000, height: 4000);
+
+      expect(memoryCollageExportDecodeTarget(file, const Size(894, 768)), (
+        cacheWidth: 894,
+        cacheHeight: null,
+      ));
+      expect(memoryCollageExportDecodeTarget(file, const Size(300, 894)), (
+        cacheWidth: 447,
+        cacheHeight: null,
+      ));
+    });
+
+    test("keeps a canvas-width fallback when dimensions are unavailable", () {
+      expect(
+        memoryCollageExportDecodeTarget(EnteFile(), const Size(894, 768)),
+        (cacheWidth: 1080, cacheHeight: null),
+      );
+      expect(
+        memoryCollageExportDecodeTarget(EnteFile(), const Size(1200, 768)),
+        (cacheWidth: 1200, cacheHeight: null),
+      );
+    });
   });
+}
+
+EnteFile _fileWithDimensions({required int width, required int height}) {
+  return EnteFile()..pubMagicMetadata = PubMagicMetadata(w: width, h: height);
 }
 
 Widget _testApp(Widget child) {

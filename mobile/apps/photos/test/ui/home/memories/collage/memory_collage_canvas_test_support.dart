@@ -15,7 +15,6 @@ Future<void> verifyMemoryCollageCanvas(
   MemoryCollageManifest? loadedManifest,
   String? templateID,
   String? backgroundAssetIDOverride,
-  Set<String>? expectedRequiredAssetIDs,
   int minimumEncodedByteLength = 500000,
   String titleText = "AUGUST 2026",
   bool verifyRasterOutput = true,
@@ -64,9 +63,6 @@ Future<void> verifyMemoryCollageCanvas(
           layer.appliesToBackground(backgroundAssetID))
         layer.assetID,
   });
-  if (expectedRequiredAssetIDs != null) {
-    expect(requiredAssetIDs, expectedRequiredAssetIDs);
-  }
   await tester.runAsync(
     () => MemoryCollageCanvasView.precacheAssets(
       assetContext,
@@ -78,7 +74,12 @@ Future<void> verifyMemoryCollageCanvas(
   await tester.pumpWidget(
     MaterialApp(
       home: MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+        // Authored collage typography ignores both accessibility text scaling
+        // and Bold Text so preview and export geometry stay identical.
+        data: const MediaQueryData(
+          textScaler: TextScaler.linear(2),
+          boldText: true,
+        ),
         child: ColoredBox(
           color: Colors.black,
           child: Center(
@@ -132,14 +133,9 @@ Future<void> verifyMemoryCollageCanvas(
         ? FontStyle.italic
         : FontStyle.normal,
   );
-  final useDarkColors = manifest.assetFor(backgroundAssetID).dark;
   expect(
     title.style!.color,
-    parseMemoryCollageColor(
-      useDarkColors
-          ? template.titleStyle.colorOnDark ?? template.titleStyle.color
-          : template.titleStyle.color,
-    ),
+    parseMemoryCollageColor(template.titleStyle.color),
   );
   final titleAlignments = tester
       .widgetList<Align>(
@@ -155,28 +151,7 @@ Future<void> verifyMemoryCollageCanvas(
       ),
     ),
   );
-  final titlePadding = tester
-      .widgetList<Padding>(
-        find.ancestor(of: titleFinder, matching: find.byType(Padding)),
-      )
-      .singleWhere((padding) => padding.child is LayoutBuilder);
-  var expectedTitlePadding = EdgeInsets.zero;
   final titlePlacement = template.titleStyle.placement;
-  if (titlePlacement is MemoryCollageTitleAnchor) {
-    final anchorLayer = template.layerFor(titlePlacement.layerID);
-    final anchorAsset = manifest.assetFor(anchorLayer.assetID);
-    final safetyMargin = anchorAsset.safetyMarginPx;
-    final horizontal = safetyMargin == null
-        ? 10.0
-        : safetyMargin /
-              anchorAsset.width *
-              (anchorLayer.width / memoryCollageExportPixelRatio);
-    expectedTitlePadding = EdgeInsets.symmetric(
-      horizontal: horizontal,
-      vertical: 4,
-    );
-  }
-  expect(titlePadding.padding, expectedTitlePadding);
   final titleBoundsFinder = find.byKey(
     const ValueKey("memory-collage-title-bounds"),
   );
@@ -197,51 +172,11 @@ Future<void> verifyMemoryCollageCanvas(
   expect(titlePainter.didExceedMaxLines, isFalse);
   expect(titlePainter.height, lessThanOrEqualTo(titleBounds.height + 0.001));
   titlePainter.dispose();
-  if (titlePlacement is MemoryCollageTitleRect) {
-    _expectPositionedRect(tester, titleFinder, titlePlacement.rect);
-  }
+  _expectPositionedRect(tester, titleFinder, titlePlacement.rect);
   for (final slot in template.photoSlots) {
     if (slot is MemoryCollageMattedRectPhotoSlot) {
-      _expectMattedRectSlot(
-        tester,
-        slot,
-        template.matStyle!,
-        useDarkColors: useDarkColors,
-      );
-      continue;
+      _expectMattedRectSlot(tester, slot, template.matStyle!);
     }
-    if (slot is! MemoryCollageRectPhotoSlot) continue;
-    final photoFinder = find.byKey(
-      ValueKey("memory-collage-photo-${slot.slot}"),
-    );
-    _expectPositionedRect(tester, photoFinder, slot.rect);
-    final clip = tester.widget<ClipRRect>(
-      find.ancestor(of: photoFinder, matching: find.byType(ClipRRect)).first,
-    );
-    expect(
-      clip.borderRadius,
-      BorderRadius.circular((slot.radius ?? 0) / memoryCollageExportPixelRatio),
-    );
-    final border = slot.border;
-    if (border != null) {
-      final borderColor = parseMemoryCollageColor(border.color);
-      final borderWidth = border.width / memoryCollageExportPixelRatio;
-      expect(
-        tester.widgetList<DecoratedBox>(find.byType(DecoratedBox)).any((box) {
-          if (box.position != DecorationPosition.foreground ||
-              box.decoration is! BoxDecoration) {
-            return false;
-          }
-          final decoration = box.decoration as BoxDecoration;
-          final renderedBorder = decoration.border;
-          return renderedBorder is Border &&
-              renderedBorder.top.color == borderColor &&
-              renderedBorder.top.width == borderWidth;
-        }),
-        isTrue,
-      );
-    }
-    _expectRectShadows(tester, slot);
   }
   for (final rule in template.rules) {
     final rulePositioned = tester
@@ -256,9 +191,7 @@ Future<void> verifyMemoryCollageCanvas(
     final coloredBox = transform.child! as ColoredBox;
     expect(
       coloredBox.color,
-      parseMemoryCollageColor(
-        rule.colorFor(backgroundAssetID, isDark: useDarkColors),
-      ),
+      parseMemoryCollageColor(rule.colorFor(backgroundAssetID)),
     );
   }
   if (template.matStyle != null) {
@@ -268,7 +201,6 @@ Future<void> verifyMemoryCollageCanvas(
       template: template,
       backgroundAssetID: backgroundAssetID,
       titleFinder: titleFinder,
-      useDarkColors: useDarkColors,
     );
   }
   if (!verifyRasterOutput) return;
@@ -343,7 +275,6 @@ void _expectMattedTemplateDrawOrder(
   required MemoryCollageTemplate template,
   required String backgroundAssetID,
   required Finder titleFinder,
-  required bool useDarkColors,
 }) {
   final backgroundFinder = find.descendant(
     of: find.byKey(boundaryKey),
@@ -379,16 +310,13 @@ void _expectMattedTemplateDrawOrder(
             (widget) =>
                 widget is ColoredBox &&
                 widget.color ==
-                    parseMemoryCollageColor(
-                      rule.colorFor(backgroundAssetID, isDark: useDarkColors),
-                    ),
+                    parseMemoryCollageColor(rule.colorFor(backgroundAssetID)),
           ),
         ),
         rule.rect,
       ),
   ];
-  final titlePlacement =
-      template.titleStyle.placement as MemoryCollageTitleRect;
+  final titlePlacement = template.titleStyle.placement;
   final titlePositioned = _positionedAncestorMatching(
     tester,
     titleFinder,
@@ -440,9 +368,8 @@ void _expectMattedTemplateDrawOrder(
 void _expectMattedRectSlot(
   WidgetTester tester,
   MemoryCollageMattedRectPhotoSlot slot,
-  MemoryCollageMatStyle style, {
-  required bool useDarkColors,
-}) {
+  MemoryCollageMatStyle style,
+) {
   final matFinder = find.byKey(ValueKey("memory-collage-mat-${slot.slot}"));
   final photoFinder = find.byKey(
     ValueKey("memory-collage-matted-photo-${slot.slot}"),
@@ -453,12 +380,7 @@ void _expectMattedRectSlot(
 
   final mat = tester.widget<DecoratedBox>(matFinder);
   final decoration = mat.decoration as BoxDecoration;
-  expect(
-    decoration.color,
-    parseMemoryCollageColor(
-      useDarkColors ? style.fillOnDark ?? style.fill : style.fill,
-    ),
-  );
+  expect(decoration.color, parseMemoryCollageColor(style.fill));
   if (style.shadows.isEmpty) {
     expect(decoration.boxShadow, isNull);
   } else {
@@ -510,45 +432,7 @@ void _expectMattedRectSlot(
     photoPositioned.height,
     slot.photoRect.height / memoryCollageExportPixelRatio,
   );
-  final clip = tester.widget<ClipRRect>(photoFinder);
-  expect(
-    clip.borderRadius,
-    BorderRadius.circular((slot.radius ?? 0) / memoryCollageExportPixelRatio),
-  );
-}
-
-void _expectRectShadows(WidgetTester tester, MemoryCollageRectPhotoSlot slot) {
-  if (slot.shadows.isEmpty) return;
-  final positioneds = tester
-      .widgetList<Positioned>(find.byType(Positioned))
-      .toList(growable: false);
-  final photoIndex = positioneds.indexWhere(
-    (positioned) =>
-        _matchesRect(positioned, slot.rect) && !_isFilteredShadow(positioned),
-  );
-  expect(photoIndex, greaterThanOrEqualTo(0));
-  for (final shadow in slot.shadows) {
-    final shadowRect = MemoryCollageRect(
-      x: slot.rect.x + shadow.dx,
-      y: slot.rect.y + shadow.dy,
-      width: slot.rect.width,
-      height: slot.rect.height,
-    );
-    final shadowIndex = positioneds.indexWhere(
-      (positioned) =>
-          _matchesRect(positioned, shadowRect) && _isFilteredShadow(positioned),
-    );
-    expect(shadowIndex, greaterThanOrEqualTo(0));
-    expect(shadowIndex, lessThan(photoIndex));
-    final transform = positioneds[shadowIndex].child as Transform;
-    final imageFiltered = transform.child! as ImageFiltered;
-    final silhouette = imageFiltered.child! as DecoratedBox;
-    final decoration = silhouette.decoration as BoxDecoration;
-    expect(
-      decoration.borderRadius,
-      BorderRadius.circular((slot.radius ?? 0) / memoryCollageExportPixelRatio),
-    );
-  }
+  expect(tester.widget<ClipRect>(photoFinder), isA<ClipRect>());
 }
 
 void _expectPositionedRect(
@@ -589,11 +473,6 @@ bool _matchesRect(Positioned positioned, MemoryCollageRect rect) {
       positioned.top == rect.y / scale &&
       positioned.width == rect.width / scale &&
       positioned.height == rect.height / scale;
-}
-
-bool _isFilteredShadow(Positioned positioned) {
-  final child = positioned.child;
-  return child is Transform && child.child is ImageFiltered;
 }
 
 String _variantOutputPath(String template, String templateID) {

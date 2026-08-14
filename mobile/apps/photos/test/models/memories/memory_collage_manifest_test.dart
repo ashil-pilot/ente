@@ -49,6 +49,134 @@ void main() {
     }
   });
 
+  test("ships only fields consumed by the frozen runtime schema", () {
+    _expectOnlyKeys(sourceJson, const {
+      "version",
+      "canvas",
+      "assets",
+      "defaultTemplateId",
+      "templates",
+    });
+    _expectOnlyKeys(sourceJson["canvas"]! as Map<String, dynamic>, const {
+      "width",
+      "height",
+    });
+    for (final asset
+        in (sourceJson["assets"]! as List<dynamic>)
+            .cast<Map<String, dynamic>>()) {
+      _expectOnlyKeys(asset, const {
+        "id",
+        "width",
+        "height",
+        "role",
+        "emptyWindowColor",
+        "photoWindows",
+      });
+      for (final window
+          in (asset["photoWindows"] as List<dynamic>? ?? const [])
+              .cast<Map<String, dynamic>>()) {
+        _expectOnlyKeys(window, const {"x", "y", "width", "height"});
+      }
+    }
+
+    for (final template
+        in (sourceJson["templates"]! as List<dynamic>)
+            .cast<Map<String, dynamic>>()) {
+      _expectOnlyKeys(template, const {
+        "id",
+        "minimumPhotoShortSide",
+        "background",
+        "layers",
+        "photoSlots",
+        "rules",
+        "matStyle",
+        "titleStyle",
+      });
+      _expectOnlyKeys(template["background"]! as Map<String, dynamic>, const {
+        "layerId",
+        "defaultAssetId",
+        "assetIds",
+      });
+      for (final layer
+          in (template["layers"]! as List<dynamic>)
+              .cast<Map<String, dynamic>>()) {
+        _expectOnlyKeys(layer, const {
+          "layerId",
+          "asset",
+          "x",
+          "y",
+          "width",
+          "height",
+          "z",
+          "rotation",
+          "shadows",
+          "backgroundAssetIds",
+          "blendMode",
+          "opacity",
+        });
+      }
+      for (final slot
+          in (template["photoSlots"]! as List<dynamic>)
+              .cast<Map<String, dynamic>>()) {
+        final kind = slot["kind"];
+        _expectOnlyKeys(
+          slot,
+          kind == "assetWindow"
+              ? const {"kind", "slot", "layerId", "windowIndex"}
+              : const {"kind", "slot", "mat", "rect", "z", "rotation"},
+        );
+      }
+      for (final rule
+          in (template["rules"] as List<dynamic>? ?? const [])
+              .cast<Map<String, dynamic>>()) {
+        _expectOnlyKeys(rule, const {
+          "x",
+          "y",
+          "width",
+          "height",
+          "z",
+          "color",
+          "colorsByBackground",
+        });
+      }
+      final matStyle = template["matStyle"] as Map<String, dynamic>?;
+      if (matStyle != null) {
+        _expectOnlyKeys(matStyle, const {
+          "fill",
+          "photoFill",
+          "border",
+          "photoInset",
+          "shadows",
+        });
+      }
+      final title = template["titleStyle"]! as Map<String, dynamic>;
+      _expectOnlyKeys(title, const {
+        "placement",
+        "fontFamily",
+        "fontWeight",
+        "fontStyle",
+        "fontSize",
+        "minFontSize",
+        "lineHeight",
+        "maxLines",
+        "letterSpacing",
+        "color",
+        "textAlign",
+        "verticalAlign",
+        "shadow",
+      });
+      _expectOnlyKeys(title["placement"]! as Map<String, dynamic>, const {
+        "kind",
+        "x",
+        "y",
+        "width",
+        "height",
+        "z",
+        "rotation",
+      });
+    }
+  });
+
   test("shares every ordered background choice across all templates", () {
     const backgroundIDs = [
       "paper-washi",
@@ -140,7 +268,6 @@ void main() {
       expect(window.width, 276);
       expect(window.height, 318);
     }
-    expect(() => manifest.assetFor("film-strip"), throwsFormatException);
     expect(polaroidWindows, hasLength(1));
     expect(polaroidWindows.single.width, 414);
     expect(polaroidWindows.single.height, 420);
@@ -283,8 +410,6 @@ void main() {
     final stamp = template.layerFor("stamp");
 
     expect((bannerAsset.width, bannerAsset.height), (900, 150));
-    expect(bannerAsset.safetyMarginPx, 18);
-    expect(() => manifest.assetFor("banner"), throwsFormatException);
     expect(bannerLayer.assetID, "banner-wide");
     expect(
       (
@@ -334,8 +459,7 @@ void main() {
       expect((layer.x, layer.y), (0, 0));
     }
 
-    expect(title.placement, isA<MemoryCollageTitleRect>());
-    final titlePlacement = title.placement as MemoryCollageTitleRect;
+    final titlePlacement = title.placement;
     expect(
       (
         titlePlacement.rect.x,
@@ -353,7 +477,6 @@ void main() {
     expect(title.minFontSize, 27);
     expect(title.maxLines, 1);
     expect(title.letterSpacing, 12);
-    expect(title.memoryTitleCasing, "preserve");
     expect(template.layerFor("sunStreak").blendMode, "soft-light");
     expect(template.layerFor("vignette").blendMode, "multiply");
     expect(template.layerFor("grain").blendMode, "overlay");
@@ -364,10 +487,9 @@ void main() {
     for (final id in ["calm-classic", "calm-film-trio", "calm-accent-print"]) {
       final calm = manifest.templateFor(id);
       final title = calm.titleStyle;
-      final placement = title.placement as MemoryCollageTitleRect;
+      final placement = title.placement;
 
       expect(title.fontFamily, "Lora", reason: id);
-      expect(title.fontAsset, "fonts/Lora-SemiBold.ttf", reason: id);
       expect(title.fontStyle, "normal", reason: id);
       expect(title.fontWeight, 600, reason: id);
       expect(title.fontSize, 96, reason: id);
@@ -411,15 +533,6 @@ void main() {
       expect(calm.layerFor("grain").blendMode, "overlay", reason: id);
       expect(calm.layerFor("grain").opacity, 0.41, reason: id);
     }
-
-    expect(
-      () => manifest.assetFor("paper-notebook-blush"),
-      throwsFormatException,
-    );
-    expect(
-      () => manifest.assetFor("paper-notebook-sage"),
-      throwsFormatException,
-    );
   });
 
   test(
@@ -428,10 +541,9 @@ void main() {
       for (final id in ["minimal-classic", "minimal-rows", "minimal-grid"]) {
         final minimal = manifest.templateFor(id);
         final title = minimal.titleStyle;
-        final titlePlacement = title.placement as MemoryCollageTitleRect;
+        final titlePlacement = title.placement;
 
         expect(title.fontFamily, "Inter", reason: id);
-        expect(title.fontAsset, "fonts/Inter-Medium.ttf", reason: id);
         expect(title.fontStyle, "normal", reason: id);
         expect(title.fontWeight, 500, reason: id);
         expect(title.fontSize, 102, reason: id);
@@ -440,7 +552,6 @@ void main() {
         expect(title.lineHeight, 1.04, reason: id);
         expect(title.letterSpacing, -1.5, reason: id);
         expect(title.color, "#24201a", reason: id);
-        expect(title.colorOnDark, isNull, reason: id);
         expect(
           (
             titlePlacement.rect.x,
@@ -476,12 +587,11 @@ void main() {
               rule.rect.height,
               rule.z,
               rule.color,
-              rule.colorOnDark,
             ),
           ),
           orderedEquals([
-            (78, 288, 924, 3, 10, "#cfc5ae", null),
-            (78, 1842, 924, 3, 10, "#cfc5ae", null),
+            (78, 288, 924, 3, 10, "#cfc5ae"),
+            (78, 1842, 924, 3, 10, "#cfc5ae"),
           ]),
           reason: id,
         );
@@ -494,7 +604,6 @@ void main() {
 
         final matStyle = minimal.matStyle!;
         expect(matStyle.fill, "#faf6ec", reason: id);
-        expect(matStyle.fillOnDark, isNull, reason: id);
         expect(matStyle.photoFill, "#e7e1d4", reason: id);
         expect(matStyle.photoInset, 15, reason: id);
         expect(matStyle.border.width, 3, reason: id);
@@ -538,13 +647,6 @@ void main() {
           expect(slotJson, isNot(contains("shadows")), reason: id);
         }
       }
-
-      expect(() => manifest.assetFor("editorial-bone"), throwsFormatException);
-      expect(() => manifest.assetFor("editorial-paper"), throwsFormatException);
-      expect(
-        () => manifest.assetFor("editorial-charcoal"),
-        throwsFormatException,
-      );
     },
   );
 
@@ -606,7 +708,6 @@ void main() {
           slot.matRect.height - 30,
           reason: template.id,
         );
-        expect(slot.radius ?? 0, 0, reason: template.id);
       }
     }
   });
@@ -627,54 +728,6 @@ void main() {
         "minimal-grid": 270,
       },
     );
-  });
-
-  test("parses direct rect photo and title placements", () {
-    final json = _copyJson(sourceJson);
-    final template = _firstTemplate(json);
-    final slots = template["photoSlots"]! as List<dynamic>;
-    slots[0] = {
-      "slot": 0,
-      "kind": "rect",
-      "x": 60,
-      "y": 90,
-      "width": 300,
-      "height": 420,
-      "z": 11,
-      "rotation": -3,
-      "radius": 18,
-      "border": {"width": 12, "color": "#ffffff"},
-      "shadows": [
-        {"dx": 0, "dy": 9, "blur": 18, "color": "rgba(0,0,0,0.2)"},
-      ],
-    };
-    final titleStyle = template["titleStyle"]! as Map<String, dynamic>;
-    titleStyle["placement"] = {
-      "kind": "rect",
-      "x": 120,
-      "y": 90,
-      "width": 840,
-      "height": 150,
-      "z": 20,
-      "rotation": 1,
-    };
-
-    final parsed = MemoryCollageManifest.fromJson(json);
-    final parsedTemplate = parsed.templateFor("scrapbook-maximal");
-    final rectSlot =
-        parsedTemplate.photoSlots.first as MemoryCollageRectPhotoSlot;
-    final titleRect =
-        parsedTemplate.titleStyle.placement as MemoryCollageTitleRect;
-
-    expect(rectSlot.rect.width, 300);
-    expect(rectSlot.z, 11);
-    expect(rectSlot.rotation, -3);
-    expect(rectSlot.radius, 18);
-    expect(rectSlot.border?.width, 12);
-    expect(rectSlot.shadows, hasLength(1));
-    expect(titleRect.rect.width, 840);
-    expect(titleRect.z, 20);
-    expect(titleRect.rotation, 1);
   });
 
   test("exposes immutable manifest collections", () {
@@ -858,21 +911,21 @@ void main() {
       );
     });
 
-    test("rejects invalid direct rect geometry", () {
-      final invalidPhotoRect = _copyJson(sourceJson);
+    test("rejects unsupported photo slots and invalid title geometry", () {
+      final unsupportedPhotoSlot = _copyJson(sourceJson);
       final slots =
-          _firstTemplate(invalidPhotoRect)["photoSlots"]! as List<dynamic>;
+          _firstTemplate(unsupportedPhotoSlot)["photoSlots"]! as List<dynamic>;
       slots[0] = {
         "slot": 0,
         "kind": "rect",
-        "x": -1,
+        "x": 0,
         "y": 0,
-        "width": 100,
-        "height": 100,
+        "width": 300,
+        "height": 300,
         "z": 1,
       };
       expect(
-        () => MemoryCollageManifest.fromJson(invalidPhotoRect),
+        () => MemoryCollageManifest.fromJson(unsupportedPhotoSlot),
         throwsFormatException,
       );
 
@@ -905,23 +958,6 @@ void main() {
       filmWindow["width"] = 260;
       expect(
         () => MemoryCollageManifest.fromJson(undersizedAssetWindow),
-        throwsFormatException,
-      );
-
-      final undersizedDirectRect = _copyJson(sourceJson);
-      final slots =
-          _firstTemplate(undersizedDirectRect)["photoSlots"]! as List<dynamic>;
-      slots[0] = {
-        "slot": 0,
-        "kind": "rect",
-        "x": 0,
-        "y": 0,
-        "width": 269,
-        "height": 360,
-        "z": 1,
-      };
-      expect(
-        () => MemoryCollageManifest.fromJson(undersizedDirectRect),
         throwsFormatException,
       );
 
@@ -1006,7 +1042,7 @@ void main() {
       );
     });
 
-    test("rejects invalid title enumerations and anchors", () {
+    test("rejects invalid title enumerations and placements", () {
       final invalidAlign = _copyJson(sourceJson);
       final titleStyle =
           _firstTemplate(invalidAlign)["titleStyle"]! as Map<String, dynamic>;
@@ -1096,4 +1132,8 @@ Map<String, dynamic> _template(Map<String, dynamic> json, String id) {
   return (json["templates"]! as List<dynamic>)
       .cast<Map<String, dynamic>>()
       .singleWhere((template) => template["id"] == id);
+}
+
+void _expectOnlyKeys(Map<String, dynamic> json, Set<String> allowedKeys) {
+  expect(json.keys.toSet().difference(allowedKeys), isEmpty);
 }
