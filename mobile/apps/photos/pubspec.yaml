@@ -316,8 +316,8 @@ flutter:
     - assets/video-editor/
     - assets/image-editor/
     # Runtime collage rendering addresses the frozen 3x plates, backgrounds,
-    # and finish textures explicitly. Authoring-only ingredients live under
-    # scripts/memories_collage and must not enter the app bundle.
+    # and finish textures explicitly. Authoring sources are archived at
+    # github.com/ashil-pilot/memory-collage-design-source.
     - assets/memories_collage/manifest.json
     - assets/memories_collage/3.0x/
     - assets/icons/
