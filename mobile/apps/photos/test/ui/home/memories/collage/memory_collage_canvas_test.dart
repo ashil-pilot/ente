@@ -150,7 +150,7 @@ void main() {
     }
   });
 
-  testWidgets("uses the minimal conditional hairlines and grain", (
+  testWidgets("uses minimal grain only on editorial backgrounds", (
     tester,
   ) async {
     await _pumpCanvas(
@@ -160,7 +160,6 @@ void main() {
       backgroundAssetID: "paper-cream-fiber",
       photoBuilder: (_, _, _) => const SizedBox.expand(),
     );
-    expect(_coloredBoxes(const Color(0xFFCFC5AE)), findsNWidgets(2));
     expect(_blendPaints(), findsNothing);
 
     await _pumpCanvas(
@@ -171,7 +170,6 @@ void main() {
       photoBuilder: (_, _, _) => const SizedBox.expand(),
     );
     await tester.pump(const Duration(seconds: 1));
-    expect(_coloredBoxes(const Color(0xFFD8CFBC)), findsNWidgets(2));
     expect(_blendPaints(), findsOneWidget);
   });
 
@@ -357,15 +355,6 @@ Future<void> _pumpCanvas(
     ),
   );
   await tester.pump();
-}
-
-Finder _coloredBoxes(Color color) {
-  return find.descendant(
-    of: find.byType(MemoryCollageCanvasView),
-    matching: find.byWidgetPredicate(
-      (widget) => widget is ColoredBox && widget.color == color,
-    ),
-  );
 }
 
 Finder _blendPaints() {

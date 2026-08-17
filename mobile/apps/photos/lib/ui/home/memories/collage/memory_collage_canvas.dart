@@ -134,8 +134,6 @@ class MemoryCollageCanvasView extends StatelessWidget {
             for (final slot in template.photoSlots)
               _buildPhotoSlot(context, slot),
             Positioned.fill(child: _assetImage(template.plateAssetID)),
-            if (template.finishPreset == MemoryCollageFinishPreset.minimal)
-              ..._buildMinimalHairlines(backgroundAssetID),
             _positionedRect(
               rect: template.title.rect,
               rotation: template.title.rotation,
@@ -178,24 +176,6 @@ class MemoryCollageCanvasView extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  List<Widget> _buildMinimalHairlines(String backgroundAssetID) {
-    final color = parseMemoryCollageColor(
-      _editorialBackgroundIDs.contains(backgroundAssetID)
-          ? "#d8cfbc"
-          : "#cfc5ae",
-    );
-    return [
-      for (final y in const [288.0, 1842.0])
-        Positioned(
-          left: 78 / memoryCollageExportPixelRatio,
-          top: y / memoryCollageExportPixelRatio,
-          width: 924 / memoryCollageExportPixelRatio,
-          height: 3 / memoryCollageExportPixelRatio,
-          child: ColoredBox(color: color),
-        ),
-    ];
   }
 
   List<Widget> _buildFinish(
