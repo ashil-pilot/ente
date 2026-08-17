@@ -5,7 +5,6 @@ import "package:flutter/services.dart";
 const memoryCollageManifestAsset = "assets/memories_collage/manifest.json";
 
 class MemoryCollageManifest {
-  final int version;
   final MemoryCollageCanvas canvas;
   final List<MemoryCollageBackground> backgrounds;
   final String defaultTemplateID;
@@ -14,7 +13,6 @@ class MemoryCollageManifest {
   final Map<String, MemoryCollageTemplate> _templatesByID;
 
   MemoryCollageManifest._({
-    required this.version,
     required this.canvas,
     required List<MemoryCollageBackground> backgrounds,
     required this.defaultTemplateID,
@@ -29,15 +27,7 @@ class MemoryCollageManifest {
        });
 
   factory MemoryCollageManifest.fromJson(Map<String, dynamic> json) {
-    final version = _jsonInt(json, "version");
-    if (version != 3) {
-      throw FormatException(
-        "Unsupported memory collage manifest version: $version",
-      );
-    }
-
     final manifest = MemoryCollageManifest._(
-      version: version,
       canvas: MemoryCollageCanvas.fromJson(_jsonMap(json, "canvas")),
       backgrounds: _jsonList(
         _jsonMap(json, "backgrounds"),

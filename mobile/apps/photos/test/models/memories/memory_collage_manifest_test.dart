@@ -17,8 +17,7 @@ void main() {
     manifest = MemoryCollageManifest.fromJson(sourceJson);
   });
 
-  test("loads the frozen v3 collage contract", () {
-    expect(manifest.version, 3);
+  test("loads the frozen collage contract", () {
     expect(manifest.canvas.width, 1080);
     expect(manifest.canvas.height, 1920);
     expect(manifest.defaultTemplateID, "calm-film-trio");
@@ -68,7 +67,6 @@ void main() {
 
   test("ships only data consumed by the flattened runtime", () {
     expect(sourceJson.keys.toSet(), {
-      "version",
       "canvas",
       "backgrounds",
       "defaultTemplateId",
@@ -299,42 +297,33 @@ void main() {
   });
 
   group("validation", () {
-    test(
-      "rejects unsupported versions, duplicate IDs, and missing defaults",
-      () {
-        final oldVersion = _deepCopy(sourceJson)..["version"] = 2;
-        expect(
-          () => MemoryCollageManifest.fromJson(oldVersion),
-          throwsFormatException,
-        );
+    test("rejects duplicate IDs and missing defaults", () {
+      final duplicateBackground = _deepCopy(sourceJson);
+      final backgrounds =
+          (duplicateBackground["backgrounds"]!
+                  as Map<String, dynamic>)["assets"]!
+              as List<dynamic>;
+      backgrounds.add(Map<String, dynamic>.from(backgrounds.first as Map));
+      expect(
+        () => MemoryCollageManifest.fromJson(duplicateBackground),
+        throwsFormatException,
+      );
 
-        final duplicateBackground = _deepCopy(sourceJson);
-        final backgrounds =
-            (duplicateBackground["backgrounds"]!
-                    as Map<String, dynamic>)["assets"]!
-                as List<dynamic>;
-        backgrounds.add(Map<String, dynamic>.from(backgrounds.first as Map));
-        expect(
-          () => MemoryCollageManifest.fromJson(duplicateBackground),
-          throwsFormatException,
-        );
+      final duplicateTemplate = _deepCopy(sourceJson);
+      final templates = duplicateTemplate["templates"]! as List<dynamic>;
+      templates.add(Map<String, dynamic>.from(templates.first as Map));
+      expect(
+        () => MemoryCollageManifest.fromJson(duplicateTemplate),
+        throwsFormatException,
+      );
 
-        final duplicateTemplate = _deepCopy(sourceJson);
-        final templates = duplicateTemplate["templates"]! as List<dynamic>;
-        templates.add(Map<String, dynamic>.from(templates.first as Map));
-        expect(
-          () => MemoryCollageManifest.fromJson(duplicateTemplate),
-          throwsFormatException,
-        );
-
-        final missingDefault = _deepCopy(sourceJson)
-          ..["defaultTemplateId"] = "missing";
-        expect(
-          () => MemoryCollageManifest.fromJson(missingDefault),
-          throwsFormatException,
-        );
-      },
-    );
+      final missingDefault = _deepCopy(sourceJson)
+        ..["defaultTemplateId"] = "missing";
+      expect(
+        () => MemoryCollageManifest.fromJson(missingDefault),
+        throwsFormatException,
+      );
+    });
 
     test("rejects invalid backgrounds and template references", () {
       final wrongSize = _deepCopy(sourceJson);
