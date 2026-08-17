@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
+import 'package:photos/core/constants.dart';
 
 const double kMemoryPreviousTapAreaFraction = 0.20;
 
@@ -12,11 +13,13 @@ class MemorySideTapGestureDetector extends StatelessWidget {
   final Widget child;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final VoidCallback? onSwipeDown;
 
   const MemorySideTapGestureDetector({
     required this.child,
     required this.onPrevious,
     required this.onNext,
+    this.onSwipeDown,
     super.key,
   });
 
@@ -35,6 +38,13 @@ class MemorySideTapGestureDetector extends StatelessWidget {
           onNext();
         }
       },
+      onVerticalDragUpdate: onSwipeDown == null
+          ? null
+          : (details) {
+              if (details.delta.dy > dragSensitivity) {
+                onSwipeDown!();
+              }
+            },
       child: child,
     );
   }

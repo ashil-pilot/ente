@@ -346,6 +346,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
                   key: const ValueKey("memory-collage-side-navigation"),
                   onPrevious: _navigatePrevious,
                   onNext: _navigateNext,
+                  onSwipeDown: () => Navigator.maybePop(context),
                   child: _buildForeground(snapshot, files),
                 ),
               ),

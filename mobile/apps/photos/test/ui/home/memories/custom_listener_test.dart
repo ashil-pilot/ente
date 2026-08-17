@@ -139,4 +139,23 @@ void main() {
     expect(nextCount, 1);
     expect(buttonCount, 1);
   });
+
+  testWidgets("side navigation dismisses on a downward swipe", (tester) async {
+    var dismissCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MemorySideTapGestureDetector(
+          onPrevious: () {},
+          onNext: () {},
+          onSwipeDown: () => dismissCount++,
+          child: const ColoredBox(key: targetKey, color: Colors.black),
+        ),
+      ),
+    );
+
+    await tester.drag(find.byKey(targetKey), const Offset(0, 60));
+
+    expect(dismissCount, 1);
+  });
 }
