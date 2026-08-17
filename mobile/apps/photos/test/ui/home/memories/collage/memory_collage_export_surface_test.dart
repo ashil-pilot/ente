@@ -120,7 +120,7 @@ void main() {
         files: files,
         title: "Export title",
         templateID: template.id,
-        backgroundAssetID: template.background.defaultAssetID,
+        backgroundAssetID: template.defaultBackgroundAssetID,
       );
 
       await tester.pumpWidget(
@@ -163,7 +163,7 @@ void main() {
       expect(canvas.files, same(snapshot.files));
       expect(canvas.title, "Export title");
       expect(canvas.templateID, template.id);
-      expect(canvas.backgroundAssetID, template.background.defaultAssetID);
+      expect(canvas.backgroundAssetID, template.defaultBackgroundAssetID);
 
       final renderedPhotos = tester
           .widgetList<MemoryCollageExportPhoto>(
@@ -180,7 +180,7 @@ void main() {
         expect(renderedFileIndices.add(originalIndex), isTrue);
         expect(
           photo.targetPixelSize,
-          memoryCollageExportTargetPixelSize(manifest, template, originalIndex),
+          memoryCollageExportTargetPixelSize(template, originalIndex),
         );
         photo.onFinalImageLoaded();
       }
@@ -203,7 +203,7 @@ void main() {
       files: List.generate(template.photoSlots.length, _photo),
       title: "Export title",
       templateID: template.id,
-      backgroundAssetID: template.background.defaultAssetID,
+      backgroundAssetID: template.defaultBackgroundAssetID,
     );
     final wait = snapshot.waitUntilReady(timeout: const Duration(seconds: 1));
     final waitExpectation = expectLater(

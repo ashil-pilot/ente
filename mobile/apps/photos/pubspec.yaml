@@ -315,9 +315,9 @@ flutter:
     - assets/rewind_badges/
     - assets/video-editor/
     - assets/image-editor/
-    # The repository retains 1x/2x/3x collage exports for authoring and
-    # verification. Runtime rendering addresses the 3x files explicitly, so
-    # only the normalized manifest and that scale belong in the app bundle.
+    # Runtime collage rendering addresses the frozen 3x plates, backgrounds,
+    # and finish textures explicitly. Authoring-only ingredients live under
+    # scripts/memories_collage and must not enter the app bundle.
     - assets/memories_collage/manifest.json
     - assets/memories_collage/3.0x/
     - assets/icons/

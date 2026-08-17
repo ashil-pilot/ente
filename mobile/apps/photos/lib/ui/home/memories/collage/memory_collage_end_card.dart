@@ -159,7 +159,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       manifest,
       assetIDs: memoryCollageRequiredAssetIDs(
         manifest,
-        defaultTemplate.background.defaultAssetID,
+        defaultTemplate.defaultBackgroundAssetID,
         templateID: defaultTemplate.id,
       ),
     );
@@ -268,7 +268,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
       files: _files,
       title: widget.title,
       templateID: template.id,
-      backgroundAssetID: template.background.defaultAssetID,
+      backgroundAssetID: template.defaultBackgroundAssetID,
     );
   }
 
@@ -393,7 +393,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
               manifest: manifest,
               files: files,
               title: widget.title,
-              backgroundAssetID: defaultTemplate.background.defaultAssetID,
+              backgroundAssetID: defaultTemplate.defaultBackgroundAssetID,
               templateID: defaultTemplate.id,
               photoBuilder: _buildBackdropPhoto,
             ),
@@ -448,7 +448,7 @@ class _MemoryCollageEndCardState extends State<MemoryCollageEndCard> {
                 manifest: manifest,
                 files: files,
                 title: widget.title,
-                backgroundAssetID: defaultTemplate.background.defaultAssetID,
+                backgroundAssetID: defaultTemplate.defaultBackgroundAssetID,
                 templateID: defaultTemplate.id,
                 photoBuilder: _buildPreviewPhoto,
               ),

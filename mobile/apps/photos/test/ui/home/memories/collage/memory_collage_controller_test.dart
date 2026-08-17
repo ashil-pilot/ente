@@ -13,22 +13,20 @@ void main() {
   late List<EnteFile> files;
   late Map<String, dynamic> sourceManifest;
   late MemoryCollageManifest manifest;
-  late MemoryCollageManifest productionManifest;
 
   setUpAll(() async {
     sourceManifest =
         jsonDecode(await rootBundle.loadString(memoryCollageManifestAsset))
             as Map<String, dynamic>;
-    productionManifest = MemoryCollageManifest.fromJson(sourceManifest);
-    manifest = _threeTemplateManifest(sourceManifest);
+    manifest = MemoryCollageManifest.fromJson(sourceManifest);
   });
 
   setUp(() {
     files = List.generate(8, _file);
   });
 
-  test("starts with revision zero and the manifest default template", () {
-    final calls = <int>[];
+  test("starts at revision zero with the default template and background", () {
+    final revisions = <int>[];
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
@@ -36,21 +34,22 @@ void main() {
       selector:
           ({required memoryID, required shuffleRevision, required files}) {
             expect(memoryID, "memory-1");
-            calls.add(shuffleRevision);
+            revisions.add(shuffleRevision);
             return files.take(7).toList();
           },
     );
 
-    expect(calls, [0]);
+    expect(revisions, [0]);
     expect(controller.shuffleRevision, 0);
-    expect(controller.templateID, "scrapbook-calm");
-    expect(controller.backgroundIndex, 0);
-    expect(controller.backgroundAssetID, "paper-blush-stripe");
+    expect(controller.templateID, "calm-film-trio");
+    expect(controller.backgroundAssetID, "paper-cream-fiber");
+    expect(controller.backgroundIndex, 1);
+    expect(controller.backgroundIDs, manifest.backgroundAssetIDs);
     expect(controller.canCreate, isTrue);
     expect(controller.selectedFiles, files.take(7));
   });
 
-  test("can start with an explicit template and its default background", () {
+  test("an explicit template starts with its authored default background", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
@@ -59,22 +58,22 @@ void main() {
     );
 
     expect(controller.templateID, "scrapbook-maximal");
-    expect(controller.backgroundIDs, ["paper-cream-fiber", "paper-washi"]);
     expect(controller.backgroundAssetID, "paper-washi");
+    expect(controller.backgroundIndex, 0);
   });
 
-  test("shuffle advances the revision and replaces only the photos", () {
+  test("shuffle replaces only the photos", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
-      templateID: "scrapbook-calm",
       selector:
           ({required memoryID, required shuffleRevision, required files}) =>
               files.skip(shuffleRevision).take(7).toList(),
     );
-    controller.selectTemplate("scrapbook-calm");
     controller.nextBackground();
+    final templateID = controller.templateID;
+    final backgroundID = controller.backgroundAssetID;
     var notifications = 0;
     controller.addListener(() => notifications++);
 
@@ -82,91 +81,66 @@ void main() {
 
     expect(controller.shuffleRevision, 1);
     expect(controller.selectedFiles, files.skip(1).take(7));
-    expect(controller.templateID, "scrapbook-calm");
-    expect(controller.backgroundAssetID, "paper-sage-stripe");
+    expect(controller.templateID, templateID);
+    expect(controller.backgroundAssetID, backgroundID);
     expect(notifications, 1);
   });
 
-  test("keeps the selected background when the next template supports it", () {
-    final sharedManifest = _sharedBackgroundManifest(sourceManifest);
-    final controller = MemoryCollageController(
-      memoryID: "memory-1",
-      files: files,
-      manifest: sharedManifest,
-      templateID: "scrapbook-maximal",
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.take(7).toList(),
-    );
-    final initialSelection = controller.selectedFiles;
-
-    controller.nextBackground();
-    expect(controller.backgroundAssetID, "paper-cream-fiber");
-
-    controller.selectTemplate("scrapbook-calm");
-    expect(controller.backgroundAssetID, "paper-cream-fiber");
-    expect(
-      controller.backgroundAssetIDForTemplate("minimal-editorial"),
-      "paper-cream-fiber",
-    );
-    controller.selectTemplate("minimal-editorial");
-    expect(controller.backgroundAssetID, "paper-cream-fiber");
-
-    expect(controller.shuffleRevision, 0);
-    expect(identical(controller.selectedFiles, initialSelection), isTrue);
-  });
-
-  test("falls back to the target default when a background is unsupported", () {
+  test("background selection is global and remains stable across styles", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
       templateID: "scrapbook-maximal",
     );
-    var notifications = 0;
-    controller.addListener(() => notifications++);
+    final initialSelection = controller.selectedFiles;
 
     controller.nextBackground();
     expect(controller.backgroundAssetID, "paper-cream-fiber");
-    expect(
-      controller.backgroundAssetIDForTemplate("scrapbook-calm"),
-      "paper-blush-stripe",
-    );
-    expect(controller.backgroundAssetID, "paper-cream-fiber");
-
-    controller.selectTemplate("scrapbook-calm");
-
-    expect(controller.backgroundAssetID, "paper-blush-stripe");
-    expect(controller.backgroundIndex, 0);
-    expect(notifications, 2);
+    for (final template in manifest.templates) {
+      controller.selectTemplate(template.id);
+      expect(
+        controller.backgroundAssetID,
+        "paper-cream-fiber",
+        reason: template.id,
+      );
+    }
+    expect(controller.shuffleRevision, 0);
+    expect(identical(controller.selectedFiles, initialSelection), isTrue);
   });
 
-  test("next template follows manifest order, wraps, and preserves photos", () {
+  test("next template follows style-family order and preserves state", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.take(7).toList(),
     );
     final initialSelection = controller.selectedFiles;
+    final initialBackground = controller.backgroundAssetID;
     var notifications = 0;
     controller.addListener(() => notifications++);
 
-    expect(controller.templateID, "scrapbook-calm");
-    expect(controller.nextTemplateID, "minimal-editorial");
-    controller.selectTemplate(controller.nextTemplateID);
-    expect(controller.nextTemplateID, "scrapbook-maximal");
-    controller.selectTemplate(controller.nextTemplateID);
-    expect(controller.nextTemplateID, "scrapbook-calm");
-    controller.selectTemplate(controller.nextTemplateID);
+    const expectedCycle = [
+      "calm-accent-print",
+      "scrapbook-maximal",
+      "minimal-classic",
+      "minimal-rows",
+      "minimal-grid",
+      "calm-classic",
+      "calm-film-trio",
+    ];
+    final visited = <String>[];
+    for (var count = 0; count < expectedCycle.length; count++) {
+      controller.selectTemplate(controller.nextTemplateID);
+      visited.add(controller.templateID);
+    }
 
-    expect(controller.selectedFiles, hasLength(7));
+    expect(visited, expectedCycle);
+    expect(controller.templateID, manifest.defaultTemplateID);
+    expect(controller.backgroundAssetID, initialBackground);
     expect(identical(controller.selectedFiles, initialSelection), isTrue);
     expect(controller.shuffleRevision, 0);
-    expect(controller.templateID, "scrapbook-calm");
-    expect(notifications, 3);
+    expect(notifications, expectedCycle.length);
   });
 
   test("selecting the active template is a no-op", () {
@@ -197,99 +171,61 @@ void main() {
     expect(controller.templateID, manifest.defaultTemplateID);
   });
 
-  test("exposes immutable photos and template background IDs", () {
+  test("exposes immutable photos and background IDs", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
       manifest: manifest,
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.take(7).toList(),
     );
 
     expect(
       () => controller.selectedFiles.add(_file(99)),
       throwsUnsupportedError,
     );
-    expect(() => controller.backgroundIDs.add("third"), throwsUnsupportedError);
-  });
-
-  test("cannot create when selection has fewer than seven photos", () {
-    final controller = MemoryCollageController(
-      memoryID: "memory-1",
-      files: files.take(6),
-      manifest: manifest,
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.toList(),
+    expect(
+      () => controller.backgroundIDs.add("another"),
+      throwsUnsupportedError,
     );
-
-    expect(controller.selectedFiles, hasLength(6));
-    expect(controller.canCreate, isFalse);
   });
 
-  test("can create with seven selected photos", () {
+  test("requires exactly seven selected photos", () {
+    MemoryCollageController controllerFor(int count) {
+      return MemoryCollageController(
+        memoryID: "memory-1",
+        files: files,
+        manifest: manifest,
+        selector:
+            ({required memoryID, required shuffleRevision, required files}) =>
+                files.take(count).toList(),
+      );
+    }
+
+    expect(controllerFor(6).canCreate, isFalse);
+    expect(controllerFor(7).canCreate, isTrue);
+    expect(controllerFor(8).canCreate, isFalse);
+  });
+
+  test("a single global background does not emit a no-op notification", () {
+    final singleBackgroundManifest = _singleBackgroundManifest(sourceManifest);
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
-      manifest: manifest,
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.take(7).toList(),
-    );
-
-    expect(controller.selectedFiles, hasLength(7));
-    expect(controller.canCreate, isTrue);
-  });
-
-  test("cannot create with more than seven selected photos", () {
-    final controller = MemoryCollageController(
-      memoryID: "memory-1",
-      files: files,
-      manifest: manifest,
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.toList(),
-    );
-
-    expect(controller.selectedFiles, hasLength(8));
-    expect(controller.canCreate, isFalse);
-  });
-
-  test("a single background does not emit a no-op notification", () {
-    final controller = MemoryCollageController(
-      memoryID: "memory-1",
-      files: files,
-      manifest: manifest,
-      templateID: "minimal-editorial",
-      selector:
-          ({required memoryID, required shuffleRevision, required files}) =>
-              files.take(7).toList(),
+      manifest: singleBackgroundManifest,
     );
     var notifications = 0;
     controller.addListener(() => notifications++);
 
     controller.nextBackground();
 
-    expect(controller.backgroundAssetID, "paper-terracotta-mottle");
+    expect(controller.backgroundAssetID, "paper-cream-fiber");
     expect(notifications, 0);
   });
 
-  test("production styles share all backgrounds", () {
-    final expectedBackgroundIDs =
-        productionManifest.templates.first.background.assetIDs;
-
-    expect(expectedBackgroundIDs, hasLength(7));
-    for (final template in productionManifest.templates) {
-      expect(template.background.assetIDs, expectedBackgroundIDs);
-    }
-  });
-
-  test("production style cycling follows all seven authored templates", () {
+  test("production manifest contains all seven frozen templates", () {
     final controller = MemoryCollageController(
       memoryID: "memory-1",
       files: files,
-      manifest: productionManifest,
+      manifest: manifest,
     );
     const order = [
       "scrapbook-maximal",
@@ -301,99 +237,24 @@ void main() {
       "minimal-grid",
     ];
 
-    expect(controller.templateID, "calm-film-trio");
-    expect(
-      order[(order.indexOf(controller.templateID) + 1) % order.length],
-      controller.nextTemplateID,
-    );
-    for (var count = 0; count < order.length; count++) {
-      controller.selectTemplate(controller.nextTemplateID);
-    }
+    expect(manifest.templates.map((template) => template.id), order);
     expect(controller.templateID, "calm-film-trio");
   });
 }
 
-MemoryCollageManifest _threeTemplateManifest(Map<String, dynamic> source) {
-  final json = _copyJson(source);
-  final sourceTemplate = (json["templates"]! as List<dynamic>)
-      .cast<Map<String, dynamic>>()
-      .singleWhere((template) => template["id"] == "scrapbook-maximal");
-  json["defaultTemplateId"] = "scrapbook-calm";
-  json["templates"] = [
-    _template(
-      sourceTemplate,
-      id: "scrapbook-maximal",
-      backgroundIDs: const ["paper-cream-fiber", "paper-washi"],
-      defaultBackgroundID: "paper-washi",
-    ),
-    _template(
-      sourceTemplate,
-      id: "scrapbook-calm",
-      backgroundIDs: const ["paper-blush-stripe", "paper-sage-stripe"],
-      defaultBackgroundID: "paper-blush-stripe",
-    ),
-    _template(
-      sourceTemplate,
-      id: "minimal-editorial",
-      backgroundIDs: const ["paper-terracotta-mottle"],
-      defaultBackgroundID: "paper-terracotta-mottle",
-    ),
-  ];
+MemoryCollageManifest _singleBackgroundManifest(Map<String, dynamic> source) {
+  final json = jsonDecode(jsonEncode(source)) as Map<String, dynamic>;
+  final backgrounds = json["backgrounds"]! as Map<String, dynamic>;
+  backgrounds["assets"] = (backgrounds["assets"]! as List<dynamic>)
+      .where(
+        (entry) => (entry as Map<String, dynamic>)["id"] == "paper-cream-fiber",
+      )
+      .toList();
+  for (final template in json["templates"]! as List<dynamic>) {
+    (template as Map<String, dynamic>)["defaultBackgroundAssetId"] =
+        "paper-cream-fiber";
+  }
   return MemoryCollageManifest.fromJson(json);
-}
-
-MemoryCollageManifest _sharedBackgroundManifest(Map<String, dynamic> source) {
-  final json = _copyJson(source);
-  final sourceTemplate = (json["templates"]! as List<dynamic>)
-      .cast<Map<String, dynamic>>()
-      .singleWhere((template) => template["id"] == "scrapbook-maximal");
-  const backgroundIDs = ["paper-washi", "paper-cream-fiber"];
-  json["defaultTemplateId"] = "scrapbook-calm";
-  json["templates"] = [
-    _template(
-      sourceTemplate,
-      id: "scrapbook-maximal",
-      backgroundIDs: backgroundIDs,
-      defaultBackgroundID: "paper-washi",
-    ),
-    _template(
-      sourceTemplate,
-      id: "scrapbook-calm",
-      backgroundIDs: backgroundIDs,
-      defaultBackgroundID: "paper-washi",
-    ),
-    _template(
-      sourceTemplate,
-      id: "minimal-editorial",
-      backgroundIDs: backgroundIDs,
-      defaultBackgroundID: "paper-washi",
-    ),
-  ];
-  return MemoryCollageManifest.fromJson(json);
-}
-
-Map<String, dynamic> _template(
-  Map<String, dynamic> source, {
-  required String id,
-  required List<String> backgroundIDs,
-  required String defaultBackgroundID,
-}) {
-  final template = _copyJson(source)..["id"] = id;
-  final background = template["background"]! as Map<String, dynamic>;
-  background
-    ..["defaultAssetId"] = defaultBackgroundID
-    ..["assetIds"] = backgroundIDs;
-  final backgroundLayerID = background["layerId"]! as String;
-  final layers = (template["layers"]! as List<dynamic>)
-      .cast<Map<String, dynamic>>();
-  layers.singleWhere(
-    (layer) => layer["layerId"] == backgroundLayerID,
-  )["asset"] = defaultBackgroundID;
-  return template;
-}
-
-Map<String, dynamic> _copyJson(Map<String, dynamic> source) {
-  return jsonDecode(jsonEncode(source)) as Map<String, dynamic>;
 }
 
 EnteFile _file(int id) {

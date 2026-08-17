@@ -1,605 +1,135 @@
 {
-  "version": 2,
+  "version": 3,
   "canvas": {
     "width": 1080,
     "height": 1920
   },
-  "assets": [
-    {
-      "id": "paper-washi",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "paper-cream-fiber",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "paper-blush-stripe",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "paper-sage-stripe",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "paper-terracotta-mottle",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "paper-torn",
-      "width": 1098,
-      "height": 1734
-    },
-    {
-      "id": "polaroid-frame",
-      "width": 462,
-      "height": 534,
-      "emptyWindowColor": "#2e2318",
-      "photoWindows": [
-        {
-          "x": 27,
-          "y": 27,
-          "width": 414,
-          "height": 420
-        }
-      ]
-    },
-    {
-      "id": "film-strip-four",
-      "width": 390,
-      "height": 1800,
-      "emptyWindowColor": "#3a2a1c",
-      "photoWindows": [
-        {
-          "x": 57,
-          "y": 69,
-          "width": 276,
-          "height": 318
-        },
-        {
-          "x": 57,
-          "y": 453,
-          "width": 276,
-          "height": 318
-        },
-        {
-          "x": 57,
-          "y": 837,
-          "width": 276,
-          "height": 318
-        },
-        {
-          "x": 57,
-          "y": 1221,
-          "width": 276,
-          "height": 318
-        }
-      ]
-    },
-    {
-      "id": "banner-wide",
-      "width": 900,
-      "height": 150
-    },
-    {
-      "id": "tape-mustard",
-      "width": 336,
-      "height": 72
-    },
-    {
-      "id": "tape-blush",
-      "width": 228,
-      "height": 66
-    },
-    {
-      "id": "tape-sage",
-      "width": 210,
-      "height": 63
-    },
-    {
-      "id": "stamp-postmark",
-      "width": 240,
-      "height": 270
-    },
-    {
-      "id": "star",
-      "width": 282,
-      "height": 282
-    },
-    {
-      "id": "fern",
-      "width": 228,
-      "height": 408
-    },
-    {
-      "id": "coffee-ring",
-      "width": 192,
-      "height": 192
-    },
-    {
-      "id": "sun-streak",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "vignette",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "grain-overlay",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "film-strip-four-horizontal",
-      "width": 972,
-      "height": 252,
-      "emptyWindowColor": "#33241a",
-      "photoWindows": [
-        {
-          "x": 30,
-          "y": 39,
-          "width": 210,
-          "height": 174
-        },
-        {
-          "x": 264,
-          "y": 39,
-          "width": 210,
-          "height": 174
-        },
-        {
-          "x": 498,
-          "y": 39,
-          "width": 210,
-          "height": 174
-        },
-        {
-          "x": 732,
-          "y": 39,
-          "width": 210,
-          "height": 174
-        }
-      ]
-    },
-    {
-      "id": "film-strip-three-horizontal",
-      "width": 972,
-      "height": 348,
-      "emptyWindowColor": "#33241a",
-      "photoWindows": [
-        {
-          "x": 30,
-          "y": 39,
-          "width": 288,
-          "height": 270
-        },
-        {
-          "x": 342,
-          "y": 39,
-          "width": 288,
-          "height": 270
-        },
-        {
-          "x": 654,
-          "y": 39,
-          "width": 288,
-          "height": 270
-        }
-      ]
-    },
-    {
-      "id": "print-frame-hero",
-      "width": 876,
-      "height": 594,
-      "emptyWindowColor": "#2e2318",
-      "photoWindows": [
-        {
-          "x": 24,
-          "y": 24,
-          "width": 834,
-          "height": 546
-        }
-      ]
-    },
-    {
-      "id": "editorial-sand",
-      "width": 1080,
-      "height": 1920
-    },
-    {
-      "id": "editorial-sage",
-      "width": 1080,
-      "height": 1920
-    }
-  ],
+  "backgrounds": {
+    "assets": [
+      {
+        "id": "paper-washi",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "id": "paper-cream-fiber",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "id": "paper-blush-stripe",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "id": "paper-sage-stripe",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "id": "paper-terracotta-mottle",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "id": "editorial-sand",
+        "width": 1080,
+        "height": 1920
+      },
+      {
+        "id": "editorial-sage",
+        "width": 1080,
+        "height": 1920
+      }
+    ]
+  },
   "defaultTemplateId": "calm-film-trio",
   "templates": [
     {
       "id": "scrapbook-maximal",
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-washi",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-washi",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "torn",
-          "asset": "paper-torn",
-          "x": -12,
-          "y": 120,
-          "width": 1098,
-          "height": 1734,
-          "z": 2,
-          "rotation": 0.8,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 42,
-              "blur": 66,
-              "color": "rgba(80,50,22,0.3)"
-            }
-          ]
-        },
-        {
-          "layerId": "ring",
-          "asset": "coffee-ring",
-          "x": 444,
-          "y": 1530,
-          "width": 192,
-          "height": 192,
-          "z": 3,
-          "rotation": 8
-        },
-        {
-          "layerId": "fern",
-          "asset": "fern",
-          "x": 897,
-          "y": 72,
-          "width": 228,
-          "height": 408,
-          "z": 4,
-          "rotation": 196,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 3,
-              "dy": 6,
-              "blur": 9,
-              "color": "rgba(80,60,30,0.3)"
-            }
-          ]
-        },
-        {
-          "layerId": "star",
-          "asset": "star",
-          "x": 336,
-          "y": 240,
-          "width": 282,
-          "height": 282,
-          "z": 9,
-          "rotation": 12,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 3,
-              "dy": 9,
-              "blur": 15,
-              "color": "rgba(90,55,15,0.35)"
-            }
-          ]
-        },
-        {
-          "layerId": "strip",
-          "asset": "film-strip-four",
-          "x": 618,
-          "y": 270,
-          "width": 390,
-          "height": 1800,
-          "z": 10,
-          "rotation": 2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 54,
-              "color": "rgba(70,32,12,0.38)"
-            }
-          ]
-        },
-        {
-          "layerId": "p1",
-          "asset": "polaroid-frame",
-          "x": 42,
-          "y": 312,
-          "width": 462,
-          "height": 534,
-          "z": 12,
-          "rotation": -4.5,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.22)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 36,
-              "blur": 72,
-              "color": "rgba(90,60,30,0.26)"
-            }
-          ]
-        },
-        {
-          "layerId": "p2",
-          "asset": "polaroid-frame",
-          "x": 96,
-          "y": 858,
-          "width": 462,
-          "height": 534,
-          "z": 13,
-          "rotation": 3,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.22)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 36,
-              "blur": 72,
-              "color": "rgba(90,60,30,0.26)"
-            }
-          ]
-        },
-        {
-          "layerId": "p3",
-          "asset": "polaroid-frame",
-          "x": 48,
-          "y": 1362,
-          "width": 462,
-          "height": 534,
-          "z": 14,
-          "rotation": -2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.22)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 36,
-              "blur": 72,
-              "color": "rgba(90,60,30,0.26)"
-            }
-          ]
-        },
-        {
-          "layerId": "banner",
-          "asset": "banner-wide",
-          "x": 90,
-          "y": 138,
-          "width": 900,
-          "height": 150,
-          "z": 16,
-          "rotation": -2.5,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(80,40,15,0.35)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeA",
-          "asset": "tape-mustard",
-          "x": 54,
-          "y": 78,
-          "width": 336,
-          "height": 72,
-          "z": 17,
-          "rotation": -4,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(90,60,25,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeB",
-          "asset": "tape-blush",
-          "x": 132,
-          "y": 276,
-          "width": 228,
-          "height": 66,
-          "z": 15,
-          "rotation": 2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(110,60,45,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeC",
-          "asset": "tape-sage",
-          "x": 444,
-          "y": 822,
-          "width": 210,
-          "height": 63,
-          "z": 15,
-          "rotation": -36,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(70,80,45,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "stamp",
-          "asset": "stamp-postmark",
-          "x": 786,
-          "y": 72,
-          "width": 240,
-          "height": 270,
-          "z": 17,
-          "rotation": 5,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(90,60,30,0.3)"
-            }
-          ]
-        },
-        {
-          "layerId": "sunStreak",
-          "asset": "sun-streak",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 34,
-          "rotation": 0,
-          "blendMode": "soft-light",
-          "opacity": 1
-        },
-        {
-          "layerId": "vignette",
-          "asset": "vignette",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 36,
-          "rotation": 0,
-          "blendMode": "multiply",
-          "opacity": 1
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.55
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-washi",
+      "plateAssetId": "layout-scrapbook-maximal",
+      "finishPreset": "scrapbook",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 0
+          "x": 698.452462,
+          "y": 339.409364,
+          "width": 276,
+          "height": 318,
+          "z": 10,
+          "rotation": 2,
+          "backingColor": "#7B4A32"
         },
         {
           "slot": 1,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 1
+          "x": 685.051055,
+          "y": 723.175442,
+          "width": 276,
+          "height": 318,
+          "z": 10,
+          "rotation": 2,
+          "backingColor": "#7B4A32"
         },
         {
           "slot": 2,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 2
+          "x": 671.649648,
+          "y": 1106.941519,
+          "width": 276,
+          "height": 318,
+          "z": 10,
+          "rotation": 2,
+          "backingColor": "#7B4A32"
         },
         {
           "slot": 3,
-          "kind": "assetWindow",
-          "layerId": "p1",
-          "windowIndex": 0
+          "x": 66.636979,
+          "y": 338.857103,
+          "width": 414,
+          "height": 420,
+          "z": 12,
+          "rotation": -4.5,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 4,
-          "kind": "assetWindow",
-          "layerId": "p2",
-          "windowIndex": 0
+          "x": 124.565967,
+          "y": 885.198122,
+          "width": 414,
+          "height": 420,
+          "z": 13,
+          "rotation": 3,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 5,
-          "kind": "assetWindow",
-          "layerId": "p3",
-          "windowIndex": 0
+          "x": 73.951188,
+          "y": 1388.913577,
+          "width": 414,
+          "height": 420,
+          "z": 14,
+          "rotation": -2,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 6,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 3
+          "x": 658.248242,
+          "y": 1490.707597,
+          "width": 276,
+          "height": 318,
+          "z": 10,
+          "rotation": 2,
+          "backingColor": "#7B4A32"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 144,
-          "y": 156,
-          "width": 618,
-          "height": 114,
-          "z": 20,
-          "rotation": -2.5
-        },
+      "title": {
+        "x": 144,
+        "y": 156,
+        "width": 618,
+        "height": 114,
+        "rotation": -2.5,
         "fontFamily": "Lora",
         "fontWeight": 600,
-        "fontStyle": "normal",
         "fontSize": 45,
         "minFontSize": 27,
         "lineHeight": 1,
@@ -618,299 +148,89 @@
     },
     {
       "id": "calm-classic",
-      "minimumPhotoShortSide": 174,
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-cream-fiber",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-cream-fiber",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "fern",
-          "asset": "fern",
-          "x": 882,
-          "y": -42,
-          "width": 228,
-          "height": 408,
-          "z": 3,
-          "rotation": 188,
-          "opacity": 0.85,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 3,
-              "dy": 6,
-              "blur": 9,
-              "color": "rgba(80,60,30,0.28)"
-            }
-          ]
-        },
-        {
-          "layerId": "strip",
-          "asset": "film-strip-four-horizontal",
-          "x": 54,
-          "y": 1566,
-          "width": 972,
-          "height": 252,
-          "z": 5,
-          "rotation": -1.2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 24,
-              "blur": 48,
-              "color": "rgba(70,40,18,0.3)"
-            }
-          ]
-        },
-        {
-          "layerId": "hero",
-          "asset": "print-frame-hero",
-          "x": 102,
-          "y": 264,
-          "width": 876,
-          "height": 594,
-          "z": 6,
-          "rotation": -0.8,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 21,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 66,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "p1",
-          "asset": "polaroid-frame",
-          "x": 78,
-          "y": 900,
-          "width": 462,
-          "height": 534,
-          "z": 7,
-          "rotation": 1.2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 60,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "p2",
-          "asset": "polaroid-frame",
-          "x": 546,
-          "y": 918,
-          "width": 462,
-          "height": 534,
-          "z": 8,
-          "rotation": -1,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 60,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeL",
-          "asset": "tape-blush",
-          "x": 48,
-          "y": 228,
-          "width": 228,
-          "height": 66,
-          "z": 10,
-          "rotation": -43,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(110,60,45,0.2)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeR",
-          "asset": "tape-sage",
-          "x": 816,
-          "y": 222,
-          "width": 210,
-          "height": 63,
-          "z": 11,
-          "rotation": 44,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(70,80,45,0.2)"
-            }
-          ]
-        },
-        {
-          "layerId": "stamp",
-          "asset": "stamp-postmark",
-          "x": 840,
-          "y": 1398,
-          "width": 192,
-          "height": 216,
-          "z": 12,
-          "rotation": -6,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(90,60,30,0.28)"
-            }
-          ]
-        },
-        {
-          "layerId": "sunStreak",
-          "asset": "sun-streak",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 34,
-          "rotation": 0,
-          "blendMode": "soft-light",
-          "opacity": 1
-        },
-        {
-          "layerId": "vignette",
-          "asset": "vignette",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 36,
-          "rotation": 0,
-          "blendMode": "multiply",
-          "opacity": 0.7
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.41
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-cream-fiber",
+      "plateAssetId": "layout-calm-classic",
+      "finishPreset": "calm",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "assetWindow",
-          "layerId": "hero",
-          "windowIndex": 0
+          "x": 125.999708,
+          "y": 287.958113,
+          "width": 834,
+          "height": 546,
+          "z": 6,
+          "rotation": -0.8,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 1,
-          "kind": "assetWindow",
-          "layerId": "p1",
-          "windowIndex": 0
+          "x": 105.627615,
+          "y": 927.069407,
+          "width": 414,
+          "height": 420,
+          "z": 7,
+          "rotation": 1.2,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 2,
-          "kind": "assetWindow",
-          "layerId": "p2",
-          "windowIndex": 0
+          "x": 572.475971,
+          "y": 944.952212,
+          "width": 414,
+          "height": 420,
+          "z": 8,
+          "rotation": -1,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 3,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 0
+          "x": 84.07698,
+          "y": 1612.350789,
+          "width": 210,
+          "height": 174,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 4,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 1
+          "x": 318.02566,
+          "y": 1607.450263,
+          "width": 210,
+          "height": 174,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 5,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 2
+          "x": 551.97434,
+          "y": 1602.549737,
+          "width": 210,
+          "height": 174,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 6,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 3
+          "x": 785.92302,
+          "y": 1597.649211,
+          "width": 210,
+          "height": 174,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 114,
-          "y": 66,
-          "width": 672,
-          "height": 180,
-          "z": 20,
-          "rotation": -1.5
-        },
+      "title": {
+        "x": 114,
+        "y": 66,
+        "width": 672,
+        "height": 180,
+        "rotation": -1.5,
         "fontFamily": "Lora",
         "fontWeight": 600,
-        "fontStyle": "normal",
         "fontSize": 96,
         "minFontSize": 60,
         "lineHeight": 1.06,
@@ -918,335 +238,94 @@
         "letterSpacing": -0.5,
         "color": "#6f5642",
         "textAlign": "left",
-        "verticalAlign": "top",
-        "shadow": {
-          "dx": 0,
-          "dy": 0,
-          "blur": 0,
-          "color": "rgba(0,0,0,0)"
-        }
+        "verticalAlign": "top"
       }
     },
     {
       "id": "calm-film-trio",
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-cream-fiber",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-cream-fiber",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "fern",
-          "asset": "fern",
-          "x": 882,
-          "y": -42,
-          "width": 228,
-          "height": 408,
-          "z": 3,
-          "rotation": 188,
-          "opacity": 0.85,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 3,
-              "dy": 6,
-              "blur": 9,
-              "color": "rgba(80,60,30,0.28)"
-            }
-          ]
-        },
-        {
-          "layerId": "strip",
-          "asset": "film-strip-three-horizontal",
-          "x": 54,
-          "y": 1434,
-          "width": 972,
-          "height": 348,
-          "z": 5,
-          "rotation": -1.2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 24,
-              "blur": 48,
-              "color": "rgba(70,40,18,0.3)"
-            }
-          ]
-        },
-        {
-          "layerId": "hero",
-          "asset": "print-frame-hero",
-          "x": 102,
-          "y": 264,
-          "width": 876,
-          "height": 594,
-          "z": 6,
-          "rotation": -0.8,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 21,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 66,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "p1",
-          "asset": "polaroid-frame",
-          "x": 48,
-          "y": 900,
-          "width": 312,
-          "height": 361,
-          "z": 7,
-          "rotation": 1.2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 60,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "p2",
-          "asset": "polaroid-frame",
-          "x": 384,
-          "y": 930,
-          "width": 312,
-          "height": 361,
-          "z": 8,
-          "rotation": -1,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 60,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "p3",
-          "asset": "polaroid-frame",
-          "x": 720,
-          "y": 912,
-          "width": 312,
-          "height": 361,
-          "z": 9,
-          "rotation": 1.8,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 60,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeL",
-          "asset": "tape-blush",
-          "x": 48,
-          "y": 228,
-          "width": 228,
-          "height": 66,
-          "z": 10,
-          "rotation": -43,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(110,60,45,0.2)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeR",
-          "asset": "tape-sage",
-          "x": 816,
-          "y": 222,
-          "width": 210,
-          "height": 63,
-          "z": 11,
-          "rotation": 44,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(70,80,45,0.2)"
-            }
-          ]
-        },
-        {
-          "layerId": "stamp",
-          "asset": "stamp-postmark",
-          "x": 840,
-          "y": 1254,
-          "width": 192,
-          "height": 216,
-          "z": 12,
-          "rotation": -6,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(90,60,30,0.28)"
-            }
-          ]
-        },
-        {
-          "layerId": "sunStreak",
-          "asset": "sun-streak",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 34,
-          "rotation": 0,
-          "blendMode": "soft-light",
-          "opacity": 1
-        },
-        {
-          "layerId": "vignette",
-          "asset": "vignette",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 36,
-          "rotation": 0,
-          "blendMode": "multiply",
-          "opacity": 0.7
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.41
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-cream-fiber",
+      "plateAssetId": "layout-calm-film-trio",
+      "finishPreset": "calm",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "assetWindow",
-          "layerId": "hero",
-          "windowIndex": 0
+          "x": 125.999708,
+          "y": 287.958113,
+          "width": 834,
+          "height": 546,
+          "z": 6,
+          "rotation": -0.8,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 1,
-          "kind": "assetWindow",
-          "layerId": "p1",
-          "windowIndex": 0
+          "x": 66.658053,
+          "y": 918.299686,
+          "width": 279.584416,
+          "height": 283.932584,
+          "z": 7,
+          "rotation": 1.2,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 2,
-          "kind": "assetWindow",
-          "layerId": "p2",
-          "windowIndex": 0
+          "x": 401.879507,
+          "y": 948.22054,
+          "width": 279.584416,
+          "height": 283.932584,
+          "z": 8,
+          "rotation": -1,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 3,
-          "kind": "assetWindow",
-          "layerId": "p3",
-          "windowIndex": 0
+          "x": 738.869805,
+          "y": 930.326454,
+          "width": 279.584416,
+          "height": 283.932584,
+          "z": 9,
+          "rotation": 1.8,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 4,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 0
+          "x": 84.068427,
+          "y": 1479.534035,
+          "width": 288,
+          "height": 270,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 5,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 1
+          "x": 396,
+          "y": 1473,
+          "width": 288,
+          "height": 270,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 6,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 2
+          "x": 707.931573,
+          "y": 1466.465965,
+          "width": 288,
+          "height": 270,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 114,
-          "y": 66,
-          "width": 672,
-          "height": 180,
-          "z": 20,
-          "rotation": -1.5
-        },
+      "title": {
+        "x": 114,
+        "y": 66,
+        "width": 672,
+        "height": 180,
+        "rotation": -1.5,
         "fontFamily": "Lora",
         "fontWeight": 600,
-        "fontStyle": "normal",
         "fontSize": 96,
         "minFontSize": 60,
         "lineHeight": 1.06,
@@ -1254,316 +333,94 @@
         "letterSpacing": -0.5,
         "color": "#6f5642",
         "textAlign": "left",
-        "verticalAlign": "top",
-        "shadow": {
-          "dx": 0,
-          "dy": 0,
-          "blur": 0,
-          "color": "rgba(0,0,0,0)"
-        }
+        "verticalAlign": "top"
       }
     },
     {
       "id": "calm-accent-print",
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-cream-fiber",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-cream-fiber",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "fern",
-          "asset": "fern",
-          "x": 882,
-          "y": -42,
-          "width": 228,
-          "height": 408,
-          "z": 3,
-          "rotation": 188,
-          "opacity": 0.85,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 3,
-              "dy": 6,
-              "blur": 9,
-              "color": "rgba(80,60,30,0.28)"
-            }
-          ]
-        },
-        {
-          "layerId": "strip",
-          "asset": "film-strip-three-horizontal",
-          "x": 54,
-          "y": 1506,
-          "width": 972,
-          "height": 348,
-          "z": 5,
-          "rotation": -1.2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 24,
-              "blur": 48,
-              "color": "rgba(70,40,18,0.3)"
-            }
-          ]
-        },
-        {
-          "layerId": "hero",
-          "asset": "print-frame-hero",
-          "x": 102,
-          "y": 264,
-          "width": 876,
-          "height": 594,
-          "z": 6,
-          "rotation": -0.8,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 21,
-              "color": "rgba(90,60,30,0.2)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 30,
-              "blur": 66,
-              "color": "rgba(90,60,30,0.22)"
-            }
-          ]
-        },
-        {
-          "layerId": "p1",
-          "asset": "polaroid-frame",
-          "x": 78,
-          "y": 900,
-          "width": 462,
-          "height": 534,
-          "z": 7,
-          "rotation": 1.2,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.22)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 36,
-              "blur": 72,
-              "color": "rgba(90,60,30,0.26)"
-            }
-          ]
-        },
-        {
-          "layerId": "p2",
-          "asset": "polaroid-frame",
-          "x": 546,
-          "y": 918,
-          "width": 462,
-          "height": 534,
-          "z": 8,
-          "rotation": -1,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 9,
-              "blur": 18,
-              "color": "rgba(90,60,30,0.22)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 36,
-              "blur": 72,
-              "color": "rgba(90,60,30,0.26)"
-            }
-          ]
-        },
-        {
-          "layerId": "tapeL",
-          "asset": "tape-blush",
-          "x": 48,
-          "y": 228,
-          "width": 228,
-          "height": 66,
-          "z": 10,
-          "rotation": -43,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(110,60,45,0.2)"
-            }
-          ]
-        },
-        {
-          "layerId": "print",
-          "asset": "polaroid-frame",
-          "x": 726,
-          "y": 204,
-          "width": 312,
-          "height": 361,
-          "z": 12,
-          "rotation": 5,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(90,60,30,0.22)"
-            },
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 21,
-              "blur": 42,
-              "color": "rgba(90,60,30,0.26)"
-            }
-          ]
-        },
-        {
-          "layerId": "printTape",
-          "asset": "tape-sage",
-          "x": 777,
-          "y": 172,
-          "width": 210,
-          "height": 63,
-          "z": 13,
-          "rotation": -6,
-          "shadows": [
-            {
-              "kind": "dropShadow",
-              "dx": 0,
-              "dy": 6,
-              "blur": 12,
-              "color": "rgba(110,60,45,0.2)"
-            }
-          ]
-        },
-        {
-          "layerId": "sunStreak",
-          "asset": "sun-streak",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 34,
-          "rotation": 0,
-          "blendMode": "soft-light",
-          "opacity": 1
-        },
-        {
-          "layerId": "vignette",
-          "asset": "vignette",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 36,
-          "rotation": 0,
-          "blendMode": "multiply",
-          "opacity": 0.7
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.41
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-cream-fiber",
+      "plateAssetId": "layout-calm-accent-print",
+      "finishPreset": "calm",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "assetWindow",
-          "layerId": "hero",
-          "windowIndex": 0
+          "x": 125.999708,
+          "y": 287.958113,
+          "width": 834,
+          "height": 546,
+          "z": 6,
+          "rotation": -0.8,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 1,
-          "kind": "assetWindow",
-          "layerId": "p1",
-          "windowIndex": 0
+          "x": 105.627615,
+          "y": 927.069407,
+          "width": 414,
+          "height": 420,
+          "z": 7,
+          "rotation": 1.2,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 2,
-          "kind": "assetWindow",
-          "layerId": "p2",
-          "windowIndex": 0
+          "x": 572.475971,
+          "y": 944.952212,
+          "width": 414,
+          "height": 420,
+          "z": 8,
+          "rotation": -1,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 3,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 0
+          "x": 84.068427,
+          "y": 1551.534035,
+          "width": 288,
+          "height": 270,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 4,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 1
+          "x": 396,
+          "y": 1545,
+          "width": 288,
+          "height": 270,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 5,
-          "kind": "assetWindow",
-          "layerId": "strip",
-          "windowIndex": 2
+          "x": 707.931573,
+          "y": 1538.465965,
+          "width": 288,
+          "height": 270,
+          "z": 5,
+          "rotation": -1.2,
+          "backingColor": "#7A5B41"
         },
         {
           "slot": 6,
-          "kind": "assetWindow",
-          "layerId": "print",
-          "windowIndex": 0
+          "x": 745.993654,
+          "y": 222.506559,
+          "width": 279.584416,
+          "height": 283.932584,
+          "z": 12,
+          "rotation": 5,
+          "backingColor": "#E7E1D4"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 114,
-          "y": 66,
-          "width": 672,
-          "height": 180,
-          "z": 20,
-          "rotation": -1.5
-        },
+      "title": {
+        "x": 114,
+        "y": 66,
+        "width": 672,
+        "height": 180,
+        "rotation": -1.5,
         "fontFamily": "Lora",
         "fontWeight": 600,
-        "fontStyle": "normal",
         "fontSize": 96,
         "minFontSize": 60,
         "lineHeight": 1.06,
@@ -1571,244 +428,94 @@
         "letterSpacing": -0.5,
         "color": "#6f5642",
         "textAlign": "left",
-        "verticalAlign": "top",
-        "shadow": {
-          "dx": 0,
-          "dy": 0,
-          "blur": 0,
-          "color": "rgba(0,0,0,0)"
-        }
+        "verticalAlign": "top"
       }
     },
     {
       "id": "minimal-classic",
-      "minimumPhotoShortSide": 183,
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-cream-fiber",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-cream-fiber",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.12,
-          "backgroundAssetIds": [
-            "editorial-sand",
-            "editorial-sage"
-          ]
-        }
-      ],
-      "matStyle": {
-        "fill": "#faf6ec",
-        "photoFill": "#e7e1d4",
-        "border": {
-          "width": 3,
-          "color": "rgba(90,75,55,0.20)"
-        },
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 3,
-            "blur": 9,
-            "color": "rgba(90,70,45,0.12)"
-          }
-        ],
-        "photoInset": 15
-      },
-      "rules": [
-        {
-          "x": 78,
-          "y": 288,
-          "width": 924,
-          "height": 3,
-          "z": 10,
-          "color": "#cfc5ae",
-          "colorsByBackground": {
-            "editorial-sand": "#d8cfbc",
-            "editorial-sage": "#d8cfbc"
-          }
-        },
-        {
-          "x": 78,
-          "y": 1842,
-          "width": 924,
-          "height": 3,
-          "z": 10,
-          "color": "#cfc5ae",
-          "colorsByBackground": {
-            "editorial-sand": "#d8cfbc",
-            "editorial-sage": "#d8cfbc"
-          }
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-cream-fiber",
+      "plateAssetId": "layout-minimal-classic",
+      "finishPreset": "minimal",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 390,
-            "width": 924,
-            "height": 798
-          },
-          "rect": {
-            "x": 93,
-            "y": 405,
-            "width": 894,
-            "height": 768
-          },
+          "x": 93,
+          "y": 405,
+          "width": 894,
+          "height": 768,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 1,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 1212,
-            "width": 450,
-            "height": 318
-          },
-          "rect": {
-            "x": 93,
-            "y": 1227,
-            "width": 420,
-            "height": 288
-          },
+          "x": 93,
+          "y": 1227,
+          "width": 420,
+          "height": 288,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 2,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 552,
-            "y": 1212,
-            "width": 450,
-            "height": 318
-          },
-          "rect": {
-            "x": 567,
-            "y": 1227,
-            "width": 420,
-            "height": 288
-          },
+          "x": 567,
+          "y": 1227,
+          "width": 420,
+          "height": 288,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 3,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 1554,
-            "width": 213,
-            "height": 252
-          },
-          "rect": {
-            "x": 93,
-            "y": 1569,
-            "width": 183,
-            "height": 222
-          },
+          "x": 93,
+          "y": 1569,
+          "width": 183,
+          "height": 222,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 4,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 315,
-            "y": 1554,
-            "width": 213,
-            "height": 252
-          },
-          "rect": {
-            "x": 330,
-            "y": 1569,
-            "width": 183,
-            "height": 222
-          },
+          "x": 330,
+          "y": 1569,
+          "width": 183,
+          "height": 222,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 5,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 552,
-            "y": 1554,
-            "width": 213,
-            "height": 252
-          },
-          "rect": {
-            "x": 567,
-            "y": 1569,
-            "width": 183,
-            "height": 222
-          },
+          "x": 567,
+          "y": 1569,
+          "width": 183,
+          "height": 222,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 6,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 789,
-            "y": 1554,
-            "width": 213,
-            "height": 252
-          },
-          "rect": {
-            "x": 804,
-            "y": 1569,
-            "width": 183,
-            "height": 222
-          },
+          "x": 804,
+          "y": 1569,
+          "width": 183,
+          "height": 222,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 78,
-          "y": 84,
-          "width": 924,
-          "height": 186,
-          "z": 20,
-          "rotation": 0
-        },
+      "title": {
+        "x": 78,
+        "y": 84,
+        "width": 924,
+        "height": 186,
+        "rotation": 0,
         "fontFamily": "Inter",
         "fontWeight": 500,
-        "fontStyle": "normal",
         "fontSize": 102,
         "minFontSize": 66,
         "lineHeight": 1.04,
@@ -1816,243 +523,94 @@
         "letterSpacing": -1.5,
         "color": "#24201a",
         "textAlign": "left",
-        "verticalAlign": "top",
-        "shadow": {
-          "dx": 0,
-          "dy": 0,
-          "blur": 0,
-          "color": "rgba(0,0,0,0)"
-        }
+        "verticalAlign": "top"
       }
     },
     {
       "id": "minimal-rows",
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-cream-fiber",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-cream-fiber",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.12,
-          "backgroundAssetIds": [
-            "editorial-sand",
-            "editorial-sage"
-          ]
-        }
-      ],
-      "matStyle": {
-        "fill": "#faf6ec",
-        "photoFill": "#e7e1d4",
-        "border": {
-          "width": 3,
-          "color": "rgba(90,75,55,0.20)"
-        },
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 3,
-            "blur": 9,
-            "color": "rgba(90,70,45,0.12)"
-          }
-        ],
-        "photoInset": 15
-      },
-      "rules": [
-        {
-          "x": 78,
-          "y": 288,
-          "width": 924,
-          "height": 3,
-          "z": 10,
-          "color": "#cfc5ae",
-          "colorsByBackground": {
-            "editorial-sand": "#d8cfbc",
-            "editorial-sage": "#d8cfbc"
-          }
-        },
-        {
-          "x": 78,
-          "y": 1842,
-          "width": 924,
-          "height": 3,
-          "z": 10,
-          "color": "#cfc5ae",
-          "colorsByBackground": {
-            "editorial-sand": "#d8cfbc",
-            "editorial-sage": "#d8cfbc"
-          }
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-cream-fiber",
+      "plateAssetId": "layout-minimal-rows",
+      "finishPreset": "minimal",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 351,
-            "width": 924,
-            "height": 699
-          },
-          "rect": {
-            "x": 93,
-            "y": 366,
-            "width": 894,
-            "height": 669
-          },
+          "x": 93,
+          "y": 366,
+          "width": 894,
+          "height": 669,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 1,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 1095,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 93,
-            "y": 1110,
-            "width": 270,
-            "height": 300
-          },
+          "x": 93,
+          "y": 1110,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 2,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 390,
-            "y": 1095,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 405,
-            "y": 1110,
-            "width": 270,
-            "height": 300
-          },
+          "x": 405,
+          "y": 1110,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 3,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 702,
-            "y": 1095,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 717,
-            "y": 1110,
-            "width": 270,
-            "height": 300
-          },
+          "x": 717,
+          "y": 1110,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 4,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 1470,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 93,
-            "y": 1485,
-            "width": 270,
-            "height": 300
-          },
+          "x": 93,
+          "y": 1485,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 5,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 390,
-            "y": 1470,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 405,
-            "y": 1485,
-            "width": 270,
-            "height": 300
-          },
+          "x": 405,
+          "y": 1485,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 6,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 702,
-            "y": 1470,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 717,
-            "y": 1485,
-            "width": 270,
-            "height": 300
-          },
+          "x": 717,
+          "y": 1485,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 78,
-          "y": 84,
-          "width": 924,
-          "height": 186,
-          "z": 20,
-          "rotation": 0
-        },
+      "title": {
+        "x": 78,
+        "y": 84,
+        "width": 924,
+        "height": 186,
+        "rotation": 0,
         "fontFamily": "Inter",
         "fontWeight": 500,
-        "fontStyle": "normal",
         "fontSize": 102,
         "minFontSize": 66,
         "lineHeight": 1.04,
@@ -2060,243 +618,94 @@
         "letterSpacing": -1.5,
         "color": "#24201a",
         "textAlign": "left",
-        "verticalAlign": "top",
-        "shadow": {
-          "dx": 0,
-          "dy": 0,
-          "blur": 0,
-          "color": "rgba(0,0,0,0)"
-        }
+        "verticalAlign": "top"
       }
     },
     {
       "id": "minimal-grid",
-      "background": {
-        "layerId": "bg",
-        "defaultAssetId": "paper-cream-fiber",
-        "assetIds": [
-          "paper-washi",
-          "paper-cream-fiber",
-          "paper-blush-stripe",
-          "paper-sage-stripe",
-          "paper-terracotta-mottle",
-          "editorial-sand",
-          "editorial-sage"
-        ]
-      },
-      "layers": [
-        {
-          "layerId": "bg",
-          "asset": "paper-cream-fiber",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 0,
-          "rotation": 0
-        },
-        {
-          "layerId": "grain",
-          "asset": "grain-overlay",
-          "x": 0,
-          "y": 0,
-          "width": 1080,
-          "height": 1920,
-          "z": 38,
-          "rotation": 0,
-          "blendMode": "overlay",
-          "opacity": 0.12,
-          "backgroundAssetIds": [
-            "editorial-sand",
-            "editorial-sage"
-          ]
-        }
-      ],
-      "matStyle": {
-        "fill": "#faf6ec",
-        "photoFill": "#e7e1d4",
-        "border": {
-          "width": 3,
-          "color": "rgba(90,75,55,0.20)"
-        },
-        "shadows": [
-          {
-            "kind": "dropShadow",
-            "dx": 0,
-            "dy": 3,
-            "blur": 9,
-            "color": "rgba(90,70,45,0.12)"
-          }
-        ],
-        "photoInset": 15
-      },
-      "rules": [
-        {
-          "x": 78,
-          "y": 288,
-          "width": 924,
-          "height": 3,
-          "z": 10,
-          "color": "#cfc5ae",
-          "colorsByBackground": {
-            "editorial-sand": "#d8cfbc",
-            "editorial-sage": "#d8cfbc"
-          }
-        },
-        {
-          "x": 78,
-          "y": 1842,
-          "width": 924,
-          "height": 3,
-          "z": 10,
-          "color": "#cfc5ae",
-          "colorsByBackground": {
-            "editorial-sand": "#d8cfbc",
-            "editorial-sage": "#d8cfbc"
-          }
-        }
-      ],
+      "defaultBackgroundAssetId": "paper-cream-fiber",
+      "plateAssetId": "layout-minimal-grid",
+      "finishPreset": "minimal",
       "photoSlots": [
         {
           "slot": 0,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 357,
-            "width": 450,
-            "height": 474
-          },
-          "rect": {
-            "x": 93,
-            "y": 372,
-            "width": 420,
-            "height": 444
-          },
+          "x": 93,
+          "y": 372,
+          "width": 420,
+          "height": 444,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 1,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 552,
-            "y": 357,
-            "width": 450,
-            "height": 474
-          },
-          "rect": {
-            "x": 567,
-            "y": 372,
-            "width": 420,
-            "height": 444
-          },
+          "x": 567,
+          "y": 372,
+          "width": 420,
+          "height": 444,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 2,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 900,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 93,
-            "y": 915,
-            "width": 270,
-            "height": 300
-          },
+          "x": 93,
+          "y": 915,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 3,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 390,
-            "y": 900,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 405,
-            "y": 915,
-            "width": 270,
-            "height": 300
-          },
+          "x": 405,
+          "y": 915,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 4,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 702,
-            "y": 900,
-            "width": 300,
-            "height": 330
-          },
-          "rect": {
-            "x": 717,
-            "y": 915,
-            "width": 270,
-            "height": 300
-          },
+          "x": 717,
+          "y": 915,
+          "width": 270,
+          "height": 300,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 5,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 78,
-            "y": 1299,
-            "width": 450,
-            "height": 474
-          },
-          "rect": {
-            "x": 93,
-            "y": 1314,
-            "width": 420,
-            "height": 444
-          },
+          "x": 93,
+          "y": 1314,
+          "width": 420,
+          "height": 444,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         },
         {
           "slot": 6,
-          "kind": "mattedRect",
-          "mat": {
-            "x": 552,
-            "y": 1299,
-            "width": 450,
-            "height": 474
-          },
-          "rect": {
-            "x": 567,
-            "y": 1314,
-            "width": 420,
-            "height": 444
-          },
+          "x": 567,
+          "y": 1314,
+          "width": 420,
+          "height": 444,
           "z": 4,
-          "rotation": 0
+          "rotation": 0,
+          "backingColor": "#E7E1D4"
         }
       ],
-      "titleStyle": {
-        "placement": {
-          "kind": "rect",
-          "x": 78,
-          "y": 84,
-          "width": 924,
-          "height": 186,
-          "z": 20,
-          "rotation": 0
-        },
+      "title": {
+        "x": 78,
+        "y": 84,
+        "width": 924,
+        "height": 186,
+        "rotation": 0,
         "fontFamily": "Inter",
         "fontWeight": 500,
-        "fontStyle": "normal",
         "fontSize": 102,
         "minFontSize": 66,
         "lineHeight": 1.04,
@@ -2304,13 +713,7 @@
         "letterSpacing": -1.5,
         "color": "#24201a",
         "textAlign": "left",
-        "verticalAlign": "top",
-        "shadow": {
-          "dx": 0,
-          "dy": 0,
-          "blur": 0,
-          "color": "rgba(0,0,0,0)"
-        }
+        "verticalAlign": "top"
       }
     }
   ]

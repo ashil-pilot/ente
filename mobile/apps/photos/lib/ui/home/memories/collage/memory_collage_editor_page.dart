@@ -251,9 +251,7 @@ class _MemoryCollageEditorPageState extends State<MemoryCollageEditorPage> {
     var didFail = false;
     setState(() => _backgroundReady = false);
     try {
-      final destinationBackground = controller.backgroundAssetIDForTemplate(
-        templateID,
-      );
+      final destinationBackground = controller.backgroundAssetID;
       await MemoryCollageCanvasView.precacheAssets(
         context,
         controller.manifest,

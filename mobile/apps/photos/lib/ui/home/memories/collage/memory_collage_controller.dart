@@ -12,9 +12,9 @@ typedef MemoryCollageSelection =
 
 /// Transient state for a single memory's collage editor.
 ///
-/// A new controller starts at shuffle revision zero and the manifest's default
-/// template. Template and background choices are not persisted after the
-/// editor is closed.
+/// A new controller starts at shuffle revision zero, the manifest's default
+/// template, and that template's default background. Template and background
+/// choices are not persisted after the editor is closed.
 class MemoryCollageController extends ChangeNotifier {
   final String memoryID;
   final MemoryCollageManifest manifest;
@@ -34,11 +34,11 @@ class MemoryCollageController extends ChangeNotifier {
     MemoryCollageSelection? selector,
   }) : _sourceFiles = List<EnteFile>.unmodifiable(files),
        _selector = selector ?? MemoryCollageSelector.select {
-    _templateID = templateID ?? manifest.defaultTemplateID;
-    _backgroundAssetID = manifest
-        .templateFor(_templateID)
-        .background
-        .defaultAssetID;
+    final template = manifest.templateFor(
+      templateID ?? manifest.defaultTemplateID,
+    );
+    _templateID = template.id;
+    _backgroundAssetID = template.defaultBackgroundAssetID;
     _selectedFiles = _selectFiles();
   }
 
@@ -47,7 +47,16 @@ class MemoryCollageController extends ChangeNotifier {
   String get templateID => _templateID;
 
   String get nextTemplateID {
-    final templates = manifest.templates;
+    final templates = [
+      for (final preset in const [
+        MemoryCollageFinishPreset.calm,
+        MemoryCollageFinishPreset.scrapbook,
+        MemoryCollageFinishPreset.minimal,
+      ])
+        ...manifest.templates.where(
+          (template) => template.finishPreset == preset,
+        ),
+    ];
     if (templates.length == 1) return _templateID;
     final currentIndex = templates.indexWhere(
       (template) => template.id == _templateID,
@@ -60,7 +69,7 @@ class MemoryCollageController extends ChangeNotifier {
 
   MemoryCollageTemplate get template => manifest.templateFor(_templateID);
 
-  List<String> get backgroundIDs => template.background.assetIDs;
+  List<String> get backgroundIDs => manifest.backgroundAssetIDs;
 
   bool get canCreate =>
       MemoryCollageSelector.hasRequiredPhotoCount(_selectedFiles.length);
@@ -70,13 +79,6 @@ class MemoryCollageController extends ChangeNotifier {
   int get backgroundIndex => backgroundIDs.indexOf(_backgroundAssetID);
 
   String get backgroundAssetID => _backgroundAssetID;
-
-  String backgroundAssetIDForTemplate(String templateID) {
-    final background = manifest.templateFor(templateID).background;
-    return background.assetIDs.contains(_backgroundAssetID)
-        ? _backgroundAssetID
-        : background.defaultAssetID;
-  }
 
   void shuffle() {
     _shuffleRevision++;
@@ -95,9 +97,7 @@ class MemoryCollageController extends ChangeNotifier {
   void selectTemplate(String templateID) {
     manifest.templateFor(templateID);
     if (_templateID == templateID) return;
-    final backgroundAssetID = backgroundAssetIDForTemplate(templateID);
     _templateID = templateID;
-    _backgroundAssetID = backgroundAssetID;
     notifyListeners();
   }
 

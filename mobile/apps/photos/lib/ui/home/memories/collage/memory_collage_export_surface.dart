@@ -163,7 +163,6 @@ class _MemoryCollageExportSurfaceState
                   file: file,
                   tagPrefix: "memory-collage-export-${snapshot._id}-$slot-",
                   targetPixelSize: memoryCollageExportTargetPixelSize(
-                    widget.manifest,
                     template,
                     slot,
                   ),
@@ -184,26 +183,13 @@ class _MemoryCollageExportSurfaceState
 /// 1920 export canvas.
 @visibleForTesting
 Size memoryCollageExportTargetPixelSize(
-  MemoryCollageManifest manifest,
   MemoryCollageTemplate template,
   int slot,
 ) {
-  final photoSlot = template.photoSlots.singleWhere(
-    (photoSlot) => photoSlot.slot == slot,
+  final photoSlot = template.photoSlot(slot);
+  const totalBleed = memoryCollagePhotoBleedCanvasPixels * 2;
+  return Size(
+    photoSlot.rect.width + totalBleed,
+    photoSlot.rect.height + totalBleed,
   );
-  return switch (photoSlot) {
-    MemoryCollageAssetWindowPhotoSlot() => () {
-      final layer = template.layerFor(photoSlot.layerID);
-      final asset = manifest.assetFor(layer.assetID);
-      final window = asset.photoWindows[photoSlot.windowIndex];
-      return Size(
-        window.width / asset.width * layer.width,
-        window.height / asset.height * layer.height,
-      );
-    }(),
-    MemoryCollageMattedRectPhotoSlot() => Size(
-      photoSlot.photoRect.width,
-      photoSlot.photoRect.height,
-    ),
-  };
 }

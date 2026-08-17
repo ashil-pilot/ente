@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "referenceCommit": "0d3f9836ff6cfb14138a89f746bf348380d046f8",
+  "designReview": {
+    "project": "b5926664-6523-44f3-9fcf-2f9c9a4bdd61",
+    "page": "Plate Review.dc.html",
+    "approvedEmptyState": "natural photo materials"
+  },
+  "source": {
+    "file": "Memory Collage.dc.html",
+    "sha256": "54a02ed673afbc920f37bde50fb9d391c0cdeab144d44c1283c93710b4b1623f",
+    "supportSha256": "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe"
+  },
+  "authoringIngredients": {
+    "directory": "source_assets",
+    "count": 14,
+    "bytes": 1779100,
+    "inventorySha256": "4138722d5c37de4d94c15813853d013261ca9933779cdb23c73d7a13d68bc2b0"
+  },
+  "runtimeInputs": {
+    "count": 10,
+    "bytes": 4366722,
+    "inventorySha256": "0810ff3b8a03e207ed7ca45a62c9e82f9c5969a5c88b483aca021001fc637680"
+  },
+  "generation": {
+    "tool": "export_plates_test.dart",
+    "flutter": "3.38.10",
+    "engine": "3c25ef829c74f0f39fbb8df093d9a6b9f941ea6b",
+    "photoBleedCanvasPixels": 2,
+    "knockout": "Erase accumulated lower-z fixed art inside each transformed higher-z photo window",
+    "optimization": "Sharp lossless PNG re-encode; decoded RGBA must remain byte-identical"
+  },
+  "emptyBackingColors": {
+    "polaroidAndHero": "#E7E1D4",
+    "verticalFilm": "#7B4A32",
+    "horizontalFilm": "#7A5B41",
+    "minimal": "#E7E1D4"
+  },
+  "plates": [
+    {
+      "id": "layout-scrapbook-maximal",
+      "bytes": 1424276,
+      "encodedSha256": "c000ae71b8b974f5db91f1a930d78fa15e890f2a432fdcebd61e5f52262cd77b",
+      "decodedRgbaSha256": "2750bbc295e682f6d8279f613b67ea3a15dffdd10e8b4e3b3653a2856e97da17"
+    },
+    {
+      "id": "layout-calm-classic",
+      "bytes": 684711,
+      "encodedSha256": "1cd53537212472f4724623f8f79bd542ae22be3c97daeae495400c62ca3caba7",
+      "decodedRgbaSha256": "f500682667b4210c46bab36109ad88101234445bf2eb1ffe3a4d5e55f6cb73a3"
+    },
+    {
+      "id": "layout-calm-film-trio",
+      "bytes": 687720,
+      "encodedSha256": "54952ed1a61123ac42324cd23ece17a9555b971a0696627be4ca2ecf8f17ba69",
+      "decodedRgbaSha256": "4f3d2c1e6cf4739c0d950858bed3837b0c452675e415c3c58b585ae435bddbd1"
+    },
+    {
+      "id": "layout-calm-accent-print",
+      "bytes": 717475,
+      "encodedSha256": "04b8ff75f4bb2d2638974582a373d2e68636d843690c5a0c0e0fa94ca3b80eae",
+      "decodedRgbaSha256": "5666c68041b7140183008e0497b2510c51aeeca4394ce29cd24bc353fc9687c3"
+    },
+    {
+      "id": "layout-minimal-classic",
+      "bytes": 10890,
+      "encodedSha256": "eebcc0b189e230ae454956feab62c6f268727e6ff7dc9d5c74bfba208ba19752",
+      "decodedRgbaSha256": "2e08cef7b64cb4cae2471b6038e994a5b6c465d5fe54a09cc0402572dbb1fbd5"
+    },
+    {
+      "id": "layout-minimal-rows",
+      "bytes": 10875,
+      "encodedSha256": "517ccc0b459784e2f8d17dcb3e823d89fd53827d6da264e6bb2557600d92b04d",
+      "decodedRgbaSha256": "d7a3e58d936875e4a5b10b2f36aee40b687f7dbc70963ecdc87de9d11e0e0195"
+    },
+    {
+      "id": "layout-minimal-grid",
+      "bytes": 10750,
+      "encodedSha256": "0e9dbdaf2c7584f84ce4229e8f6b71074e52097a366838b124808dfd5d87ef7b",
+      "decodedRgbaSha256": "6a55d7bf95d2393af032ae51db82288363a3dd62dad74e213bd7f2f06c06bc4d"
+    }
+  ]
+}

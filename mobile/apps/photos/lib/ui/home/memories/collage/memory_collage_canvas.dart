@@ -7,6 +7,12 @@ import "package:photos/models/memories/memory_collage_manifest.dart";
 
 const memoryCollageLogicalSize = Size(360, 640);
 const memoryCollageExportPixelRatio = 3.0;
+const memoryCollagePhotoBleedCanvasPixels = 2.0;
+
+const _sunStreakAssetID = "sun-streak";
+const _vignetteAssetID = "vignette";
+const _grainAssetID = "grain-overlay";
+const _editorialBackgroundIDs = {"editorial-sand", "editorial-sage"};
 
 typedef MemoryCollagePhotoBuilder =
     Widget Function(BuildContext context, EnteFile file, int slot);
@@ -46,26 +52,24 @@ Set<String> memoryCollageRequiredAssetIDs(
   final template = templateID == null
       ? manifest.defaultTemplate
       : manifest.templateFor(templateID);
-  if (!template.background.assetIDs.contains(backgroundAssetID)) {
+  if (!manifest.backgroundAssetIDs.contains(backgroundAssetID)) {
     throw ArgumentError.value(
       backgroundAssetID,
       "backgroundAssetID",
-      "is not supported by memory collage template ${template.id}",
+      "is not a memory collage background",
     );
   }
   return {
     backgroundAssetID,
-    for (final layer in template.layers)
-      if (layer.layerID != template.background.layerID &&
-          layer.appliesToBackground(backgroundAssetID))
-        layer.assetID,
+    template.plateAssetID,
+    ..._finishAssetIDs(template.finishPreset, backgroundAssetID),
   };
 }
 
-/// Renders the approved memory collage at a fixed 360 x 640 logical size.
+/// Renders a frozen memory-collage layout at 360 x 640 logical pixels.
 ///
 /// At the export pixel ratio of 3, this maps exactly to the authored
-/// 1080 x 1920 canvas and its 3x raster assets.
+/// 1080 x 1920 canvas and full-canvas raster assets.
 class MemoryCollageCanvasView extends StatelessWidget {
   final MemoryCollageManifest manifest;
   final List<EnteFile> files;
@@ -89,7 +93,15 @@ class MemoryCollageCanvasView extends StatelessWidget {
     MemoryCollageManifest manifest, {
     Iterable<String>? assetIDs,
   }) async {
-    final ids = assetIDs ?? manifest.assets.map((asset) => asset.id);
+    final ids =
+        assetIDs ??
+        {
+          ...manifest.backgroundAssetIDs,
+          for (final template in manifest.templates) template.plateAssetID,
+          _sunStreakAssetID,
+          _vignetteAssetID,
+          _grainAssetID,
+        };
     await Future.wait([
       for (final assetID in ids) precacheMemoryCollageAsset(context, assetID),
     ]);
@@ -100,10 +112,9 @@ class MemoryCollageCanvasView extends StatelessWidget {
     final template = templateID == null
         ? manifest.defaultTemplate
         : manifest.templateFor(templateID!);
-    if (!template.background.assetIDs.contains(backgroundAssetID)) {
+    if (!manifest.backgroundAssetIDs.contains(backgroundAssetID)) {
       throw StateError(
-        "Background $backgroundAssetID is not supported by memory collage "
-        "template ${template.id}",
+        "Background $backgroundAssetID is not supported by memory collages",
       );
     }
     if (files.length != template.photoSlots.length) {
@@ -112,281 +123,112 @@ class MemoryCollageCanvasView extends StatelessWidget {
         "got ${files.length}",
       );
     }
-    final slotByLayerAndWindow = <(String, int), int>{
-      for (final slot in template.photoSlots)
-        if (slot is MemoryCollageAssetWindowPhotoSlot)
-          (slot.layerID, slot.windowIndex): slot.slot,
-    };
-    final entries = <_MemoryCollageStackEntry>[];
-    var sourceOrder = 0;
-    for (final layer in template.layers) {
-      if (!layer.appliesToBackground(backgroundAssetID)) continue;
-      entries.add(
-        _MemoryCollageStackEntry(
-          z: layer.z,
-          sourceOrder: sourceOrder++,
-          children: [
-            for (final shadow in layer.shadows.reversed)
-              _buildLayerShadow(template, layer, shadow),
-            _buildLayer(context, template, layer, slotByLayerAndWindow),
-          ],
-        ),
-      );
-    }
-    for (final slot in template.photoSlots) {
-      switch (slot) {
-        case MemoryCollageAssetWindowPhotoSlot():
-          break;
-        case MemoryCollageMattedRectPhotoSlot():
-          entries.add(
-            _MemoryCollageStackEntry(
-              z: slot.z,
-              sourceOrder: sourceOrder++,
-              children: [
-                _buildMattedRectPhoto(context, slot, template.matStyle!),
-              ],
-            ),
-          );
-      }
-    }
-    for (final rule in template.rules) {
-      entries.add(
-        _MemoryCollageStackEntry(
-          z: rule.z,
-          sourceOrder: sourceOrder++,
-          children: [_buildRule(rule, backgroundAssetID)],
-        ),
-      );
-    }
-    final titlePlacement = template.titleStyle.placement;
-    entries.add(
-      _MemoryCollageStackEntry(
-        z: titlePlacement.z,
-        sourceOrder: sourceOrder++,
-        children: [_buildRectTitle(template.titleStyle, titlePlacement)],
-      ),
-    );
-    entries.sort((left, right) {
-      final zOrder = left.z.compareTo(right.z);
-      return zOrder != 0
-          ? zOrder
-          : left.sourceOrder.compareTo(right.sourceOrder);
-    });
 
     return SizedBox.fromSize(
       size: memoryCollageLogicalSize,
       child: ClipRect(
         child: Stack(
           clipBehavior: Clip.none,
-          children: [for (final entry in entries) ...entry.children],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLayer(
-    BuildContext context,
-    MemoryCollageTemplate template,
-    MemoryCollageLayer layer,
-    Map<(String, int), int> slotByLayerAndWindow,
-  ) {
-    final assetID = layer.layerID == template.background.layerID
-        ? backgroundAssetID
-        : layer.assetID;
-    final asset = manifest.assetFor(assetID);
-    final width = layer.width / memoryCollageExportPixelRatio;
-    final height = layer.height / memoryCollageExportPixelRatio;
-
-    final blendMode = _blendModeFor(layer.blendMode);
-    final Widget assetWidget;
-    if (blendMode != null) {
-      assetWidget = _BlendAssetImage(
-        assetID: assetID,
-        width: width,
-        height: height,
-        blendMode: blendMode,
-        opacity: layer.opacity,
-      );
-    } else {
-      Widget image = Image(
-        image: memoryCollageAssetProvider(assetID),
-        width: width,
-        height: height,
-        fit: BoxFit.fill,
-        filterQuality: FilterQuality.high,
-      );
-      if (layer.opacity < 1) {
-        image = Opacity(opacity: layer.opacity, child: image);
-      }
-      assetWidget = image;
-    }
-
-    final layerChildren = <Widget>[];
-    for (
-      var windowIndex = 0;
-      windowIndex < asset.photoWindows.length;
-      windowIndex++
-    ) {
-      final slot = slotByLayerAndWindow[(layer.layerID, windowIndex)];
-      if (slot == null || slot >= files.length) continue;
-      final window = asset.photoWindows[windowIndex];
-      layerChildren.add(
-        Positioned(
-          left: window.x / asset.width * width,
-          top: window.y / asset.height * height,
-          width: window.width / asset.width * width,
-          height: window.height / asset.height * height,
-          child: ClipRect(
-            child: ColoredBox(
-              key: ValueKey("memory-collage-photo-backing-$slot"),
-              color: parseMemoryCollageColor(asset.emptyWindowColor!),
-              child: photoBuilder(context, files[slot], slot),
-            ),
-          ),
-        ),
-      );
-    }
-    layerChildren.add(Positioned.fill(child: assetWidget));
-
-    return Positioned(
-      left: layer.x / memoryCollageExportPixelRatio,
-      top: layer.y / memoryCollageExportPixelRatio,
-      width: width,
-      height: height,
-      child: Transform.rotate(
-        angle: layer.rotation * math.pi / 180,
-        alignment: Alignment.center,
-        child: Stack(clipBehavior: Clip.none, children: layerChildren),
-      ),
-    );
-  }
-
-  Widget _buildLayerShadow(
-    MemoryCollageTemplate template,
-    MemoryCollageLayer layer,
-    MemoryCollageShadow shadow,
-  ) {
-    final assetID = layer.layerID == template.background.layerID
-        ? backgroundAssetID
-        : layer.assetID;
-    final width = layer.width / memoryCollageExportPixelRatio;
-    final height = layer.height / memoryCollageExportPixelRatio;
-    final color = parseMemoryCollageColor(shadow.color);
-    final blurSigma = BoxShadow(
-      color: color,
-      blurRadius: shadow.blur / memoryCollageExportPixelRatio,
-    ).blurSigma;
-
-    return Positioned(
-      left: (layer.x + shadow.dx) / memoryCollageExportPixelRatio,
-      top: (layer.y + shadow.dy) / memoryCollageExportPixelRatio,
-      width: width,
-      height: height,
-      child: Transform.rotate(
-        angle: layer.rotation * math.pi / 180,
-        alignment: Alignment.center,
-        child: ImageFiltered(
-          imageFilter: ui.ImageFilter.blur(
-            sigmaX: blurSigma,
-            sigmaY: blurSigma,
-          ),
-          child: ColorFiltered(
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            child: Image(
-              image: memoryCollageAssetProvider(assetID),
-              width: width,
-              height: height,
-              fit: BoxFit.fill,
-              filterQuality: FilterQuality.high,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMattedRectPhoto(
-    BuildContext context,
-    MemoryCollageMattedRectPhotoSlot slot,
-    MemoryCollageMatStyle style,
-  ) {
-    final matRect = slot.matRect;
-    final photoRect = slot.photoRect;
-    return Positioned(
-      left: matRect.x / memoryCollageExportPixelRatio,
-      top: matRect.y / memoryCollageExportPixelRatio,
-      width: matRect.width / memoryCollageExportPixelRatio,
-      height: matRect.height / memoryCollageExportPixelRatio,
-      child: Transform.rotate(
-        angle: slot.rotation * math.pi / 180,
-        alignment: Alignment.center,
-        child: Stack(
-          clipBehavior: Clip.none,
           children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                key: ValueKey("memory-collage-mat-${slot.slot}"),
-                decoration: BoxDecoration(
-                  color: parseMemoryCollageColor(style.fill),
-                  boxShadow: style.shadows.isEmpty
-                      ? null
-                      : [
-                          for (final shadow in style.shadows)
-                            BoxShadow(
-                              color: parseMemoryCollageColor(shadow.color),
-                              offset: Offset(
-                                shadow.dx / memoryCollageExportPixelRatio,
-                                shadow.dy / memoryCollageExportPixelRatio,
-                              ),
-                              blurRadius:
-                                  shadow.blur / memoryCollageExportPixelRatio,
-                            ),
-                        ],
-                  border: Border.all(
-                    color: parseMemoryCollageColor(style.border.color),
-                    width: style.border.width / memoryCollageExportPixelRatio,
-                    strokeAlign: BorderSide.strokeAlignInside,
-                  ),
-                ),
-              ),
+            Positioned.fill(child: _assetImage(backgroundAssetID)),
+            for (final slot in template.photoSlots)
+              _buildPhotoSlot(context, slot),
+            Positioned.fill(child: _assetImage(template.plateAssetID)),
+            if (template.finishPreset == MemoryCollageFinishPreset.minimal)
+              ..._buildMinimalHairlines(backgroundAssetID),
+            _positionedRect(
+              rect: template.title.rect,
+              rotation: template.title.rotation,
+              child: _MemoryCollageTitle(title: title, style: template.title),
             ),
-            Positioned(
-              left: (photoRect.x - matRect.x) / memoryCollageExportPixelRatio,
-              top: (photoRect.y - matRect.y) / memoryCollageExportPixelRatio,
-              width: photoRect.width / memoryCollageExportPixelRatio,
-              height: photoRect.height / memoryCollageExportPixelRatio,
-              child: ClipRect(
-                key: ValueKey("memory-collage-matted-photo-${slot.slot}"),
-                child: ColoredBox(
-                  key: ValueKey("memory-collage-photo-backing-${slot.slot}"),
-                  color: parseMemoryCollageColor(style.photoFill),
-                  child: photoBuilder(context, files[slot.slot], slot.slot),
-                ),
-              ),
-            ),
+            ..._buildFinish(template.finishPreset, backgroundAssetID),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRectTitle(
-    MemoryCollageTitleStyle style,
-    MemoryCollageTitleRect placement,
-  ) {
-    return _positionedRect(
-      rect: placement.rect,
-      rotation: placement.rotation,
-      child: _MemoryCollageTitle(title: title, style: style),
+  Widget _assetImage(String assetID) {
+    return Image(
+      image: memoryCollageAssetProvider(assetID),
+      width: memoryCollageLogicalSize.width,
+      height: memoryCollageLogicalSize.height,
+      fit: BoxFit.fill,
+      filterQuality: FilterQuality.high,
     );
   }
 
-  Widget _buildRule(MemoryCollageRule rule, String backgroundAssetID) {
-    final colorValue = rule.colorFor(backgroundAssetID);
-    return _positionedRect(
-      rect: rule.rect,
-      rotation: 0,
-      child: ColoredBox(color: parseMemoryCollageColor(colorValue)),
+  Widget _buildPhotoSlot(BuildContext context, MemoryCollagePhotoSlot slot) {
+    final rect = slot.rect;
+    const bleed = memoryCollagePhotoBleedCanvasPixels;
+    return Positioned(
+      left: (rect.x - bleed) / memoryCollageExportPixelRatio,
+      top: (rect.y - bleed) / memoryCollageExportPixelRatio,
+      width: (rect.width + bleed * 2) / memoryCollageExportPixelRatio,
+      height: (rect.height + bleed * 2) / memoryCollageExportPixelRatio,
+      child: Transform.rotate(
+        angle: slot.rotation * math.pi / 180,
+        alignment: Alignment.center,
+        child: ClipRect(
+          child: ColoredBox(
+            key: ValueKey("memory-collage-photo-backing-${slot.slot}"),
+            color: parseMemoryCollageColor(slot.backingColor),
+            child: photoBuilder(context, files[slot.slot], slot.slot),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildMinimalHairlines(String backgroundAssetID) {
+    final color = parseMemoryCollageColor(
+      _editorialBackgroundIDs.contains(backgroundAssetID)
+          ? "#d8cfbc"
+          : "#cfc5ae",
+    );
+    return [
+      for (final y in const [288.0, 1842.0])
+        Positioned(
+          left: 78 / memoryCollageExportPixelRatio,
+          top: y / memoryCollageExportPixelRatio,
+          width: 924 / memoryCollageExportPixelRatio,
+          height: 3 / memoryCollageExportPixelRatio,
+          child: ColoredBox(color: color),
+        ),
+    ];
+  }
+
+  List<Widget> _buildFinish(
+    MemoryCollageFinishPreset preset,
+    String backgroundAssetID,
+  ) {
+    return switch (preset) {
+      MemoryCollageFinishPreset.scrapbook => [
+        _blendAsset(_sunStreakAssetID, BlendMode.softLight, 1),
+        _blendAsset(_vignetteAssetID, BlendMode.multiply, 1),
+        _blendAsset(_grainAssetID, BlendMode.overlay, 0.55),
+      ],
+      MemoryCollageFinishPreset.calm => [
+        _blendAsset(_sunStreakAssetID, BlendMode.softLight, 1),
+        _blendAsset(_vignetteAssetID, BlendMode.multiply, 0.7),
+        _blendAsset(_grainAssetID, BlendMode.overlay, 0.41),
+      ],
+      MemoryCollageFinishPreset.minimal => [
+        if (_editorialBackgroundIDs.contains(backgroundAssetID))
+          _blendAsset(_grainAssetID, BlendMode.overlay, 0.12),
+      ],
+    };
+  }
+
+  Widget _blendAsset(String assetID, BlendMode blendMode, double opacity) {
+    return Positioned.fill(
+      child: _BlendAssetImage(
+        assetID: assetID,
+        width: memoryCollageLogicalSize.width,
+        height: memoryCollageLogicalSize.height,
+        blendMode: blendMode,
+        opacity: opacity,
+      ),
     );
   }
 
@@ -409,16 +251,20 @@ class MemoryCollageCanvasView extends StatelessWidget {
   }
 }
 
-class _MemoryCollageStackEntry {
-  final int z;
-  final int sourceOrder;
-  final List<Widget> children;
-
-  const _MemoryCollageStackEntry({
-    required this.z,
-    required this.sourceOrder,
-    required this.children,
-  });
+Set<String> _finishAssetIDs(
+  MemoryCollageFinishPreset preset,
+  String backgroundAssetID,
+) {
+  return switch (preset) {
+    MemoryCollageFinishPreset.scrapbook || MemoryCollageFinishPreset.calm => {
+      _sunStreakAssetID,
+      _vignetteAssetID,
+      _grainAssetID,
+    },
+    MemoryCollageFinishPreset.minimal => {
+      if (_editorialBackgroundIDs.contains(backgroundAssetID)) _grainAssetID,
+    },
+  };
 }
 
 class _MemoryCollageTitle extends StatelessWidget {
@@ -521,9 +367,6 @@ class _MemoryCollageTitle extends StatelessWidget {
       nonFittingSize = fittingSize;
     }
 
-    // Hard line separators have already been normalized, so reaching this
-    // branch would require an unrealistically large title or degenerate
-    // constraints. Keep the result deterministic and, critically, bounded.
     return (fontSize: nonFittingSize, maxLines: style.maxLines);
   }
 
@@ -580,28 +423,28 @@ class _MemoryCollageTitle extends StatelessWidget {
     final preferredFontSize = style.fontSize / memoryCollageExportPixelRatio;
     final scale = fontSize / preferredFontSize;
     final shadow = style.shadow;
-    // This text is part of an authored composition. System Bold Text must not
-    // alter its geometry or make previews differ from exported collages.
     return TextStyle(
       inherit: false,
       color: parseMemoryCollageColor(style.color),
       fontFamily: style.fontFamily,
       fontSize: fontSize,
       fontWeight: _fontWeightFor(style.fontWeight),
-      fontStyle: _fontStyleFor(style.fontStyle),
+      fontStyle: FontStyle.normal,
       letterSpacing:
           style.letterSpacing / memoryCollageExportPixelRatio * scale,
       height: style.lineHeight,
-      shadows: [
-        Shadow(
-          offset: Offset(
-            shadow.dx / memoryCollageExportPixelRatio * scale,
-            shadow.dy / memoryCollageExportPixelRatio * scale,
-          ),
-          blurRadius: shadow.blur / memoryCollageExportPixelRatio * scale,
-          color: parseMemoryCollageColor(shadow.color),
-        ),
-      ],
+      shadows: shadow == null
+          ? null
+          : [
+              Shadow(
+                offset: Offset(
+                  shadow.dx / memoryCollageExportPixelRatio * scale,
+                  shadow.dy / memoryCollageExportPixelRatio * scale,
+                ),
+                blurRadius: shadow.blur / memoryCollageExportPixelRatio * scale,
+                color: parseMemoryCollageColor(shadow.color),
+              ),
+            ],
     );
   }
 }
@@ -719,16 +562,6 @@ class _BlendAssetPainter extends CustomPainter {
   }
 }
 
-BlendMode? _blendModeFor(String? value) {
-  return switch (value) {
-    "multiply" => BlendMode.multiply,
-    "overlay" => BlendMode.overlay,
-    "soft-light" => BlendMode.softLight,
-    null => null,
-    _ => throw FormatException("Unsupported memory collage blend mode: $value"),
-  };
-}
-
 FontWeight _fontWeightFor(int weight) {
   return switch (weight) {
     100 => FontWeight.w100,
@@ -740,15 +573,9 @@ FontWeight _fontWeightFor(int weight) {
     700 => FontWeight.w700,
     800 => FontWeight.w800,
     900 => FontWeight.w900,
-    _ => FontWeight.normal,
-  };
-}
-
-FontStyle _fontStyleFor(String value) {
-  return switch (value) {
-    "normal" => FontStyle.normal,
-    "italic" => FontStyle.italic,
-    _ => throw FormatException("Unsupported memory collage font style: $value"),
+    _ => throw FormatException(
+      "Unsupported memory collage font weight: $weight",
+    ),
   };
 }
 
@@ -759,7 +586,6 @@ TextAlign _textAlignFor(String value) {
     "right" => TextAlign.right,
     "start" => TextAlign.start,
     "end" => TextAlign.end,
-    "justify" => TextAlign.justify,
     _ => throw FormatException(
       "Unsupported memory collage text alignment: $value",
     ),
@@ -777,7 +603,7 @@ AlignmentGeometry _titleAlignment(String textAlign, String verticalAlign) {
   };
   return switch (textAlign) {
     "left" => Alignment(-1, y),
-    "center" || "justify" => Alignment(0, y),
+    "center" => Alignment(0, y),
     "right" => Alignment(1, y),
     "start" => AlignmentDirectional(-1, y),
     "end" => AlignmentDirectional(1, y),

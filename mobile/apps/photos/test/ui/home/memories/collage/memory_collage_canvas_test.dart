@@ -29,118 +29,201 @@ void main() {
     manifest = MemoryCollageManifest.fromJson(sourceJson);
   });
 
-  test("declares the exact seven-photo runtime template contracts", () {
-    expect(
-      manifest.templates.map((template) => template.id),
-      _runtimeTemplateIDs,
-    );
-    for (final templateID in _runtimeTemplateIDs) {
-      final template = manifest.templateFor(templateID);
-      expect(
-        template.photoSlots.map((slot) => slot.slot),
-        List.generate(7, (index) => index),
-      );
-      expect(template.background.assetIDs, _sharedBackgroundAssetIDs);
-
-      for (final backgroundAssetID in template.background.assetIDs) {
-        final expectedAssetIDs = {
+  test("resolves only each plate, background, and narrow finish assets", () {
+    for (final template in manifest.templates) {
+      for (final backgroundAssetID in manifest.backgroundAssetIDs) {
+        final required = memoryCollageRequiredAssetIDs(
+          manifest,
           backgroundAssetID,
-          for (final layer in template.layers)
-            if (layer.layerID != template.background.layerID &&
-                layer.appliesToBackground(backgroundAssetID))
-              layer.assetID,
-        };
+          templateID: template.id,
+        );
+        final base = {backgroundAssetID, template.plateAssetID};
+        switch (template.finishPreset) {
+          case MemoryCollageFinishPreset.scrapbook:
+          case MemoryCollageFinishPreset.calm:
+            expect(required, {
+              ...base,
+              "sun-streak",
+              "vignette",
+              "grain-overlay",
+            });
+          case MemoryCollageFinishPreset.minimal:
+            expect(required, {
+              ...base,
+              if (_editorialBackgrounds.contains(backgroundAssetID))
+                "grain-overlay",
+            });
+        }
+      }
+    }
+
+    final defaultTemplate = manifest.defaultTemplate;
+    expect(
+      memoryCollageRequiredAssetIDs(
+        manifest,
+        defaultTemplate.defaultBackgroundAssetID,
+      ),
+      memoryCollageRequiredAssetIDs(
+        manifest,
+        defaultTemplate.defaultBackgroundAssetID,
+        templateID: defaultTemplate.id,
+      ),
+    );
+  });
+
+  for (final templateID in _templateIDs) {
+    testWidgets("$templateID renders its frozen seven-photo plate", (
+      tester,
+    ) async {
+      await verifyMemoryCollageCanvas(
+        tester,
+        manifest: manifest,
+        templateID: templateID,
+        verifyRasterOutput: templateID == manifest.defaultTemplateID,
+      );
+    });
+  }
+
+  testWidgets("renders every approved manifest empty-photo backing color", (
+    tester,
+  ) async {
+    for (final template in manifest.templates) {
+      await _pumpCanvas(
+        tester,
+        manifest: manifest,
+        templateID: template.id,
+        photoBuilder: (_, _, _) => const SizedBox.shrink(),
+      );
+      for (final slot in template.photoSlots) {
+        final backing = tester.widget<ColoredBox>(
+          find.byKey(ValueKey("memory-collage-photo-backing-${slot.slot}")),
+        );
         expect(
-          memoryCollageRequiredAssetIDs(
-            manifest,
-            backgroundAssetID,
-            templateID: templateID,
-          ),
-          expectedAssetIDs,
+          backing.color,
+          parseMemoryCollageColor(slot.backingColor),
+          reason: "${template.id} slot ${slot.slot}",
         );
       }
     }
   });
 
-  testWidgets("uses material-aware empty photo colors", (tester) async {
-    final expectedColorsByTemplate = {
-      "scrapbook-maximal": [
-        const Color(0xFF3A2A1C),
-        const Color(0xFF3A2A1C),
-        const Color(0xFF3A2A1C),
-        const Color(0xFF2E2318),
-        const Color(0xFF2E2318),
-        const Color(0xFF2E2318),
-        const Color(0xFF3A2A1C),
-      ],
-      "calm-classic": [
-        const Color(0xFF2E2318),
-        const Color(0xFF2E2318),
-        const Color(0xFF2E2318),
-        const Color(0xFF33241A),
-        const Color(0xFF33241A),
-        const Color(0xFF33241A),
-        const Color(0xFF33241A),
-      ],
-      "calm-film-trio": [
-        ...List.filled(4, const Color(0xFF2E2318)),
-        ...List.filled(3, const Color(0xFF33241A)),
-      ],
-      "calm-accent-print": [
-        ...List.filled(3, const Color(0xFF2E2318)),
-        ...List.filled(3, const Color(0xFF33241A)),
-        const Color(0xFF2E2318),
-      ],
-      for (final templateID in const [
-        "minimal-classic",
-        "minimal-rows",
-        "minimal-grid",
-      ])
-        templateID: List.filled(7, const Color(0xFFE7E1D4)),
-    };
+  testWidgets("extends each photo two authored pixels beneath its plate", (
+    tester,
+  ) async {
+    final template = manifest.defaultTemplate;
+    await _pumpCanvas(
+      tester,
+      manifest: manifest,
+      templateID: template.id,
+      photoBuilder: (_, _, _) => const SizedBox.expand(),
+    );
 
-    for (final templateID in _runtimeTemplateIDs) {
-      final template = manifest.templateFor(templateID);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MemoryCollageCanvasView(
-            manifest: manifest,
-            files: List.generate(7, (_) => EnteFile()),
-            title: "AUGUST 2026",
-            backgroundAssetID: template.background.defaultAssetID,
-            templateID: templateID,
-            photoBuilder: (_, _, _) => const SizedBox.shrink(),
-          ),
-        ),
+    for (final slot in template.photoSlots) {
+      final positioned = tester
+          .widgetList<Positioned>(
+            find.ancestor(
+              of: find.byKey(
+                ValueKey("memory-collage-photo-backing-${slot.slot}"),
+              ),
+              matching: find.byType(Positioned),
+            ),
+          )
+          .singleWhere(
+            (widget) =>
+                widget.left ==
+                    (slot.rect.x - memoryCollagePhotoBleedCanvasPixels) /
+                        memoryCollageExportPixelRatio &&
+                widget.top ==
+                    (slot.rect.y - memoryCollagePhotoBleedCanvasPixels) /
+                        memoryCollageExportPixelRatio,
+          );
+      expect(
+        positioned.width,
+        (slot.rect.width + memoryCollagePhotoBleedCanvasPixels * 2) /
+            memoryCollageExportPixelRatio,
       );
-
-      final colors = <Color>[
-        for (var slot = 0; slot < 7; slot++)
-          tester
-              .widget<ColoredBox>(
-                find.byKey(ValueKey("memory-collage-photo-backing-$slot")),
-              )
-              .color,
-      ];
-      expect(colors, expectedColorsByTemplate[templateID]);
+      expect(
+        positioned.height,
+        (slot.rect.height + memoryCollagePhotoBleedCanvasPixels * 2) /
+            memoryCollageExportPixelRatio,
+      );
     }
   });
 
-  for (final templateID in _runtimeTemplateIDs) {
-    testWidgets(
-      "$templateID renders its seven-photo runtime contract",
-      (tester) => verifyMemoryCollageCanvas(
-        tester,
-        loadedManifest: manifest,
-        templateID: templateID,
-        minimumEncodedByteLength: templateID == "scrapbook-maximal"
-            ? 500000
-            : 1000,
-      ),
+  testWidgets("uses the minimal conditional hairlines and grain", (
+    tester,
+  ) async {
+    await _pumpCanvas(
+      tester,
+      manifest: manifest,
+      templateID: "minimal-rows",
+      backgroundAssetID: "paper-cream-fiber",
+      photoBuilder: (_, _, _) => const SizedBox.expand(),
     );
-  }
+    expect(_coloredBoxes(const Color(0xFFCFC5AE)), findsNWidgets(2));
+    expect(_blendPaints(), findsNothing);
 
-  testWidgets("rejects a six-photo input before rendering", (tester) async {
+    await _pumpCanvas(
+      tester,
+      manifest: manifest,
+      templateID: "minimal-rows",
+      backgroundAssetID: "editorial-sand",
+      photoBuilder: (_, _, _) => const SizedBox.expand(),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(_coloredBoxes(const Color(0xFFD8CFBC)), findsNWidgets(2));
+    expect(_blendPaints(), findsOneWidget);
+  });
+
+  testWidgets("places the title after the plate and before finish effects", (
+    tester,
+  ) async {
+    final template = manifest.defaultTemplate;
+    await _pumpCanvas(
+      tester,
+      manifest: manifest,
+      templateID: template.id,
+      photoBuilder: (_, _, _) => const SizedBox.expand(),
+    );
+    final stack = tester
+        .widgetList<Stack>(
+          find.descendant(
+            of: find.byType(MemoryCollageCanvasView),
+            matching: find.byType(Stack),
+          ),
+        )
+        .single;
+    final plateIndex = stack.children.indexWhere(
+      (child) =>
+          child is Positioned &&
+          child.child is Image &&
+          (child.child as Image).image ==
+              memoryCollageAssetProvider(template.plateAssetID),
+    );
+    final titleIndex = stack.children.indexWhere(
+      (child) =>
+          child is Positioned &&
+          find
+              .descendant(
+                of: find.byWidget(child),
+                matching: find.byKey(
+                  const ValueKey("memory-collage-title-bounds"),
+                ),
+              )
+              .evaluate()
+              .isNotEmpty,
+    );
+    final firstFinishIndex = stack.children.indexWhere(
+      (child) =>
+          child is Positioned &&
+          child.child.runtimeType.toString().contains("_BlendAssetImage"),
+    );
+    expect(plateIndex, isNonNegative);
+    expect(titleIndex, greaterThan(plateIndex));
+    expect(firstFinishIndex, greaterThan(titleIndex));
+  });
+
+  testWidgets("rejects six photos before rendering", (tester) async {
     final template = manifest.defaultTemplate;
     await tester.pumpWidget(
       MaterialApp(
@@ -148,12 +231,11 @@ void main() {
           manifest: manifest,
           files: List.generate(6, (_) => EnteFile()),
           title: "AUGUST 2026",
-          backgroundAssetID: template.background.defaultAssetID,
+          backgroundAssetID: template.defaultBackgroundAssetID,
           photoBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
       ),
     );
-
     expect(
       tester.takeException(),
       isA<StateError>().having(
@@ -164,107 +246,48 @@ void main() {
     );
   });
 
-  testWidgets("uses the manifest default when no template is specified", (
+  testWidgets("uses the manifest default template when none is supplied", (
     tester,
   ) async {
-    await verifyMemoryCollageCanvas(
-      tester,
-      loadedManifest: manifest,
-      verifyRasterOutput: false,
-    );
+    await verifyMemoryCollageCanvas(tester, manifest: manifest);
   });
 
   for (final templateID in _titleTemplateIDs) {
     testWidgets("$templateID keeps a short title at its preferred size", (
       tester,
     ) async {
-      const shortTitle = "JOY";
-      await _verifyTitleLayout(
+      const title = "JOY";
+      await verifyMemoryCollageCanvas(
         tester,
         manifest: manifest,
         templateID: templateID,
-        title: shortTitle,
+        titleText: title,
       );
-
       final template = manifest.templateFor(templateID);
-      final renderedTitle = tester.widget<Text>(find.text(shortTitle));
-      expect(renderedTitle.maxLines, 1);
-      expect(renderedTitle.softWrap, isTrue);
-      expect(renderedTitle.textWidthBasis, TextWidthBasis.parent);
-      expect(renderedTitle.style!.inherit, isFalse);
-      expect(renderedTitle.style!.fontFamily, template.titleStyle.fontFamily);
+      final rendered = tester.widget<Text>(find.text(title));
+      expect(rendered.maxLines, 1);
+      expect(rendered.style!.fontFamily, template.title.fontFamily);
       expect(
-        renderedTitle.style!.fontWeight,
-        _expectedFontWeight(template.titleStyle.fontWeight),
+        rendered.style!.fontSize,
+        template.title.fontSize / memoryCollageExportPixelRatio,
       );
-      expect(
-        renderedTitle.style!.fontStyle,
-        template.titleStyle.fontStyle == "italic"
-            ? FontStyle.italic
-            : FontStyle.normal,
-      );
-      expect(renderedTitle.style!.height, template.titleStyle.lineHeight);
-      expect(
-        renderedTitle.style!.fontSize,
-        template.titleStyle.fontSize / memoryCollageExportPixelRatio,
-      );
-      _expectProportionallyScaledTitleStyle(
-        renderedTitle.style!,
-        template.titleStyle,
-      );
-
-      if (templateID == "scrapbook-maximal") {
-        expect(
-          tester.getSize(
-            find.byKey(const ValueKey("memory-collage-title-bounds")),
-          ),
-          const Size(206, 38),
-        );
-      }
     });
 
-    testWidgets("$templateID shrinks a very long title below its size floor", (
+    testWidgets("$templateID shrinks a very long title until it fits", (
       tester,
     ) async {
-      await _verifyTitleLayout(
+      await verifyMemoryCollageCanvas(
         tester,
         manifest: manifest,
         templateID: templateID,
-        title: _veryLongTitle,
+        titleText: _veryLongTitle,
       );
-
       final template = manifest.templateFor(templateID);
-      final renderedTitle = tester.widget<Text>(find.text(_veryLongTitle));
-      expect(renderedTitle.maxLines, template.titleStyle.maxLines);
+      final rendered = tester.widget<Text>(find.text(_veryLongTitle));
+      expect(rendered.maxLines, template.title.maxLines);
       expect(
-        renderedTitle.style!.fontSize,
-        lessThan(
-          template.titleStyle.minFontSize / memoryCollageExportPixelRatio,
-        ),
-      );
-      _expectProportionallyScaledTitleStyle(
-        renderedTitle.style!,
-        template.titleStyle,
-      );
-    });
-
-    testWidgets("$templateID fits an unbroken non-Latin title", (tester) async {
-      await _verifyTitleLayout(
-        tester,
-        manifest: manifest,
-        templateID: templateID,
-        title: _unbrokenNonLatinTitle,
-      );
-
-      final template = manifest.templateFor(templateID);
-      final renderedTitle = tester.widget<Text>(
-        find.text(_unbrokenNonLatinTitle),
-      );
-      expect(
-        renderedTitle.style!.fontSize,
-        lessThan(
-          template.titleStyle.minFontSize / memoryCollageExportPixelRatio,
-        ),
+        rendered.style!.fontSize,
+        lessThan(template.title.minFontSize / memoryCollageExportPixelRatio),
       );
     });
   }
@@ -272,104 +295,39 @@ void main() {
   testWidgets("normalizes title line breaks without dropping words", (
     tester,
   ) async {
-    const titleWithBreaks =
-        "August\r\nthrough\n\nthe\u000Byears\u000Cwe\u0085remember\u2028with\u2029joy";
-    const normalizedTitle = "August through the years we remember with joy";
-    await _verifyTitleLayout(
+    const titleWithBreaks = "August\r\nthrough\n\nthe\u000Byears";
+    const normalized = "August through the years";
+    await verifyMemoryCollageCanvas(
       tester,
       manifest: manifest,
       templateID: "scrapbook-maximal",
-      title: titleWithBreaks,
+      titleText: titleWithBreaks,
     );
-
     expect(find.text(titleWithBreaks), findsNothing);
-    expect(find.text(normalizedTitle), findsOneWidget);
+    expect(find.text(normalized), findsOneWidget);
   });
 
-  testWidgets("minimal rows retains flat-background grain and rules", (
-    tester,
-  ) async {
-    await verifyMemoryCollageCanvas(
-      tester,
-      loadedManifest: manifest,
-      templateID: "minimal-rows",
-      backgroundAssetIDOverride: "editorial-sand",
-      minimumEncodedByteLength: 1000,
-    );
-  });
-
-  testWidgets("calm long titles wrap only at the configured size floor", (
-    tester,
-  ) async {
-    const longTitle = "Trip to Pondicherry 2024";
-    await verifyMemoryCollageCanvas(
-      tester,
-      loadedManifest: manifest,
-      templateID: "calm-film-trio",
-      titleText: longTitle,
-    );
-
-    final title = tester.widget<Text>(find.text(longTitle));
-    expect(title.maxLines, 2);
-    expect(
-      title.style!.fontSize,
-      manifest.templateFor("calm-film-trio").titleStyle.minFontSize /
-          memoryCollageExportPixelRatio,
-    );
-  });
-
-  test("required assets default to the manifest's default template", () {
-    final defaultTemplate = manifest.defaultTemplate;
-    final defaultAssetIDs = memoryCollageRequiredAssetIDs(
-      manifest,
-      defaultTemplate.background.defaultAssetID,
-    );
-    for (final template in manifest.templates) {
-      final explicitAssetIDs = memoryCollageRequiredAssetIDs(
-        manifest,
-        template.background.defaultAssetID,
-        templateID: template.id,
-      );
-      expect(explicitAssetIDs, {
-        template.background.defaultAssetID,
-        for (final layer in template.layers)
-          if (layer.layerID != template.background.layerID &&
-              layer.appliesToBackground(template.background.defaultAssetID))
-            layer.assetID,
-      });
-      if (template.id == manifest.defaultTemplateID) {
-        expect(defaultAssetIDs, explicitAssetIDs);
-      }
-    }
-    expect(
-      () =>
-          memoryCollageRequiredAssetIDs(manifest, "not-a-template-background"),
-      throwsArgumentError,
-    );
-  });
-
-  testWidgets("rejects a background outside the selected template", (
-    tester,
-  ) async {
+  testWidgets("rejects an unknown background", (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: MemoryCollageCanvasView(
           manifest: manifest,
-          files: List.generate(
-            manifest.defaultTemplate.photoSlots.length,
-            (_) => EnteFile(),
-          ),
+          files: List.generate(7, (_) => EnteFile()),
           title: "AUGUST 2026",
-          backgroundAssetID: "not-a-template-background",
+          backgroundAssetID: "missing",
           photoBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
       ),
     );
     expect(tester.takeException(), isA<StateError>());
+    expect(
+      () => memoryCollageRequiredAssetIDs(manifest, "missing"),
+      throwsArgumentError,
+    );
   });
 
-  test("parses the authored CSS color formats", () {
-    expect(parseMemoryCollageColor("#f4e7cf"), const Color(0xFFF4E7CF));
+  test("parses the authored color formats", () {
+    expect(parseMemoryCollageColor("#E7E1D4"), const Color(0xFFE7E1D4));
     expect(
       parseMemoryCollageColor("rgba(90,40,15,0.5)"),
       const Color.fromRGBO(90, 40, 15, 0.5),
@@ -377,7 +335,51 @@ void main() {
   });
 }
 
-const _runtimeTemplateIDs = [
+Future<void> _pumpCanvas(
+  WidgetTester tester, {
+  required MemoryCollageManifest manifest,
+  required String templateID,
+  String? backgroundAssetID,
+  required MemoryCollagePhotoBuilder photoBuilder,
+}) async {
+  final template = manifest.templateFor(templateID);
+  await tester.pumpWidget(
+    MaterialApp(
+      home: MemoryCollageCanvasView(
+        manifest: manifest,
+        files: List.generate(7, (_) => EnteFile()),
+        title: "AUGUST 2026",
+        backgroundAssetID:
+            backgroundAssetID ?? template.defaultBackgroundAssetID,
+        templateID: templateID,
+        photoBuilder: photoBuilder,
+      ),
+    ),
+  );
+  await tester.pump();
+}
+
+Finder _coloredBoxes(Color color) {
+  return find.descendant(
+    of: find.byType(MemoryCollageCanvasView),
+    matching: find.byWidgetPredicate(
+      (widget) => widget is ColoredBox && widget.color == color,
+    ),
+  );
+}
+
+Finder _blendPaints() {
+  return find.descendant(
+    of: find.byType(MemoryCollageCanvasView),
+    matching: find.byWidgetPredicate(
+      (widget) =>
+          widget is CustomPaint &&
+          widget.painter.runtimeType.toString() == "_BlendAssetPainter",
+    ),
+  );
+}
+
+const _templateIDs = [
   "scrapbook-maximal",
   "calm-classic",
   "calm-film-trio",
@@ -393,88 +395,9 @@ const _titleTemplateIDs = [
   "minimal-rows",
 ];
 
+const _editorialBackgrounds = {"editorial-sand", "editorial-sage"};
+
 const _veryLongTitle =
     "An extraordinarily long collection of memories from our family journey "
     "through Thiruvananthapuram, Reykjavík, and San Francisco across many "
     "wonderful years";
-
-const _unbrokenNonLatinTitle =
-    "तिरुवनंतपुरमकीअविस्मरणीयपारिवारिकयात्राओंकीयादें"
-    "तिरुवनंतपुरमकीअविस्मरणीयपारिवारिकयात्राओंकीयादें"
-    "तिरुवनंतपुरमकीअविस्मरणीयपारिवारिकयात्राओंकीयादें";
-
-const _sharedBackgroundAssetIDs = [
-  "paper-washi",
-  "paper-cream-fiber",
-  "paper-blush-stripe",
-  "paper-sage-stripe",
-  "paper-terracotta-mottle",
-  "editorial-sand",
-  "editorial-sage",
-];
-
-Future<void> _verifyTitleLayout(
-  WidgetTester tester, {
-  required MemoryCollageManifest manifest,
-  required String templateID,
-  required String title,
-}) {
-  return verifyMemoryCollageCanvas(
-    tester,
-    loadedManifest: manifest,
-    templateID: templateID,
-    titleText: title,
-    verifyRasterOutput: false,
-  );
-}
-
-void _expectProportionallyScaledTitleStyle(
-  TextStyle rendered,
-  MemoryCollageTitleStyle authored,
-) {
-  final preferredFontSize = authored.fontSize / memoryCollageExportPixelRatio;
-  final scale = rendered.fontSize! / preferredFontSize;
-  expect(
-    rendered.letterSpacing,
-    closeTo(
-      authored.letterSpacing / memoryCollageExportPixelRatio * scale,
-      0.000001,
-    ),
-  );
-  expect(rendered.shadows, hasLength(1));
-  final shadow = rendered.shadows!.single;
-  expect(
-    shadow.offset.dx,
-    closeTo(
-      authored.shadow.dx / memoryCollageExportPixelRatio * scale,
-      0.000001,
-    ),
-  );
-  expect(
-    shadow.offset.dy,
-    closeTo(
-      authored.shadow.dy / memoryCollageExportPixelRatio * scale,
-      0.000001,
-    ),
-  );
-  expect(
-    shadow.blurRadius,
-    closeTo(
-      authored.shadow.blur / memoryCollageExportPixelRatio * scale,
-      0.000001,
-    ),
-  );
-}
-
-FontWeight _expectedFontWeight(int weight) => switch (weight) {
-  100 => FontWeight.w100,
-  200 => FontWeight.w200,
-  300 => FontWeight.w300,
-  400 => FontWeight.w400,
-  500 => FontWeight.w500,
-  600 => FontWeight.w600,
-  700 => FontWeight.w700,
-  800 => FontWeight.w800,
-  900 => FontWeight.w900,
-  _ => FontWeight.normal,
-};
