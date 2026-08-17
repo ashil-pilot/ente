@@ -162,6 +162,20 @@ void main() {
     }
   });
 
+  test("aligns each minimal photo assembly beneath its title", () {
+    for (final templateID in const [
+      "minimal-classic",
+      "minimal-rows",
+      "minimal-grid",
+    ]) {
+      expect(
+        manifest.templateFor(templateID).photoSlot(0).rect.y,
+        330,
+        reason: templateID,
+      );
+    }
+  });
+
   test("preserves every approved natural empty-photo backing color", () {
     const polaroid = "#E7E1D4";
     const verticalFilm = "#7B4A32";
@@ -228,14 +242,12 @@ void main() {
           .having((rect) => rect.width, "width", 618)
           .having((rect) => rect.height, "height", 114),
     );
-    expect(scrapbook.fontFamily, "Nunito");
-    expect(scrapbook.fontWeight, 400);
+    expect(scrapbook.fontFamily, "Lora");
     expect(scrapbook.rotation, -2.5);
     expect(scrapbook.shadow, isNotNull);
 
     final calm = manifest.templateFor("calm-film-trio").title;
-    expect(calm.fontFamily, "Nunito");
-    expect(calm.fontWeight, 400);
+    expect(calm.fontFamily, "Lora");
     expect(calm.maxLines, 2);
     expect(calm.shadow, isNull);
 

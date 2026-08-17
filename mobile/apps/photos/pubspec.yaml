@@ -323,6 +323,7 @@ flutter:
     - assets/icons/
     - assets/icons/nav_bar/
     - assets/launcher_icon/
+    - fonts/Lora-OFL.txt
   fonts:
     # TODO: Migrate legacy Photos text styles to ente_components fonts, then
     # remove this app-local Inter declaration.
@@ -346,6 +347,11 @@ flutter:
         - asset: fonts/Nunito-Regular.ttf
         - asset: fonts/Nunito-Black.ttf
           weight: 900
+    - family: Lora
+      fonts:
+        - asset: fonts/Lora-SemiBold.ttf
+          weight: 600
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
