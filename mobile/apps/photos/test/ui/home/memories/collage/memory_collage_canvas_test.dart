@@ -17,8 +17,8 @@ void main() {
   setUpAll(() async {
     await Future.wait([
       (FontLoader(
-        "Lora",
-      )..addFont(rootBundle.load("fonts/Lora-SemiBold.ttf"))).load(),
+        "Nunito",
+      )..addFont(rootBundle.load("fonts/Nunito-Regular.ttf"))).load(),
       (FontLoader(
         "Inter",
       )..addFont(rootBundle.load("fonts/Inter-Medium.ttf"))).load(),

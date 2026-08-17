@@ -228,12 +228,14 @@ void main() {
           .having((rect) => rect.width, "width", 618)
           .having((rect) => rect.height, "height", 114),
     );
-    expect(scrapbook.fontFamily, "Lora");
+    expect(scrapbook.fontFamily, "Nunito");
+    expect(scrapbook.fontWeight, 400);
     expect(scrapbook.rotation, -2.5);
     expect(scrapbook.shadow, isNotNull);
 
     final calm = manifest.templateFor("calm-film-trio").title;
-    expect(calm.fontFamily, "Lora");
+    expect(calm.fontFamily, "Nunito");
+    expect(calm.fontWeight, 400);
     expect(calm.maxLines, 2);
     expect(calm.shadow, isNull);
 
