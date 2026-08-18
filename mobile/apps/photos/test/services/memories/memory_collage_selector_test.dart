@@ -26,14 +26,13 @@ void main() {
       expect(MemoryCollageSelector.hasRequiredPhotoCount(8), isFalse);
     });
 
-    test("eligibility uses seven unique renderable photo identities", () {
+    test("eligibility uses seven identifiable renderable photos", () {
       final files = [
         _file(1),
         _file(2, fileType: FileType.livePhoto),
         _file(3, fileType: FileType.video),
         _file(4, fileType: FileType.other),
         _file(5, title: "capture.dng"),
-        _file(1),
         _file(6),
         _file(7),
         _file(8),
@@ -156,26 +155,6 @@ void main() {
           _ids(shuffled),
         );
       }
-    });
-
-    test("deduplicates repeated stable identities", () {
-      final result = MemoryCollageSelector.select(
-        memoryID: "memory",
-        shuffleRevision: 0,
-        files: [
-          _file(1),
-          _file(1),
-          _file(2),
-          _file(3),
-          _file(4),
-          _file(5),
-          _file(6),
-          _file(7),
-        ],
-      );
-
-      expect(result, hasLength(7));
-      expect(_ids(result).toSet(), hasLength(7));
     });
   });
 }

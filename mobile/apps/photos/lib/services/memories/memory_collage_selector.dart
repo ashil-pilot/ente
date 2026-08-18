@@ -16,15 +16,14 @@ class MemoryCollageSelector {
   /// Checks whether [files] can populate a collage without ranking them.
   ///
   /// Unlike [select], this does no hashing or sorting and stops as soon as the
-  /// seven unique renderable photos required by the shipped layouts are found.
+  /// seven renderable photos required by the shipped layouts are found.
   static bool hasEnoughEligiblePhotos(Iterable<EnteFile> files) {
-    final eligibleKeys = <String>{};
+    var eligibleCount = 0;
     for (final file in files) {
       if (!_isPhotoCapable(file)) continue;
-      final key = _stableFileKey(file);
-      if (key != null &&
-          eligibleKeys.add(key) &&
-          eligibleKeys.length == photoCount) {
+      if (_stableFileKey(file) == null) continue;
+      eligibleCount++;
+      if (eligibleCount == photoCount) {
         return true;
       }
     }
@@ -36,30 +35,29 @@ class MemoryCollageSelector {
   /// Selection is deterministic for the same memory and shuffle revision. It
   /// is independent of the source iterable's order and never mutates it. Seven
   /// files are returned whenever at least seven are eligible. An empty list
-  /// means there are fewer than seven uniquely identifiable photos.
+  /// means there are fewer than seven identifiable, renderable photos.
   static List<EnteFile> select({
     required String memoryID,
     required int shuffleRevision,
     required Iterable<EnteFile> files,
   }) {
-    final eligibleByKey = <String, EnteFile>{};
+    final ranked = <_RankedFile>[];
     for (final file in files) {
       if (!_isPhotoCapable(file)) continue;
       final key = _stableFileKey(file);
-      if (key != null) eligibleByKey.putIfAbsent(key, () => file);
-    }
-    if (eligibleByKey.length < photoCount) return const [];
-
-    final ranked = <_RankedFile>[
-      for (final entry in eligibleByKey.entries)
+      if (key == null) continue;
+      ranked.add(
         _RankedFile(
-          file: entry.value,
-          key: entry.key,
+          file: file,
+          key: key,
           digest: sha256
-              .convert(utf8.encode("$memoryID:$shuffleRevision:${entry.key}"))
+              .convert(utf8.encode("$memoryID:$shuffleRevision:$key"))
               .bytes,
         ),
-    ]..sort(_compareRankedFiles);
+      );
+    }
+    if (ranked.length < photoCount) return const [];
+    ranked.sort(_compareRankedFiles);
 
     return List.unmodifiable(
       ranked.take(photoCount).map((entry) => entry.file),
