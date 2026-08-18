@@ -44,10 +44,10 @@ class MemoryCollageManifest {
   }
 
   static Future<MemoryCollageManifest> load({AssetBundle? bundle}) async {
-    final encoded = await (bundle ?? rootBundle).loadString(
+    final jsonString = await (bundle ?? rootBundle).loadString(
       memoryCollageManifestAsset,
     );
-    final decoded = jsonDecode(encoded);
+    final decoded = jsonDecode(jsonString);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException("Memory collage manifest must be an object");
     }
