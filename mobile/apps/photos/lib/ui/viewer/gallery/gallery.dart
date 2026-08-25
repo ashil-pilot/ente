@@ -29,6 +29,7 @@ import "package:photos/ui/viewer/gallery/component/sectioned_sliver_list.dart";
 import 'package:photos/ui/viewer/gallery/empty_state.dart';
 import "package:photos/ui/viewer/gallery/gallery_app_bar_config.dart";
 import "package:photos/ui/viewer/gallery/gallery_app_bar_widget.dart";
+import "package:photos/ui/viewer/gallery/gallery_load_coordinator.dart";
 import "package:photos/ui/viewer/gallery/scrollbar/custom_scroll_bar.dart";
 import "package:photos/ui/viewer/gallery/state/boundary_reporter_mixin.dart";
 import "package:photos/ui/viewer/gallery/state/gallery_boundaries_provider.dart";
@@ -38,7 +39,6 @@ import "package:photos/ui/viewer/gallery/state/inherited_search_filter_data.dart
 import "package:photos/ui/viewer/gallery/swipe_selection_wrapper.dart";
 import "package:photos/ui/viewer/gallery/swipe_to_select_helper.dart";
 import "package:photos/utils/hierarchical_search_util.dart";
-import "package:photos/utils/misc_util.dart";
 import "package:photos/utils/widget_util.dart";
 
 typedef GalleryLoader =
@@ -53,6 +53,34 @@ typedef SortAscFn = bool Function();
 
 typedef NewLocalFilesResolver =
     Future<List<EnteFile>?> Function(LocalPhotosAddedEvent event);
+
+typedef _GallerySemanticConfiguration = ({
+  Object loadConfigurationKey,
+  String tagPrefix,
+  GalleryType? galleryType,
+  bool enableFileGrouping,
+  GroupType groupType,
+  bool sortOrderAsc,
+});
+
+class _GalleryPhysicalResult {
+  const _GalleryPhysicalResult({
+    required this.result,
+    required this.sortOrderAsc,
+    required this.groupType,
+  });
+
+  final FileLoadResult result;
+  final bool sortOrderAsc;
+  final GroupType groupType;
+}
+
+class _GalleryEventBinding {
+  const _GalleryEventBinding(this.stream, this.subscription);
+
+  final Stream<Event> stream;
+  final StreamSubscription<Event> subscription;
+}
 
 class Gallery extends StatefulWidget {
   final GalleryLoader asyncLoader;
@@ -75,6 +103,14 @@ class Gallery extends StatefulWidget {
   final Duration priorityReloadDebounceTime;
   final GalleryType? galleryType;
   final bool showGallerySettingsCTA;
+
+  /// Change this when loader predicates or event-stream semantics change while
+  /// Flutter preserves this Gallery State. Closure/stream identity is not used
+  /// because equivalent closures and filtered streams are commonly rebuilt.
+  final Object? loadConfigurationKey;
+
+  @visibleForTesting
+  final bool suppressFileRendering;
 
   // Return null to force a full reload.
   final NewLocalFilesResolver? newLocalFilesResolver;
@@ -127,6 +163,8 @@ class Gallery extends StatefulWidget {
     this.showGallerySettingsCTA = false,
     this.fileToJumpTo,
     this.newLocalFilesResolver,
+    this.loadConfigurationKey,
+    this.suppressFileRendering = false,
     super.key,
   });
 
@@ -141,8 +179,7 @@ class GalleryState extends State<Gallery> {
   static final RegExp _automationIdentifierUnsafeChars = RegExp(
     r'[^A-Za-z0-9_.-]',
   );
-  late final Debouncer _debouncer;
-  late final Debouncer _priorityDebouncer;
+  late final GalleryLoadCoordinator<_GalleryPhysicalResult> _loadCoordinator;
   double? groupHeaderExtent;
 
   late Logger _logger;
@@ -151,15 +188,15 @@ class GalleryState extends State<Gallery> {
   bool _completedJumpToDate = false;
   StreamSubscription<FilesUpdatedEvent>? _reloadEventSubscription;
   StreamSubscription<TabDoubleTapEvent>? _tabDoubleTapEvent;
-  final _forceReloadEventSubscriptions = <StreamSubscription<Event>>[];
+  final _forceReloadEventBindings = <_GalleryEventBinding>[];
   late String _logTag;
   bool _sortOrderAsc = false;
-  int _activeFileLoads = 0;
+  int _configurationGeneration = 0;
   List<EnteFile> _allGalleryFiles = [];
   final _scrollController = ScrollController();
   final _headerKey = GlobalKey();
   final _headerHeightNotifier = ValueNotifier<double?>(null);
-  final miscUtil = MiscUtil();
+  bool _headerMeasurementScheduled = false;
   final scrollBarInUseNotifier = ValueNotifier<bool>(false);
   late GroupType _groupType;
   final scrollbarBottomPaddingNotifier = ValueNotifier<double>(0);
@@ -188,60 +225,17 @@ class GalleryState extends State<Gallery> {
     }
 
     _setGroupType();
-    _debouncer = Debouncer(
-      widget.reloadDebounceTime,
-      executionInterval: widget.reloadDebounceExecutionInterval,
-      leading: true,
-    );
-    _priorityDebouncer = Debouncer(
-      widget.priorityReloadDebounceTime,
-      leading: true,
-    );
     _sortOrderAsc = widget.sortAsyncFn != null ? widget.sortAsyncFn!() : false;
-    if (widget.reloadEvent != null) {
-      _reloadEventSubscription = widget.reloadEvent!.listen((event) async {
-        bool shouldReloadFromDB = true;
-        if (event.source == 'uploadCompleted') {
-          shouldReloadFromDB = _shouldReloadOnUploadCompleted(event);
-        } else if (event.source == 'fileMissingLocal') {
-          shouldReloadFromDB = _shouldReloadOnFileMissingLocal(event);
-        }
-        if (!shouldReloadFromDB) {
-          final bool hasCalledSetState = _onFilesLoaded(_allGalleryFiles);
-          _logger.info(
-            'Skip softRefresh from DB on ${event.reason}, processed updated in memory with setStateReload $hasCalledSetState',
-          );
-          return;
-        }
-
-        if (event is LocalPhotosAddedEvent &&
-            await _tryAddNewLocalFiles(event)) {
-          return;
-        }
-
-        final isPriorityEvent =
-            event is LocalPhotosUpdatedEvent &&
-            event.hasRecentNewLocalDiscovery;
-
-        final targetDebouncer = isPriorityEvent
-            ? _priorityDebouncer
-            : _debouncer;
-
-        targetDebouncer.run(() async {
-          _logger.info(
-            "${isPriorityEvent ? 'Priority' : 'Soft'} refresh on ${event.reason}",
-          );
-          final result = await _loadFiles();
-          final bool hasTriggeredSetState = _onFilesLoaded(result.files);
-          if (hasTriggeredSetState && kDebugMode) {
-            _logger.info("Reloaded gallery on ${event.reason}");
-          }
-          if (!hasTriggeredSetState && mounted) {
-            _updateGalleryGroups();
-          }
-        });
-      });
-    }
+    _loadCoordinator = GalleryLoadCoordinator<_GalleryPhysicalResult>(
+      loader: _performPhysicalLoad,
+      applyStableResult: _applyStableLoad,
+      resultCount: (result) => result.result.files.length,
+      normalDebounce: widget.reloadDebounceTime,
+      priorityDebounce: widget.priorityReloadDebounceTime,
+      maximumSchedulingInterval: widget.reloadDebounceExecutionInterval,
+      log: _logger.info,
+    );
+    _reconcileReloadEvents();
     _tabDoubleTapEvent = Bus.instance.on<TabDoubleTapEvent>().listen((
       event,
     ) async {
@@ -255,37 +249,16 @@ class GalleryState extends State<Gallery> {
         );
       }
     });
-    if (widget.forceReloadEvents != null) {
-      for (final event in widget.forceReloadEvents!) {
-        _forceReloadEventSubscriptions.add(
-          event.listen((event) async {
-            _debouncer.run(() async {
-              _logger.info("Force refresh all files on ${event.reason}");
-              _sortOrderAsc = widget.sortAsyncFn != null
-                  ? widget.sortAsyncFn!()
-                  : false;
-              _setGroupType();
-              final result = await _loadFiles();
-              _setFilesAndReload(result.files);
-            });
-          }),
-        );
-      }
-    }
     if (widget.initialFiles != null && !_sortOrderAsc) {
       _onFilesLoaded(widget.initialFiles!);
     }
-
-    _loadFiles(limit: kInitialLoadLimit).then((result) async {
-      _setFilesAndReload(result.files);
-      if (result.hasMore) {
-        final result = await _loadFiles();
-        _setFilesAndReload(result.files);
-        _allFilesLoaded = true;
-      } else {
-        _allFilesLoaded = true;
-      }
-    });
+    _requestLoad(
+      extent: GalleryLoadExtent.limited,
+      force: false,
+      urgency: GalleryLoadUrgency.immediate,
+      reason: "initialLimited",
+      source: "initialHydration",
+    );
 
     if (_groupType.showGroupHeader()) {
       getIntrinsicSizeOfWidget(
@@ -313,22 +286,11 @@ class GalleryState extends State<Gallery> {
       });
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _selectedFilesListener();
-      try {
-        final headerRenderBox = await miscUtil
-            .getNonNullValueWithRetry(
-              () => _headerKey.currentContext?.findRenderObject(),
-              retryInterval: const Duration(milliseconds: 750),
-              id: "headerRenderBox",
-            )
-            .then((value) => value as RenderBox);
-
-        _headerHeightNotifier.value = headerRenderBox.size.height;
-      } catch (e, s) {
-        _logger.warning("Error getting renderBox offset", e, s);
-      }
-      setState(() {});
+      _measureHeaderHeight();
+      if (mounted) setState(() {});
     });
 
     widget.selectedFiles?.addListener(_selectedFilesListener);
@@ -344,19 +306,220 @@ class GalleryState extends State<Gallery> {
     }
   }
 
+  void _reconcileReloadEvents([Gallery? oldWidget]) {
+    if (oldWidget == null ||
+        !identical(oldWidget.reloadEvent, widget.reloadEvent)) {
+      unawaited(_reloadEventSubscription?.cancel());
+      _reloadEventSubscription = widget.reloadEvent?.listen(_handleReloadEvent);
+    }
+
+    final availableBindings = List<_GalleryEventBinding>.of(
+      _forceReloadEventBindings,
+    );
+    final nextBindings = <_GalleryEventBinding>[];
+    for (final eventStream in widget.forceReloadEvents ?? const []) {
+      final existingIndex = availableBindings.indexWhere(
+        (binding) => identical(binding.stream, eventStream),
+      );
+      if (existingIndex >= 0) {
+        nextBindings.add(availableBindings.removeAt(existingIndex));
+      } else {
+        nextBindings.add(
+          _GalleryEventBinding(
+            eventStream,
+            eventStream.listen(_handleForceReloadEvent),
+          ),
+        );
+      }
+    }
+    for (final binding in availableBindings) {
+      unawaited(binding.subscription.cancel());
+    }
+    _forceReloadEventBindings
+      ..clear()
+      ..addAll(nextBindings);
+  }
+
+  Future<void> _handleReloadEvent(FilesUpdatedEvent event) async {
+    final isPriorityEvent =
+        event is LocalPhotosUpdatedEvent && event.hasRecentNewLocalDiscovery;
+    final force =
+        event is LocalPhotosUpdatedEvent && event.requiresGalleryForceReload;
+    final urgency = isPriorityEvent
+        ? GalleryLoadUrgency.priority
+        : GalleryLoadUrgency.normal;
+
+    // The database already contains these mutations. While physical or
+    // scheduled work exists, invalidate it and let one merged load observe the
+    // latest database state instead of allowing an older snapshot to win.
+    if (_loadCoordinator.isBusy &&
+        (event.source == 'uploadCompleted' ||
+            event.source == 'fileMissingLocal')) {
+      _requestLoad(
+        extent: GalleryLoadExtent.full,
+        force: force,
+        urgency: urgency,
+        reason: event.reason,
+        source: event.source,
+      );
+      return;
+    }
+
+    bool shouldReloadFromDB = true;
+    if (event.source == 'uploadCompleted') {
+      shouldReloadFromDB = _shouldReloadOnUploadCompleted(event);
+    } else if (event.source == 'fileMissingLocal') {
+      shouldReloadFromDB = _shouldReloadOnFileMissingLocal(event);
+    }
+    if (!shouldReloadFromDB) {
+      final bool hasCalledSetState = _onFilesLoaded(_allGalleryFiles);
+      _logger.info(
+        'Skip softRefresh from DB on ${event.reason}, processed updated in memory with setStateReload $hasCalledSetState',
+      );
+      return;
+    }
+
+    if (event is LocalPhotosAddedEvent && await _tryAddNewLocalFiles(event)) {
+      return;
+    }
+
+    _requestLoad(
+      extent: GalleryLoadExtent.full,
+      force: force,
+      urgency: urgency,
+      reason: event.reason,
+      source: event.source,
+    );
+  }
+
+  void _handleForceReloadEvent(Event event) {
+    _requestLoad(
+      extent: GalleryLoadExtent.full,
+      force: true,
+      urgency: GalleryLoadUrgency.normal,
+      reason: event.reason,
+      source: event.runtimeType.toString(),
+    );
+  }
+
+  void _requestLoad({
+    required GalleryLoadExtent extent,
+    required bool force,
+    required GalleryLoadUrgency urgency,
+    required String reason,
+    required String source,
+  }) {
+    _loadCoordinator.request(
+      extent: extent,
+      force: force,
+      urgency: urgency,
+      reason: reason,
+      source: source,
+      configurationGeneration: _configurationGeneration,
+    );
+  }
+
+  Future<_GalleryPhysicalResult> _performPhysicalLoad(
+    GalleryLoadAttempt attempt,
+  ) async {
+    final force = attempt.force;
+    final sortOrderAsc = force ? _resolveSortOrder(widget) : _sortOrderAsc;
+    final groupType = force ? _resolveGroupType(widget) : _groupType;
+    final loader = widget.asyncLoader;
+    final limit = attempt.extent == GalleryLoadExtent.limited
+        ? kInitialLoadLimit
+        : null;
+    final result = await loader(
+      galleryLoadStartTime,
+      galleryLoadEndTime,
+      limit: limit,
+      asc: sortOrderAsc,
+    );
+    return _GalleryPhysicalResult(
+      result: result,
+      sortOrderAsc: sortOrderAsc,
+      groupType: groupType,
+    );
+  }
+
+  void _applyStableLoad(
+    _GalleryPhysicalResult physicalResult,
+    GalleryLoadAttempt attempt,
+  ) {
+    if (!mounted) return;
+    _sortOrderAsc = physicalResult.sortOrderAsc;
+    _groupType = physicalResult.groupType;
+    final result = physicalResult.result;
+    _setFilesAndReload(result.files);
+
+    if (attempt.extent == GalleryLoadExtent.limited && result.hasMore) {
+      _requestLoad(
+        extent: GalleryLoadExtent.full,
+        force: false,
+        urgency: GalleryLoadUrgency.immediate,
+        reason: "initialFull",
+        source: "initialHydration",
+      );
+    } else {
+      _allFilesLoaded = true;
+    }
+
+    if (!result.hasMore) {
+      final inheritedSearchFilterData = _inheritedSearchFilterData;
+      final searchFilterDataProvider =
+          inheritedSearchFilterData?.isHierarchicalSearchable == true
+          ? inheritedSearchFilterData!.searchFilterDataProvider
+          : null;
+      if (searchFilterDataProvider != null &&
+          !searchFilterDataProvider.isSearchingNotifier.value) {
+        unawaited(
+          curateFilters(
+            searchFilterDataProvider,
+            result.files,
+            context,
+            shouldApply: () =>
+                mounted &&
+                _loadCoordinator.isGenerationCurrent(attempt.generation),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void didUpdateWidget(covariant Gallery oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _loadCoordinator.updateScheduling(
+      normalDebounce: widget.reloadDebounceTime,
+      priorityDebounce: widget.priorityReloadDebounceTime,
+      maximumSchedulingInterval: widget.reloadDebounceExecutionInterval,
+    );
     if (oldWidget.tagPrefix != widget.tagPrefix) {
       _automationScrollIdentifier = _buildAutomationScrollIdentifier(
         widget.tagPrefix,
       );
     }
-    if (oldWidget.groupType != widget.groupType) {
-      _setGroupType();
-      if (mounted) {
-        setState(() {});
-      }
+    if (!identical(oldWidget.selectedFiles, widget.selectedFiles)) {
+      oldWidget.selectedFiles?.removeListener(_selectedFilesListener);
+      widget.selectedFiles?.addListener(_selectedFilesListener);
+      _selectedFilesListener();
+    }
+
+    final oldConfiguration = _semanticConfiguration(oldWidget);
+    final newConfiguration = _semanticConfiguration(widget);
+    // Rebind deliberately on widget ownership changes. We do not use stream
+    // identity as a semantic signal because parents commonly recreate
+    // equivalent filtered stream views on every build.
+    _reconcileReloadEvents(oldWidget);
+    if (oldConfiguration != newConfiguration) {
+      _configurationGeneration++;
+      _requestLoad(
+        extent: GalleryLoadExtent.full,
+        force: true,
+        urgency: GalleryLoadUrgency.immediate,
+        reason: "widgetConfigurationChanged",
+        source: "didUpdateWidget",
+      );
     }
   }
 
@@ -369,6 +532,10 @@ class GalleryState extends State<Gallery> {
 
   void _updateGalleryGroups({bool callSetState = true}) {
     if (groupHeaderExtent == null) return;
+    if (widget.suppressFileRendering) {
+      if (callSetState && mounted) setState(() {});
+      return;
+    }
     final groups = GalleryGroups(
       allFiles: _allGalleryFiles,
       groupType: _groupType,
@@ -401,15 +568,45 @@ class GalleryState extends State<Gallery> {
               FileSelectionOverlayBar.roughHeight + bottomInset;
   }
 
-  void _setGroupType() {
-    if (!widget.enableFileGrouping) {
-      _groupType = GroupType.none;
-    } else if (widget.groupType != null) {
-      _groupType = widget.groupType!;
-    } else {
-      _groupType = localSettings.getGalleryGroupType();
+  void _scheduleHeaderMeasurement() {
+    if (_headerMeasurementScheduled || _headerHeightNotifier.value != null) {
+      return;
+    }
+    _headerMeasurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _headerMeasurementScheduled = false;
+      if (mounted) _measureHeaderHeight();
+    });
+  }
+
+  void _measureHeaderHeight() {
+    final renderBox =
+        _headerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      _headerHeightNotifier.value = renderBox.size.height;
     }
   }
+
+  void _setGroupType() {
+    _groupType = _resolveGroupType(widget);
+  }
+
+  GroupType _resolveGroupType(Gallery gallery) {
+    if (!gallery.enableFileGrouping) return GroupType.none;
+    return gallery.groupType ?? localSettings.getGalleryGroupType();
+  }
+
+  bool _resolveSortOrder(Gallery gallery) =>
+      gallery.sortAsyncFn != null ? gallery.sortAsyncFn!() : false;
+
+  _GallerySemanticConfiguration _semanticConfiguration(Gallery gallery) => (
+    loadConfigurationKey: gallery.loadConfigurationKey ?? gallery.tagPrefix,
+    tagPrefix: gallery.tagPrefix,
+    galleryType: gallery.galleryType,
+    enableFileGrouping: gallery.enableFileGrouping,
+    groupType: _resolveGroupType(gallery),
+    sortOrderAsc: _resolveSortOrder(gallery),
+  );
 
   void _setFilesAndReload(List<EnteFile> files) {
     final hasReloaded = _onFilesLoaded(files);
@@ -512,7 +709,7 @@ class GalleryState extends State<Gallery> {
 
   Future<bool> _tryAddNewLocalFiles(LocalPhotosAddedEvent event) async {
     final resolver = widget.newLocalFilesResolver;
-    if (resolver == null || !_allFilesLoaded || _activeFileLoads > 0) {
+    if (resolver == null || !_allFilesLoaded || _loadCoordinator.isBusy) {
       return false;
     }
 
@@ -525,7 +722,7 @@ class GalleryState extends State<Gallery> {
     }
     if (resolvedFiles == null) return false;
     if (!mounted) return true;
-    if (_activeFileLoads > 0) return false;
+    if (_loadCoordinator.isBusy) return false;
 
     final visibleLocalIDs = _allGalleryFiles
         .map((file) => file.localID)
@@ -545,6 +742,19 @@ class GalleryState extends State<Gallery> {
     _logger.info('Added ${filesToAdd.length} new local files in memory');
     return true;
   }
+
+  @visibleForTesting
+  int get debugMaximumActivePhysicalLoads =>
+      _loadCoordinator.maximumActivePhysicalLoads;
+
+  @visibleForTesting
+  int get debugRequestedGeneration => _loadCoordinator.requestedGeneration;
+
+  @visibleForTesting
+  List<EnteFile> get debugGalleryFiles => List.unmodifiable(_allGalleryFiles);
+
+  @visibleForTesting
+  double? get debugHeaderHeight => _headerHeightNotifier.value;
 
   List<EnteFile> _mergeGalleryFiles(List<EnteFile> filesToAdd) {
     final merged = <EnteFile>[];
@@ -587,64 +797,16 @@ class GalleryState extends State<Gallery> {
     }
   }
 
-  Future<FileLoadResult> _loadFiles({int? limit}) async {
-    _logger.info("Loading ${limit ?? "all"} files");
-    _activeFileLoads++;
-    try {
-      final startTime = DateTime.now().microsecondsSinceEpoch;
-      final result = await widget.asyncLoader(
-        galleryLoadStartTime,
-        galleryLoadEndTime,
-        limit: limit,
-        asc: _sortOrderAsc,
-      );
-      final endTime = DateTime.now().microsecondsSinceEpoch;
-      final duration = Duration(microseconds: endTime - startTime);
-      _logger.info(
-        "Time taken to load " +
-            result.files.length.toString() +
-            " files :" +
-            duration.inMilliseconds.toString() +
-            "ms",
-      );
-
-      if (!result.hasMore) {
-        if (!mounted) {
-          return result;
-        }
-        final inheritedSearchFilterData = _inheritedSearchFilterData;
-        final searchFilterDataProvider =
-            inheritedSearchFilterData?.isHierarchicalSearchable == true
-            ? inheritedSearchFilterData!.searchFilterDataProvider
-            : null;
-        if (searchFilterDataProvider != null &&
-            !searchFilterDataProvider.isSearchingNotifier.value) {
-          unawaited(
-            curateFilters(searchFilterDataProvider, result.files, context),
-          );
-        }
-      }
-
-      return result;
-    } catch (e, s) {
-      _logger.severe("failed to load files", e, s);
-      rethrow;
-    } finally {
-      _activeFileLoads--;
-    }
-  }
-
   @override
   void dispose() {
+    _loadCoordinator.dispose();
     _boundariesProvider?.setScrollController(null);
 
     _reloadEventSubscription?.cancel();
     _tabDoubleTapEvent?.cancel();
-    for (final subscription in _forceReloadEventSubscriptions) {
-      subscription.cancel();
+    for (final binding in _forceReloadEventBindings) {
+      binding.subscription.cancel();
     }
-    _debouncer.cancelDebounceTimer();
-    _priorityDebouncer.cancelDebounceTimer();
     _scrollController.dispose();
     scrollBarInUseNotifier.dispose();
     _headerHeightNotifier.dispose();
@@ -733,6 +895,18 @@ class GalleryState extends State<Gallery> {
     final widthAvailable = MediaQuery.sizeOf(context).width;
     final shouldEnableSwipeSelection = widget.limitSelectionToOne == false;
 
+    // Coordinator/widget tests intentionally isolate refresh ownership from
+    // thumbnail I/O, which has separate coverage and process-wide queues.
+    if (widget.suppressFileRendering) {
+      GalleryFilesState.of(context).setGalleryFiles = _allGalleryFiles;
+      if (_allGalleryFiles.isEmpty) return const SizedBox.shrink();
+      _scheduleHeaderMeasurement();
+      return SizedBox(
+        key: _headerKey,
+        child: widget.header ?? const SizedBox.shrink(),
+      );
+    }
+
     if (groupHeaderExtent == null) {
       final photoGridSize = localSettings.getPhotoGridSize();
       final tileHeight =
@@ -813,6 +987,7 @@ class GalleryState extends State<Gallery> {
         }
       });
     }
+    if (_allGalleryFiles.isNotEmpty) _scheduleHeaderMeasurement();
 
     return SwipeSelectionWrapper(
       isEnabled: shouldEnableSwipeSelection,
@@ -853,15 +1028,12 @@ class GalleryState extends State<Gallery> {
                     : scrollbarBottomPaddingNotifier,
                 child: NotificationListener<SizeChangedLayoutNotification>(
                   onNotification: (notification) {
-                    final renderBox =
-                        _headerKey.currentContext?.findRenderObject()
-                            as RenderBox?;
-                    if (renderBox != null) {
-                      _headerHeightNotifier.value = renderBox.size.height;
-                    } else {
+                    if (_headerKey.currentContext == null) {
                       _logger.info(
                         "Header render box is null, cannot get height",
                       );
+                    } else {
+                      _measureHeaderHeight();
                     }
 
                     return true;

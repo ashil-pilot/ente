@@ -97,6 +97,7 @@ class CollectionPage extends StatelessWidget {
         EventType.hide,
       },
       tagPrefix: tagPrefix,
+      loadConfigurationKey: ("collection", c.collection.id),
       selectedFiles: _selectedFiles,
       initialFiles: initialFiles,
       albumName: c.collection.displayName,

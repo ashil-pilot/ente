@@ -130,8 +130,15 @@ class _HomeGalleryWidgetState extends State<HomeGalleryWidget> {
   @override
   Widget build(BuildContext context) {
     final largeBackupSession = SyncService.instance.largeBackupSessionTracker;
+    final galleryConfiguration = (
+      userID: Configuration.instance.getUserID(),
+      localGallery: isLocalGalleryMode,
+      selectedAllFolders:
+          backupPreferenceService.hasSelectedAllFoldersForBackup,
+      hideSharedItems: _shouldHideSharedItems,
+    );
     final gallery = Gallery(
-      key: ValueKey(_shouldHideSharedItems),
+      key: ValueKey(galleryConfiguration),
       asyncLoader: (creationStartTime, creationEndTime, {limit, asc}) async {
         final ownerID = Configuration.instance.getUserIDV2();
         final hasSelectedAllForBackup =
@@ -176,6 +183,7 @@ class _HomeGalleryWidgetState extends State<HomeGalleryWidget> {
         ),
       ],
       tagPrefix: "home_gallery",
+      loadConfigurationKey: galleryConfiguration,
       selectedFiles: widget.selectedFiles,
       header: widget.header,
       footer: widget.footer,

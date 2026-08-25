@@ -98,6 +98,7 @@ class _PickCoverPhotoWidgetState extends State<PickCoverPhotoWidget> {
                 (event) => event.collectionID == widget.collection.id,
               ),
               tagPrefix: "pick_cover_photo_gallery",
+              loadConfigurationKey: ("pickCoverPhoto", widget.collection.id),
               selectedFiles: _selectedFiles,
               limitSelectionToOne: true,
               showSelectAll: false,

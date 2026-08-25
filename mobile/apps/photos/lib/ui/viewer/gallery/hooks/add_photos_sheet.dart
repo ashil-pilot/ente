@@ -279,6 +279,21 @@ class DelayedGallery extends StatefulWidget {
   State<DelayedGallery> createState() => _DelayedGalleryState();
 }
 
+class _HiddenCollectionIDsVersion {
+  _HiddenCollectionIDsVersion(Set<int> hiddenCollectionIDs)
+    : sortedIDs = List.unmodifiable(hiddenCollectionIDs.toList()..sort());
+
+  final List<int> sortedIDs;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _HiddenCollectionIDsVersion &&
+      listEquals(sortedIDs, other.sortedIDs);
+
+  @override
+  int get hashCode => Object.hashAll(sortedIDs);
+}
+
 class _DelayedGalleryState extends State<DelayedGallery> {
   bool _showGallery = false;
 
@@ -297,6 +312,10 @@ class _DelayedGalleryState extends State<DelayedGallery> {
   @override
   Widget build(BuildContext context) {
     if (_showGallery) {
+      final userID = Configuration.instance.getUserID()!;
+      final hiddenCollectionIDsVersion = _HiddenCollectionIDsVersion(
+        widget.hiddenCollectionIDs,
+      );
       return GalleryFilesState(
         child:
             Gallery(
@@ -305,7 +324,7 @@ class _DelayedGalleryState extends State<DelayedGallery> {
                 return FilesDB.instance.getAllPendingOrUploadedFiles(
                   creationStartTime,
                   creationEndTime,
-                  Configuration.instance.getUserID()!,
+                  userID,
                   limit: limit,
                   asc: asc,
                   filterOptions: DBFilterOptions(
@@ -317,6 +336,11 @@ class _DelayedGalleryState extends State<DelayedGallery> {
                 );
               },
               tagPrefix: "pick_add_photos_gallery",
+              loadConfigurationKey: (
+                "pickAddPhotos",
+                userID,
+                hiddenCollectionIDsVersion,
+              ),
               selectedFiles: widget.selectedFiles,
               showSelectAll: true,
               sortAsyncFn: () => false,

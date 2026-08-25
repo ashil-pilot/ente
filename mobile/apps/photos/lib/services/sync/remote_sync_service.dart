@@ -297,7 +297,10 @@ class RemoteSyncService {
       await _syncCollectionDiffDelete(diff, collectionID);
     }
     if (diff.updatedFiles.isNotEmpty) {
-      await _storeDiff(diff.updatedFiles, collectionID);
+      final requiresGalleryForceReload = await _storeDiff(
+        diff.updatedFiles,
+        collectionID,
+      );
       _logger.info(
         "[Collection-$collectionID] Updated ${diff.updatedFiles.length} files"
         " from remote",
@@ -306,6 +309,7 @@ class RemoteSyncService {
         LocalPhotosUpdatedEvent(
           diff.updatedFiles,
           source: "syncUpdateFromRemote",
+          requiresGalleryForceReload: requiresGalleryForceReload,
         ),
       );
       Bus.instance.fire(
@@ -786,7 +790,7 @@ class RemoteSyncService {
 
   // Moving an edited file between collections does not invalidate cached media
   // because the cache is keyed by upload ID.
-  Future<void> _storeDiff(List<EnteFile> diff, int collectionID) async {
+  Future<bool> _storeDiff(List<EnteFile> diff, int collectionID) async {
     int sharedFileNew = 0,
         sharedFileUpdated = 0,
         localUploadedFromDevice = 0,
@@ -904,9 +908,7 @@ class RemoteSyncService {
           remoteNewFile.toString() +
           " remoteFiles seen first time",
     );
-    if (needsGalleryReload) {
-      Bus.instance.fire(ForceReloadHomeGalleryEvent("remoteSync"));
-    }
+    return needsGalleryReload;
   }
 
   bool _shouldClearCache(EnteFile remoteFile, EnteFile existingFile) {
