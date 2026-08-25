@@ -1,0 +1,1 @@
+- Improved gallery refresh performance during sync in large photo libraries.

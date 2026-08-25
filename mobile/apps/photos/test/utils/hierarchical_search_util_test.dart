@@ -28,6 +28,38 @@ void main() {
     expect(searchFilterDataProvider.recommendations, isEmpty);
     searchFilterDataProvider.dispose();
   });
+
+  testWidgets("curateFilters skips immediately for a stale generation", (
+    tester,
+  ) async {
+    late final BuildContext context;
+    await tester.pumpWidget(
+      Builder(
+        builder: (builderContext) {
+          context = builderContext;
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+    final searchFilterDataProvider = SearchFilterDataProvider(
+      initialGalleryFilter: _TestFilter(),
+    );
+    var generationChecks = 0;
+
+    await curateFilters(
+      searchFilterDataProvider,
+      const [],
+      context,
+      shouldApply: () {
+        generationChecks++;
+        return false;
+      },
+    );
+
+    expect(generationChecks, 1);
+    expect(searchFilterDataProvider.recommendations, isEmpty);
+    searchFilterDataProvider.dispose();
+  });
 }
 
 class _TestFilter extends HierarchicalSearchFilter {

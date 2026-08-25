@@ -186,6 +186,7 @@ class _ClusterPageState extends State<ClusterPage> {
         EventType.peopleClusterChanged,
       },
       tagPrefix: widget.tagPrefix + widget.tagPrefix,
+      loadConfigurationKey: ("cluster", widget.clusterID),
       selectedFiles: _selectedFiles,
       enableFileGrouping: widget.enableGrouping,
       initialFiles: files,

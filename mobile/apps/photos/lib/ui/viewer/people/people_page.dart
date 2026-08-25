@@ -381,6 +381,7 @@ class _GalleryState extends State<_Gallery> {
         EventType.hide,
       },
       tagPrefix: widget.tagPrefix + widget.tagPrefix,
+      loadConfigurationKey: ("person", widget.personEntity.remoteID),
       selectedFiles: widget.selectedFiles,
       initialFiles: widget.personFiles.isNotEmpty
           ? [widget.personFiles.first]

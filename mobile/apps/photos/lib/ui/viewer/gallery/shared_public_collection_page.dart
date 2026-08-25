@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:ente_strings/ente_strings.dart";
+import "package:flutter/foundation.dart" show listEquals;
 import "package:flutter/material.dart";
 import "package:logging/logging.dart";
 import "package:photos/core/configuration.dart";
@@ -30,6 +31,26 @@ import "package:photos/ui/viewer/gallery/state/gallery_files_inherited_widget.da
 import "package:photos/ui/viewer/gallery/state/selection_state.dart";
 import "package:photos/utils/dialog_util.dart";
 import "package:photos/utils/public_link_layout_util.dart";
+
+class _SharedPublicFilesVersion {
+  _SharedPublicFilesVersion(List<EnteFile>? files)
+    : orderedIDs = List.unmodifiable(
+        (files ?? const <EnteFile>[]).map(
+          (file) =>
+              (uploadedID: file.uploadedFileID, generatedID: file.generatedID),
+        ),
+      );
+
+  final List<({int? uploadedID, int? generatedID})> orderedIDs;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _SharedPublicFilesVersion &&
+      listEquals(orderedIDs, other.orderedIDs);
+
+  @override
+  int get hashCode => Object.hashAll(orderedIDs);
+}
 
 class SharedPublicCollectionPage extends StatefulWidget {
   final CollectionWithThumbnail c;
@@ -130,6 +151,7 @@ class _SharedPublicCollectionPageState
     final GroupType groupType = normalizedLayout == "masonry"
         ? GroupType.none
         : GroupType.day;
+    final filesVersion = _SharedPublicFilesVersion(widget.files);
     final appBar = GalleryAppBarWidget.sliverConfig(
       galleryType,
       widget.c.collection.displayName,
@@ -141,11 +163,10 @@ class _SharedPublicCollectionPageState
     final gallery = Gallery(
       appBar: appBar,
       asyncLoader: (creationStartTime, creationEndTime, {limit, asc}) async {
-        widget.files!.sort(
-          (a, b) => b.creationTime!.compareTo(a.creationTime!),
-        );
+        final sortedFiles = List<EnteFile>.of(widget.files!)
+          ..sort((a, b) => b.creationTime!.compareTo(a.creationTime!));
 
-        return FileLoadResult(widget.files!, false);
+        return FileLoadResult(sortedFiles, false);
       },
       reloadEvent: Bus.instance.on<CollectionUpdatedEvent>().where(
         (event) => event.collectionID == widget.c.collection.id,
@@ -163,6 +184,12 @@ class _SharedPublicCollectionPageState
         EventType.hide,
       },
       tagPrefix: widget.tagPrefix,
+      loadConfigurationKey: (
+        "sharedPublicCollection",
+        widget.c.collection.id,
+        normalizedLayout,
+        filesVersion,
+      ),
       selectedFiles: _selectedFiles,
       initialFiles: initialFiles,
       albumName: widget.c.collection.displayName,

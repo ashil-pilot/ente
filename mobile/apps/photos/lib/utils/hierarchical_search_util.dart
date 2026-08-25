@@ -194,9 +194,11 @@ Future<List<EnteFile>> getFilteredFiles(
 Future<void> curateFilters(
   SearchFilterDataProvider searchFilterDataProvider,
   List<EnteFile> files,
-  BuildContext context,
-) async {
+  BuildContext context, {
+  bool Function()? shouldApply,
+}) async {
   try {
+    if (shouldApply != null && !shouldApply()) return;
     final l10n = Localizations.of<StringsLocalizations>(
       context,
       StringsLocalizations,
@@ -218,6 +220,7 @@ Future<void> curateFilters(
     final magicFilters = await curateMagicFilters(files, l10n);
     final onlyThemFilter = getOnlyThemFilter(searchFilterDataProvider, l10n);
 
+    if (shouldApply != null && !shouldApply()) return;
     searchFilterDataProvider.clearAndAddRecommendations([
       ...onlyThemFilter,
       ...magicFilters,
