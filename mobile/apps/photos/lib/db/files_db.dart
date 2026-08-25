@@ -9,6 +9,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import "package:photos/db/common/base.dart";
 import "package:photos/db/common/conflict_algo.dart";
+import "package:photos/db/file_load_trace.dart";
 import 'package:photos/models/file/file.dart';
 import 'package:photos/models/file/file_type.dart';
 import 'package:photos/models/file_load_result.dart';
@@ -29,6 +30,7 @@ class FilesDB with SqlDbBase {
   static const _databaseName = "ente.files.db";
 
   static final Logger _logger = Logger("FilesDB");
+  static int _nextAllFilesLoadID = 0;
 
   static const filesTable = 'files';
   static const tempTable = 'temp_files';
@@ -1916,25 +1918,80 @@ class FilesDB with SqlDbBase {
     Set<int> collectionsToIgnore, {
     bool dedupeByUploadId = true,
   }) async {
-    final db = await instance.sqliteAsyncDB;
-    final result = await db.getAll(
-      'SELECT * FROM $filesTable ORDER BY $columnCreationTime DESC',
-    );
-    _logger.info("${result.length} rows in filesDB");
+    final operationID = ++_nextAllFilesLoadID;
+    final traceID = FileLoadTrace.current?.traceID ?? "standalone-$operationID";
+    final totalStopwatch = Stopwatch()..start();
+    final queryStopwatch = Stopwatch();
+    final conversionStopwatch = Stopwatch();
+    final filteringStopwatch = Stopwatch();
+    var rawRows = 0;
+    try {
+      final db = await instance.sqliteAsyncDB;
+      queryStopwatch.start();
+      final result = await db.getAll(
+        'SELECT * FROM $filesTable ORDER BY $columnCreationTime DESC',
+      );
+      queryStopwatch.stop();
+      rawRows = result.length;
 
-    final List<EnteFile> files = await Computer.shared().compute(
-      convertToFilesForIsolate,
-      param: {"result": result},
-    );
+      conversionStopwatch.start();
+      final List<EnteFile> files = await Computer.shared().compute(
+        convertToFilesForIsolate,
+        param: {"result": result},
+      );
+      conversionStopwatch.stop();
 
-    final List<EnteFile> deduplicatedFiles = await applyDBFilters(
-      files,
-      DBFilterOptions(
-        ignoredCollectionIDs: collectionsToIgnore,
-        dedupeUploadID: dedupeByUploadId,
-      ),
-    );
-    return deduplicatedFiles;
+      filteringStopwatch.start();
+      final List<EnteFile> deduplicatedFiles = await applyDBFilters(
+        files,
+        DBFilterOptions(
+          ignoredCollectionIDs: collectionsToIgnore,
+          dedupeUploadID: dedupeByUploadId,
+        ),
+      );
+      filteringStopwatch.stop();
+      totalStopwatch.stop();
+      _logger.info(
+        "FilesDBAllFiles complete operationId=$operationID traceId=$traceID "
+        "status=success "
+        "rawRows=$rawRows finalRows=${deduplicatedFiles.length} "
+        "queryMs=${queryStopwatch.elapsedMilliseconds} "
+        "conversionMs=${conversionStopwatch.elapsedMilliseconds} "
+        "filteringMs=${filteringStopwatch.elapsedMilliseconds} "
+        "totalMs=${totalStopwatch.elapsedMilliseconds} "
+        "${_processMemorySummary()}",
+      );
+      return deduplicatedFiles;
+    } catch (error, stackTrace) {
+      if (queryStopwatch.isRunning) queryStopwatch.stop();
+      if (conversionStopwatch.isRunning) conversionStopwatch.stop();
+      if (filteringStopwatch.isRunning) filteringStopwatch.stop();
+      totalStopwatch.stop();
+      _logger.warning(
+        "FilesDBAllFiles complete operationId=$operationID traceId=$traceID "
+        "status=error "
+        "rawRows=$rawRows queryMs=${queryStopwatch.elapsedMilliseconds} "
+        "conversionMs=${conversionStopwatch.elapsedMilliseconds} "
+        "filteringMs=${filteringStopwatch.elapsedMilliseconds} "
+        "totalMs=${totalStopwatch.elapsedMilliseconds} "
+        "${_processMemorySummary()}",
+        error,
+        stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  static String _processMemorySummary() {
+    try {
+      const bytesPerMiB = 1024 * 1024;
+      return "rssMiB="
+          "${(ProcessInfo.currentRss / bytesPerMiB).toStringAsFixed(1)} "
+          "maxRssMiB="
+          "${(ProcessInfo.maxRss / bytesPerMiB).toStringAsFixed(1)}";
+    } catch (_) {
+      return "rssMiB=unavailable maxRssMiB=unavailable";
+    }
   }
 
   Future<bool> hasAnyFile() async {

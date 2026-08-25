@@ -9,6 +9,7 @@ import 'package:ente_contacts/contacts.dart';
 import "package:ente_crypto/ente_crypto.dart";
 import 'package:ente_lock_screen/lock_screen_host.dart';
 import 'package:ente_pure_utils/ente_pure_utils.dart';
+import 'package:flutter/foundation.dart';
 import "package:flutter/services.dart";
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -57,9 +58,20 @@ import "package:tuple/tuple.dart";
 import 'package:uuid/uuid.dart';
 
 class Configuration implements LockScreenHost, AccountDeletionHost {
-  Configuration._privateConstructor();
+  Configuration._privateConstructor()
+    : _resetSearchForAccountBoundary =
+          SearchService.resetForAccountBoundaryIfInitialized;
+
+  @visibleForTesting
+  Configuration.forTesting({
+    required SharedPreferences preferences,
+    required void Function() resetSearchForAccountBoundary,
+  }) : _preferences = preferences,
+       _resetSearchForAccountBoundary = resetSearchForAccountBoundary;
 
   static final Configuration instance = Configuration._privateConstructor();
+
+  final void Function() _resetSearchForAccountBoundary;
 
   static const emailKey = "email";
   static const keyAttributesKey = "key_attributes";
@@ -193,6 +205,9 @@ class Configuration implements LockScreenHost, AccountDeletionHost {
   @override
   Future<void> logout({bool autoLogout = false}) async {
     _logger.info("Logging out, autoLogout: $autoLogout");
+    // This is intentionally safe before SearchService.init(). It detaches an
+    // old account's cache without constructing Search during early auto-logout.
+    _resetSearchForAccountBoundary();
     MLService.instance.stopActiveRun(MlStopReason.logout);
     if (!autoLogout) {
       if (flagService.stopStreamProcess) {
@@ -284,7 +299,6 @@ class Configuration implements LockScreenHost, AccountDeletionHost {
       // Auto logout can run before these services are initialized.
       CollectionsService.instance.clearCache();
       FavoritesService.instance.clearCache();
-      SearchService.instance.clearCache();
       PersonService.instance.clearCache();
       try {
         smartAlbumsService.clearCache();
@@ -538,6 +552,10 @@ class Configuration implements LockScreenHost, AccountDeletionHost {
   }
 
   Future<void> setUserID(int userID) async {
+    if (getUserID() != userID) {
+      // Covers local-gallery to account login and any future account switch.
+      _resetSearchForAccountBoundary();
+    }
     await _preferences.setInt(userIDKey, userID);
   }
 
