@@ -59,6 +59,7 @@ import "package:photos/services/machine_learning/face_ml/person/person_service.d
 import 'package:photos/services/machine_learning/semantic_search/semantic_search_service.dart';
 import "package:photos/services/memories_cache_service.dart";
 import "package:photos/services/photos_contacts_service.dart";
+import "package:photos/services/search_file_cache.dart";
 import "package:photos/states/location_screen_state.dart";
 import "package:photos/ui/viewer/location/add_location_sheet.dart";
 import "package:photos/ui/viewer/location/location_screen.dart";
@@ -69,45 +70,145 @@ import "package:photos/utils/cache_util.dart";
 import "package:photos/utils/people_sort_util.dart";
 
 class SearchService {
-  Future<List<EnteFile>>? _cachedFilesFuture;
-  Future<List<EnteFile>>? _cachedFilesForSearch;
-  Future<List<EnteFile>>? _cachedFilesForHierarchicalSearch;
-  Future<List<EnteFile>>? _cachedFilesForGenericGallery;
-  Future<List<EnteFile>>? _cachedFilesForOfflineGallery;
+  late final SearchFileCache<List<EnteFile>> _baseFilesCache;
+  _DerivedSearchFileCache<List<EnteFile>>? _cachedFilesForSearch;
+  _DerivedSearchFileCache<List<EnteFile>>? _cachedFilesForHierarchicalSearch;
+  _DerivedSearchFileCache<List<EnteFile>>? _cachedFilesForGenericGallery;
+  _DerivedSearchFileCache<List<EnteFile>>? _cachedFilesForOfflineGallery;
   Future<List<EnteFile>>? _cachedHiddenFilesFuture;
-  Future<Map<int, EnteFile>>? _cachedFilesByUploadedID;
+  _DerivedSearchFileCache<Map<int, EnteFile>>? _cachedFilesByUploadedID;
   final _logger = Logger((SearchService).toString());
-  final _collectionService = CollectionsService.instance;
+  CollectionsService get _collectionService => CollectionsService.instance;
   static const _maximumResultsLimit = 20;
   late final mlDataDB = MLDataDB.instance;
   StreamSubscription<LocalPhotosUpdatedEvent>? _localPhotosUpdatedSubscription;
+  late final Future<List<EnteFile>> Function() _allFilesLoader;
+  late final Future<List<EnteFile>> Function() _hiddenFilesLoader;
+  late final Set<int> Function() _ignoreCollectionsProvider;
+  Future<void> Function()? _beforeUploadedIDDerivation;
+  Stream<LocalPhotosUpdatedEvent>? _localPhotosUpdatedEvents;
 
-  SearchService._privateConstructor();
+  SearchService._privateConstructor() {
+    _ignoreCollectionsProvider = () =>
+        CollectionsService.instance.getHiddenCollectionIds();
+    _allFilesLoader = () => FilesDB.instance.getAllFilesFromDB(
+      ignoreCollections(),
+      dedupeByUploadId: false,
+    );
+    _hiddenFilesLoader = () => FilesDB.instance.getAllFilesFromCollections(
+      CollectionsService.instance.getHiddenCollectionIds(),
+    );
+    _initializeBaseFilesCache();
+  }
 
-  static final SearchService instance = SearchService._privateConstructor();
+  @visibleForTesting
+  SearchService.forTesting({
+    required Future<List<EnteFile>> Function() allFilesLoader,
+    required Future<List<EnteFile>> Function() hiddenFilesLoader,
+    required Stream<LocalPhotosUpdatedEvent> localPhotosUpdatedEvents,
+    Set<int> Function()? ignoreCollectionsProvider,
+    Future<void> Function()? beforeUploadedIDDerivation,
+  }) {
+    _allFilesLoader = allFilesLoader;
+    _hiddenFilesLoader = hiddenFilesLoader;
+    _localPhotosUpdatedEvents = localPhotosUpdatedEvents;
+    _ignoreCollectionsProvider =
+        ignoreCollectionsProvider ?? () => const <int>{};
+    _beforeUploadedIDDerivation = beforeUploadedIDDerivation;
+    _initializeBaseFilesCache();
+  }
+
+  void _initializeBaseFilesCache() {
+    _baseFilesCache = SearchFileCache<List<EnteFile>>(
+      loader: _allFilesLoader,
+      log: _logger.info,
+    );
+  }
+
+  static SearchService? _instance;
+
+  static SearchService get instance =>
+      _instance ??= SearchService._privateConstructor();
+
+  /// Safe to call from early auto-logout before Search has been initialized.
+  static void resetForAccountBoundaryIfInitialized() {
+    _instance?._resetFileCachesForAccountBoundary();
+  }
+
+  @visibleForTesting
+  static SearchService? debugReplaceInstanceForTesting(
+    SearchService? replacement,
+  ) {
+    final previous = _instance;
+    _instance = replacement;
+    return previous;
+  }
 
   void init() {
     _localPhotosUpdatedSubscription?.cancel();
-    _localPhotosUpdatedSubscription = Bus.instance
-        .on<LocalPhotosUpdatedEvent>()
-        .listen((event) {
-          // Invalidate only; reload on demand.
-          _invalidateFileCaches();
-        });
+    _localPhotosUpdatedSubscription =
+        (_localPhotosUpdatedEvents ??
+                Bus.instance.on<LocalPhotosUpdatedEvent>())
+            .listen((event) {
+              // Invalidate only; reload on demand.
+              _invalidateFileCaches(event);
+            });
   }
 
-  void _invalidateFileCaches() {
-    _cachedFilesFuture = null;
+  void _invalidateFileCaches(LocalPhotosUpdatedEvent event) {
+    final retainedActiveRequest = _baseFilesCache.invalidate(
+      eventType: event.type.name,
+      source: event.source,
+    );
+    if (!retainedActiveRequest) {
+      _clearBaseDerivedCaches();
+    }
+    _cachedHiddenFilesFuture = null;
+  }
+
+  void _resetFileCachesForAccountBoundary() {
+    _baseFilesCache.resetForAccountBoundary();
+    _clearBaseDerivedCaches();
+    _cachedHiddenFilesFuture = null;
+  }
+
+  void _clearBaseDerivedCaches() {
     _cachedFilesForSearch = null;
     _cachedFilesForHierarchicalSearch = null;
     _cachedFilesForGenericGallery = null;
     _cachedFilesForOfflineGallery = null;
-    _cachedHiddenFilesFuture = null;
     _cachedFilesByUploadedID = null;
   }
 
+  @visibleForTesting
+  void debugResetForAccountBoundary() {
+    _resetFileCachesForAccountBoundary();
+  }
+
+  @visibleForTesting
+  int get debugMaximumActiveBaseLoads =>
+      _baseFilesCache.maximumActivePhysicalLoads;
+
+  @visibleForTesting
+  int get debugRequestedBaseGeneration => _baseFilesCache.requestedGeneration;
+
+  @visibleForTesting
+  int get debugRetainedBaseDerivedCacheCount => [
+    _cachedFilesForSearch,
+    _cachedFilesForHierarchicalSearch,
+    _cachedFilesForGenericGallery,
+    _cachedFilesForOfflineGallery,
+    _cachedFilesByUploadedID,
+  ].where((entry) => entry != null).length;
+
+  @visibleForTesting
+  Future<void> debugDispose() async {
+    await _localPhotosUpdatedSubscription?.cancel();
+    _localPhotosUpdatedSubscription = null;
+  }
+
   Set<int> ignoreCollections() {
-    return CollectionsService.instance.getHiddenCollectionIds();
+    return _ignoreCollectionsProvider();
   }
 
   Map<String, dynamic> _contactSearchParams(
@@ -281,24 +382,30 @@ class SearchService {
     return source.email == target.email;
   }
 
-  Future<List<EnteFile>> getAllFilesForSearch() async {
-    if (_cachedFilesFuture != null && _cachedFilesForSearch != null) {
-      return _cachedFilesForSearch!;
+  Future<List<EnteFile>> getAllFilesForSearch() {
+    return _getAllFilesForSearch(_baseFilesCache.request());
+  }
+
+  Future<List<EnteFile>> _getAllFilesForSearch(
+    SearchFileRequest<List<EnteFile>> request,
+  ) {
+    final cached = _cachedFilesForSearch;
+    if (cached != null && identical(cached.request, request)) {
+      return cached.future;
     }
 
-    if (_cachedFilesFuture == null) {
-      _logger.info("Reading all files from db");
-      _cachedFilesFuture = FilesDB.instance.getAllFilesFromDB(
-        ignoreCollections(),
-        dedupeByUploadId: false,
-      );
-    }
-
-    _cachedFilesForSearch = _cachedFilesFuture!.then((files) {
-      return applyDBFilters(files, DBFilterOptions(dedupeUploadID: true));
-    });
-
-    return _cachedFilesForSearch!;
+    final entry = _createDerivedSearchFileCache(
+      request: request,
+      derive: (files) =>
+          applyDBFilters(files, DBFilterOptions(dedupeUploadID: true)),
+      onError: (failedEntry) {
+        if (identical(_cachedFilesForSearch, failedEntry)) {
+          _cachedFilesForSearch = null;
+        }
+      },
+    );
+    _cachedFilesForSearch = entry;
+    return entry.future;
   }
 
   Future<List<EnteFile>> _getFilesCreatedWithinDurations(
@@ -333,25 +440,54 @@ class SearchService {
   }
 
   Future<bool> hasAnyFilesForSearch() async {
-    if (_cachedFilesFuture != null && _cachedFilesForSearch != null) {
-      return (await _cachedFilesForSearch!).isNotEmpty;
+    final cached = _cachedFilesForSearch;
+    if (cached != null && _baseFilesCache.isCurrentRequest(cached.request)) {
+      return (await cached.future).isNotEmpty;
     }
 
     return FilesDB.instance.hasAnyFile();
   }
 
   Future<Map<int, EnteFile>> _getFilesByUploadedID() {
-    return _cachedFilesByUploadedID ??= getAllFilesForSearch().then((files) {
-      final filesByUploadedID = <int, EnteFile>{};
-      for (final file in files) {
-        final uploadedID = file.uploadedFileID;
-        if (uploadedID != null && !filesByUploadedID.containsKey(uploadedID)) {
-          filesByUploadedID[uploadedID] = file;
+    final request = _baseFilesCache.request();
+    final cached = _cachedFilesByUploadedID;
+    if (cached != null && identical(cached.request, request)) {
+      return cached.future;
+    }
+
+    // Capture the matching Search derivation before any async suspension. An
+    // older uploaded-ID callback must never publish an old-request Search
+    // entry over a newer generation's derived cache.
+    final searchFilesFuture = _getAllFilesForSearch(request);
+
+    final entry = _createDerivedSearchFileCache(
+      request: request,
+      derive: (_) async {
+        await _beforeUploadedIDDerivation?.call();
+        final searchFiles = await searchFilesFuture;
+        final filesByUploadedID = <int, EnteFile>{};
+        for (final file in searchFiles) {
+          final uploadedID = file.uploadedFileID;
+          if (uploadedID != null &&
+              !filesByUploadedID.containsKey(uploadedID)) {
+            filesByUploadedID[uploadedID] = file;
+          }
         }
-      }
-      return filesByUploadedID;
-    });
+        return filesByUploadedID;
+      },
+      onError: (failedEntry) {
+        if (identical(_cachedFilesByUploadedID, failedEntry)) {
+          _cachedFilesByUploadedID = null;
+        }
+      },
+    );
+    _cachedFilesByUploadedID = entry;
+    return entry.future;
   }
+
+  @visibleForTesting
+  Future<Map<int, EnteFile>> debugGetFilesByUploadedID() =>
+      _getFilesByUploadedID();
 
   Future<List<GenericSearchResult>> getUploadedFileIDsSearchResults(
     String query,
@@ -391,67 +527,69 @@ class SearchService {
     }
   }
 
-  Future<List<EnteFile>> getAllFilesForHierarchicalSearch() async {
-    if (_cachedFilesFuture != null &&
-        _cachedFilesForHierarchicalSearch != null) {
-      return _cachedFilesForHierarchicalSearch!;
+  Future<List<EnteFile>> getAllFilesForHierarchicalSearch() {
+    final request = _baseFilesCache.request();
+    final cached = _cachedFilesForHierarchicalSearch;
+    if (cached != null && identical(cached.request, request)) {
+      return cached.future;
     }
 
-    if (_cachedFilesFuture == null) {
-      _logger.info("Reading all files from db");
-      _cachedFilesFuture = FilesDB.instance.getAllFilesFromDB(
-        ignoreCollections(),
-        dedupeByUploadId: false,
-      );
-    }
-
-    _cachedFilesForHierarchicalSearch = _cachedFilesFuture!.then((files) {
-      return applyDBFilters(
+    final entry = _createDerivedSearchFileCache(
+      request: request,
+      derive: (files) => applyDBFilters(
         files,
         DBFilterOptions(dedupeUploadID: false, onlyUploadedFiles: true),
-      );
-    });
-
-    return _cachedFilesForHierarchicalSearch!;
+      ),
+      onError: (failedEntry) {
+        if (identical(_cachedFilesForHierarchicalSearch, failedEntry)) {
+          _cachedFilesForHierarchicalSearch = null;
+        }
+      },
+    );
+    _cachedFilesForHierarchicalSearch = entry;
+    return entry.future;
   }
 
   Future<List<EnteFile>> getAllFilesForGenericGallery({
     bool onlyUploadedFiles = true,
-  }) async {
-    if (_cachedFilesFuture != null) {
-      if (onlyUploadedFiles && _cachedFilesForGenericGallery != null) {
-        return _cachedFilesForGenericGallery!;
-      }
-      if (!onlyUploadedFiles && _cachedFilesForOfflineGallery != null) {
-        return _cachedFilesForOfflineGallery!;
-      }
+  }) {
+    final request = _baseFilesCache.request();
+    final cached = onlyUploadedFiles
+        ? _cachedFilesForGenericGallery
+        : _cachedFilesForOfflineGallery;
+    if (cached != null && identical(cached.request, request)) {
+      return cached.future;
     }
 
-    if (_cachedFilesFuture == null) {
-      _logger.info("Reading all files from db");
-      _cachedFilesFuture = FilesDB.instance.getAllFilesFromDB(
-        ignoreCollections(),
-        dedupeByUploadId: false,
-      );
-    }
-
-    final filteredFiles = _cachedFilesFuture!.then((files) {
-      return applyDBFilters(
+    final entry = _createDerivedSearchFileCache(
+      request: request,
+      derive: (files) => applyDBFilters(
         files,
         DBFilterOptions(
           dedupeUploadID: true,
           onlyUploadedFiles: onlyUploadedFiles,
         ),
-      );
-    });
+      ),
+      onError: (failedEntry) {
+        final current = onlyUploadedFiles
+            ? _cachedFilesForGenericGallery
+            : _cachedFilesForOfflineGallery;
+        if (identical(current, failedEntry)) {
+          if (onlyUploadedFiles) {
+            _cachedFilesForGenericGallery = null;
+          } else {
+            _cachedFilesForOfflineGallery = null;
+          }
+        }
+      },
+    );
 
     if (onlyUploadedFiles) {
-      _cachedFilesForGenericGallery = filteredFiles;
-      return _cachedFilesForGenericGallery!;
+      _cachedFilesForGenericGallery = entry;
     } else {
-      _cachedFilesForOfflineGallery = filteredFiles;
-      return _cachedFilesForOfflineGallery!;
+      _cachedFilesForOfflineGallery = entry;
     }
+    return entry.future;
   }
 
   Future<List<EnteFile>> getAllFilesForContactPhotoPicker() async {
@@ -473,16 +611,23 @@ class SearchService {
       return _cachedHiddenFilesFuture!;
     }
     _logger.info("Reading hidden files from db");
-    final hiddenCollections = CollectionsService.instance
-        .getHiddenCollectionIds();
-    _cachedHiddenFilesFuture = FilesDB.instance.getAllFilesFromCollections(
-      hiddenCollections,
-    );
-    return _cachedHiddenFilesFuture!;
+    late final Future<List<EnteFile>> load;
+    load = () async {
+      try {
+        return await _hiddenFilesLoader();
+      } catch (error, stackTrace) {
+        if (identical(_cachedHiddenFilesFuture, load)) {
+          _cachedHiddenFilesFuture = null;
+        }
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+    }();
+    _cachedHiddenFilesFuture = load;
+    return load;
   }
 
   void clearCache() {
-    _invalidateFileCaches();
+    _resetFileCachesForAccountBoundary();
     unawaited(memoriesCacheService.clearMemoriesCache());
   }
 
@@ -1995,4 +2140,30 @@ class SearchService {
           : DateTime(year, month + 1, 1).microsecondsSinceEpoch,
     ];
   }
+}
+
+class _DerivedSearchFileCache<T> {
+  const _DerivedSearchFileCache({required this.request, required this.future});
+
+  final SearchFileRequest<List<EnteFile>> request;
+  final Future<T> future;
+}
+
+_DerivedSearchFileCache<T> _createDerivedSearchFileCache<T>({
+  required SearchFileRequest<List<EnteFile>> request,
+  required FutureOr<T> Function(List<EnteFile> files) derive,
+  required void Function(_DerivedSearchFileCache<T> entry) onError,
+}) {
+  late final _DerivedSearchFileCache<T> entry;
+  final future = () async {
+    try {
+      final snapshot = await request.future;
+      return await derive(snapshot.value);
+    } catch (error, stackTrace) {
+      onError(entry);
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }();
+  entry = _DerivedSearchFileCache(request: request, future: future);
+  return entry;
 }

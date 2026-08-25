@@ -1,0 +1,1 @@
+- Improved search reliability during photo updates in large libraries.
