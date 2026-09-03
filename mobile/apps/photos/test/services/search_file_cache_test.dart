@@ -11,16 +11,18 @@ void main() {
     final requests = List.generate(6, (_) => cache.request());
     await loader.waitForInvocationCount(1);
     expect(loader.invocationCount, 1);
-    expect(requests.map((request) => request.operationID).toSet(), {1});
+    expect(
+      requests.every((request) => identical(request, requests.first)),
+      isTrue,
+    );
 
     loader.completeNext("stable");
-    final snapshots = await Future.wait(
+    final results = await Future.wait(
       requests.map((request) => request.future),
     );
 
-    expect(snapshots.map((snapshot) => snapshot.value).toSet(), {"stable"});
+    expect(results.toSet(), {"stable"});
     expect(loader.maximumActiveCount, 1);
-    expect(cache.maximumActivePhysicalLoads, 1);
   });
 
   test(
@@ -31,7 +33,7 @@ void main() {
 
       final beforeInvalidation = cache.request();
       await loader.waitForInvocationCount(1);
-      cache.invalidate(eventType: "addedOrUpdated", source: "remoteSync");
+      cache.invalidate();
       final afterInvalidation = cache.request();
 
       loader.completeNext("stale");
@@ -44,8 +46,7 @@ void main() {
         beforeInvalidation.future,
         afterInvalidation.future,
       ]);
-      expect(results.map((snapshot) => snapshot.value), ["fresh", "fresh"]);
-      expect(results.map((snapshot) => snapshot.generation), [1, 1]);
+      expect(results, ["fresh", "fresh"]);
       expect(loader.maximumActiveCount, 1);
     },
   );
@@ -57,18 +58,30 @@ void main() {
     final request = cache.request();
     await loader.waitForInvocationCount(1);
     for (var index = 0; index < 10; index++) {
-      cache.invalidate(eventType: "addedOrUpdated", source: "burst");
+      cache.invalidate();
     }
 
     loader.completeNext(0);
     await loader.waitForInvocationCount(2);
     loader.completeNext(10);
 
-    final snapshot = await request.future;
-    expect(snapshot.value, 10);
-    expect(snapshot.generation, 10);
+    expect(await request.future, 10);
     expect(loader.invocationCount, 2);
     expect(loader.maximumActiveCount, 1);
+  });
+
+  test("invalidation before loading is absorbed into the first load", () async {
+    final loader = _ControlledLoader<int>();
+    final cache = SearchFileCache<int>(loader: loader.call);
+
+    final request = cache.request();
+    cache.invalidate();
+    expect(identical(cache.request(), request), isTrue);
+
+    await loader.waitForInvocationCount(1);
+    loader.completeNext(1);
+    expect(await request.future, 1);
+    expect(loader.invocationCount, 1);
   });
 
   test(
@@ -79,19 +92,17 @@ void main() {
 
       final request = cache.request();
       await loader.waitForInvocationCount(1);
-      cache.invalidate(eventType: "addedOrUpdated", source: "first");
+      cache.invalidate();
       loader.completeNext(0);
 
       await loader.waitForInvocationCount(2);
-      cache.invalidate(eventType: "addedOrUpdated", source: "second");
+      cache.invalidate();
       loader.completeNext(1);
 
       await loader.waitForInvocationCount(3);
       loader.completeNext(2);
 
-      final snapshot = await request.future;
-      expect(snapshot.value, 2);
-      expect(snapshot.generation, 2);
+      expect(await request.future, 2);
       expect(loader.invocationCount, 3);
       expect(loader.maximumActiveCount, 1);
     },
@@ -104,18 +115,18 @@ void main() {
     final first = cache.request();
     await loader.waitForInvocationCount(1);
     loader.completeNext(4);
-    expect((await first.future).value, 4);
+    expect(await first.future, 4);
 
     final reused = await cache.request().future;
-    expect(reused.value, 4);
+    expect(reused, 4);
     expect(loader.invocationCount, 1);
 
-    cache.invalidate(eventType: "deletedFromRemote", source: "sync");
+    cache.invalidate();
     expect(loader.invocationCount, 1);
     final refreshed = cache.request();
     await loader.waitForInvocationCount(2);
     loader.completeNext(5);
-    expect((await refreshed.future).value, 5);
+    expect(await refreshed.future, 5);
     expect(loader.maximumActiveCount, 1);
   });
 
@@ -140,42 +151,37 @@ void main() {
     final retry = cache.request();
     await loader.waitForInvocationCount(2);
     loader.completeNext(7);
-    expect((await retry.future).value, 7);
+    expect(await retry.future, 7);
     expect(loader.maximumActiveCount, 1);
   });
 
-  test(
-    "hard reset lets a new session load without waiting for old physical work",
-    () async {
-      final loader = _ControlledLoader<String>();
-      final logs = <String>[];
-      final cache = SearchFileCache<String>(loader: loader.call, log: logs.add);
+  test("new session does not wait for an old failing load", () async {
+    final loader = _ControlledLoader<String>();
+    final cache = SearchFileCache<String>(loader: loader.call);
 
-      final oldRequest = cache.request();
-      final oldExpectation = expectLater(
-        oldRequest.future,
-        throwsA(isA<SearchFileCacheReset>()),
-      );
-      await loader.waitForInvocationCount(1);
-      cache.resetForAccountBoundary();
-      await oldExpectation;
-      final newRequest = cache.request();
+    final oldRequest = cache.request();
+    final oldExpectation = expectLater(
+      oldRequest.future,
+      throwsA(isA<SearchFileCacheReset>()),
+    );
+    await loader.waitForInvocationCount(1);
+    cache.resetForAccountBoundary();
+    await oldExpectation;
+    final newRequest = cache.request();
 
-      await loader.waitForInvocationCount(2);
-      expect(loader.activeCount, 2);
-      loader.completeNext("old-account");
+    await loader.waitForInvocationCount(2);
+    expect(loader.activeCount, 2);
+    loader.failNext(StateError("old-account failure"));
+    await Future<void>.delayed(Duration.zero);
+    expect(identical(cache.request(), newRequest), isTrue);
+    expect(loader.activeCount, 1);
 
-      loader.completeNext("new-account");
-      expect((await newRequest.future).value, "new-account");
-      expect((await cache.request().future).value, "new-account");
-      expect(loader.maximumActiveCount, 2);
-      expect(cache.maximumActivePhysicalLoads, 2);
-      expect(
-        logs.any((line) => line.contains("status=discardedReset")),
-        isTrue,
-      );
-    },
-  );
+    loader.completeNext("new-account");
+    expect(await newRequest.future, "new-account");
+    expect(await cache.request().future, "new-account");
+    expect(loader.activeCount, 0);
+    expect(loader.maximumActiveCount, 2);
+  });
 
   test("late old-session success cannot replace a newer result", () async {
     final loader = _ControlledLoader<String>();
@@ -195,12 +201,12 @@ void main() {
     expect(loader.activeCount, 2);
 
     loader.completeLast("new-account");
-    expect((await newRequest.future).value, "new-account");
+    expect(await newRequest.future, "new-account");
     expect(loader.activeCount, 1);
 
     loader.completeNext("old-account");
     await Future<void>.delayed(Duration.zero);
-    expect((await cache.request().future).value, "new-account");
+    expect(await cache.request().future, "new-account");
     expect(loader.activeCount, 0);
     expect(loader.maximumActiveCount, 2);
   });
@@ -223,7 +229,7 @@ void main() {
       final newRequest = cache.request();
       await loader.waitForInvocationCount(2);
 
-      cache.invalidate(eventType: "addedOrUpdated", source: "sameSession");
+      cache.invalidate();
       expect(identical(cache.request(), newRequest), isTrue);
       await Future<void>.delayed(Duration.zero);
       expect(loader.invocationCount, 2);
@@ -234,11 +240,11 @@ void main() {
       expect(loader.activeCount, 2);
 
       loader.completeLast("fresh-new-account");
-      expect((await newRequest.future).value, "fresh-new-account");
+      expect(await newRequest.future, "fresh-new-account");
       loader.completeNext("old-account");
       await Future<void>.delayed(Duration.zero);
 
-      expect((await cache.request().future).value, "fresh-new-account");
+      expect(await cache.request().future, "fresh-new-account");
       expect(loader.activeCount, 0);
       expect(loader.maximumActiveCount, 2);
     },
@@ -259,39 +265,10 @@ void main() {
     await oldExpectation;
     await loader.waitForInvocationCount(1);
     loader.completeNext("new-account");
-    expect((await newRequest.future).value, "new-account");
+    expect(await newRequest.future, "new-account");
     expect(loader.invocationCount, 1);
     expect(loader.maximumActiveCount, 1);
   });
-
-  test(
-    "logs expose generations, coalescing, counts, timings, and RSS",
-    () async {
-      final loader = _ControlledLoader<int>();
-      final logs = <String>[];
-      final cache = SearchFileCache<int>(loader: loader.call, log: logs.add);
-
-      final request = cache.request();
-      await loader.waitForInvocationCount(1);
-      cache.invalidate(eventType: "addedOrUpdated", source: "remoteSync");
-      cache.invalidate(eventType: "addedOrUpdated", source: "remoteSync");
-      loader.completeNext(1);
-      await loader.waitForInvocationCount(2);
-      loader.completeNext(2);
-      await request.future;
-
-      expect(logs.any((line) => line.contains("SearchBaseLoad start")), isTrue);
-      expect(logs.any((line) => line.contains("coalescedSuccessor")), isTrue);
-      expect(logs.any((line) => line.contains("durationMs=")), isTrue);
-      expect(logs.any((line) => line.contains("activePhysicalLoads=")), isTrue);
-      expect(
-        logs.any((line) => line.contains("maxActivePhysicalLoads=1")),
-        isTrue,
-      );
-      expect(logs.any((line) => line.contains("rssMiB=")), isTrue);
-      expect(logs.any((line) => line.contains("physicalAttempts=2")), isTrue);
-    },
-  );
 }
 
 class _ControlledLoader<T> {

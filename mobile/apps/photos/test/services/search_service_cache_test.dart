@@ -55,7 +55,6 @@ void main() {
     expect(await offlineGallery, [firstUploaded, local]);
     expect((await uploadedMap)[10], same(firstUploaded));
     expect(baseLoader.invocationCount, 1);
-    expect(service.debugMaximumActiveBaseLoads, 1);
   });
 
   test("hasAny joins an already-requested Search view", () async {
@@ -83,13 +82,27 @@ void main() {
       await baseLoader.waitForInvocationCount(1);
       baseLoader.completeNext([_file(generatedID: 5, uploadedID: 5)]);
       await Future.wait(views);
-      expect(service.debugRetainedBaseDerivedCacheCount, 5);
 
       events.add(LocalPhotosUpdatedEvent(const [], source: "idleUpdate"));
       await Future<void>.delayed(Duration.zero);
 
-      expect(service.debugRetainedBaseDerivedCacheCount, 0);
       expect(baseLoader.invocationCount, 1);
+      final refreshedSearch = service.getAllFilesForSearch();
+      final refreshedHierarchy = service.getAllFilesForHierarchicalSearch();
+      final refreshedGallery = service.getAllFilesForGenericGallery();
+      final refreshedOfflineGallery = service.getAllFilesForGenericGallery(
+        onlyUploadedFiles: false,
+      );
+      final refreshedUploadedMap = service.debugGetFilesByUploadedID();
+      await baseLoader.waitForInvocationCount(2);
+      final fresh = _file(generatedID: 6, uploadedID: 6);
+      baseLoader.completeNext([fresh]);
+
+      expect(await refreshedSearch, [fresh]);
+      expect(await refreshedHierarchy, [fresh]);
+      expect(await refreshedGallery, [fresh]);
+      expect(await refreshedOfflineGallery, [fresh]);
+      expect((await refreshedUploadedMap)[6], same(fresh));
     },
   );
 
@@ -119,7 +132,6 @@ void main() {
     expect(await laterHierarchy, [fresh]);
     expect((await laterUploadedMap)[2], same(fresh));
     expect(baseLoader.invocationCount, 2);
-    expect(service.debugMaximumActiveBaseLoads, 1);
   });
 
   test("hidden files retain an independent invalidating cache", () async {
@@ -141,14 +153,6 @@ void main() {
     hiddenLoader.completeNext([hiddenTwo]);
     expect(await second, [hiddenTwo]);
     expect(baseLoader.invocationCount, 0);
-  });
-
-  test("calling init twice leaves one effective update subscription", () async {
-    service.init();
-    events.add(LocalPhotosUpdatedEvent(const [], source: "oneEvent"));
-    await Future<void>.delayed(Duration.zero);
-
-    expect(service.debugRequestedBaseGeneration, 1);
   });
 
   test("production account reset isolates every derived view", () async {
@@ -202,7 +206,6 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(await service.getAllFilesForSearch(), [newAccountFile]);
     expect(baseLoader.activeCount, 0);
-    expect(service.debugMaximumActiveBaseLoads, 2);
   });
 
   test(

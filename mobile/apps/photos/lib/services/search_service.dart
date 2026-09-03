@@ -91,10 +91,13 @@ class SearchService {
   SearchService._privateConstructor() {
     _ignoreCollectionsProvider = () =>
         CollectionsService.instance.getHiddenCollectionIds();
-    _allFilesLoader = () => FilesDB.instance.getAllFilesFromDB(
-      ignoreCollections(),
-      dedupeByUploadId: false,
-    );
+    _allFilesLoader = () {
+      _logger.info("Reading all files from db");
+      return FilesDB.instance.getAllFilesFromDB(
+        ignoreCollections(),
+        dedupeByUploadId: false,
+      );
+    };
     _hiddenFilesLoader = () => FilesDB.instance.getAllFilesFromCollections(
       CollectionsService.instance.getHiddenCollectionIds(),
     );
@@ -106,23 +109,18 @@ class SearchService {
     required Future<List<EnteFile>> Function() allFilesLoader,
     required Future<List<EnteFile>> Function() hiddenFilesLoader,
     required Stream<LocalPhotosUpdatedEvent> localPhotosUpdatedEvents,
-    Set<int> Function()? ignoreCollectionsProvider,
     Future<void> Function()? beforeUploadedIDDerivation,
   }) {
     _allFilesLoader = allFilesLoader;
     _hiddenFilesLoader = hiddenFilesLoader;
     _localPhotosUpdatedEvents = localPhotosUpdatedEvents;
-    _ignoreCollectionsProvider =
-        ignoreCollectionsProvider ?? () => const <int>{};
+    _ignoreCollectionsProvider = () => const <int>{};
     _beforeUploadedIDDerivation = beforeUploadedIDDerivation;
     _initializeBaseFilesCache();
   }
 
   void _initializeBaseFilesCache() {
-    _baseFilesCache = SearchFileCache<List<EnteFile>>(
-      loader: _allFilesLoader,
-      log: _logger.info,
-    );
+    _baseFilesCache = SearchFileCache<List<EnteFile>>(loader: _allFilesLoader);
   }
 
   static SearchService? _instance;
@@ -149,17 +147,14 @@ class SearchService {
     _localPhotosUpdatedSubscription =
         (_localPhotosUpdatedEvents ??
                 Bus.instance.on<LocalPhotosUpdatedEvent>())
-            .listen((event) {
+            .listen((_) {
               // Invalidate only; reload on demand.
-              _invalidateFileCaches(event);
+              _invalidateFileCaches();
             });
   }
 
-  void _invalidateFileCaches(LocalPhotosUpdatedEvent event) {
-    final retainedActiveRequest = _baseFilesCache.invalidate(
-      eventType: event.type.name,
-      source: event.source,
-    );
+  void _invalidateFileCaches() {
+    final retainedActiveRequest = _baseFilesCache.invalidate();
     if (!retainedActiveRequest) {
       _clearBaseDerivedCaches();
     }
@@ -179,27 +174,6 @@ class SearchService {
     _cachedFilesForOfflineGallery = null;
     _cachedFilesByUploadedID = null;
   }
-
-  @visibleForTesting
-  void debugResetForAccountBoundary() {
-    _resetFileCachesForAccountBoundary();
-  }
-
-  @visibleForTesting
-  int get debugMaximumActiveBaseLoads =>
-      _baseFilesCache.maximumActivePhysicalLoads;
-
-  @visibleForTesting
-  int get debugRequestedBaseGeneration => _baseFilesCache.requestedGeneration;
-
-  @visibleForTesting
-  int get debugRetainedBaseDerivedCacheCount => [
-    _cachedFilesForSearch,
-    _cachedFilesForHierarchicalSearch,
-    _cachedFilesForGenericGallery,
-    _cachedFilesForOfflineGallery,
-    _cachedFilesByUploadedID,
-  ].where((entry) => entry != null).length;
 
   @visibleForTesting
   Future<void> debugDispose() async {
@@ -2157,8 +2131,7 @@ _DerivedSearchFileCache<T> _createDerivedSearchFileCache<T>({
   late final _DerivedSearchFileCache<T> entry;
   final future = () async {
     try {
-      final snapshot = await request.future;
-      return await derive(snapshot.value);
+      return await derive(await request.future);
     } catch (error, stackTrace) {
       onError(entry);
       Error.throwWithStackTrace(error, stackTrace);
