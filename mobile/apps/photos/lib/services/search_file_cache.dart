@@ -32,7 +32,7 @@ class SearchFileRequest<T> {
   final Future<SearchFileSnapshot<T>> future;
 }
 
-/// Keeps one expensive physical load active while resolving callers with the
+/// Coalesces callers within one account session and resolves them with the
 /// first result that is stable for the latest requested generation.
 class SearchFileCache<T> {
   SearchFileCache({
@@ -126,14 +126,17 @@ class SearchFileCache<T> {
     return true;
   }
 
-  /// Detaches account-scoped state immediately. The uncancellable old load is
-  /// allowed to settle, but the physical gate remains held until it does.
+  /// Detaches account-scoped state immediately. An uncancellable old load may
+  /// settle alongside work for the new session, but its result stays detached.
   void resetForAccountBoundary() {
     final operation = _activeOperation;
     _sessionGeneration++;
     _requestedGeneration = 0;
     _currentRequest = null;
     _activeOperation = null;
+    // The gate serializes attempts only within the current account session.
+    // A new account should not wait for uncancellable work from the old one.
+    _physicalLoadBarrier = null;
     _nextOperationReason = "coldMiss";
     if (operation != null && !operation.completer.isCompleted) {
       operation.completer.completeError(const SearchFileCacheReset());
@@ -147,7 +150,7 @@ class SearchFileCache<T> {
     _log(
       "SearchBaseLoad hardReset detachedOperationId="
       "${operation?.operationID ?? 'none'} sessionGeneration=$_sessionGeneration "
-      "physicalLoadStillActive=${_activePhysicalLoads > 0}",
+      "activePhysicalLoads=$_activePhysicalLoads newSessionWaitsForOld=false",
     );
   }
 
@@ -282,10 +285,6 @@ class SearchFileCache<T> {
     if (_activePhysicalLoads > _maximumActivePhysicalLoads) {
       _maximumActivePhysicalLoads = _activePhysicalLoads;
     }
-    assert(
-      _activePhysicalLoads <= 1,
-      "Search base-file loader concurrency exceeded one",
-    );
     return _PhysicalLease(completer: completer, future: future);
   }
 

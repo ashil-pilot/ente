@@ -177,6 +177,7 @@ void main() {
     final previous = SearchService.debugReplaceInstanceForTesting(service);
     addTearDown(() => SearchService.debugReplaceInstanceForTesting(previous));
     SearchService.resetForAccountBoundaryIfInitialized();
+    await Future.wait(oldExpectations);
     final newSearch = service.getAllFilesForSearch();
     final newHierarchy = service.getAllFilesForHierarchicalSearch();
     final newUploadedGallery = service.getAllFilesForGenericGallery();
@@ -184,14 +185,11 @@ void main() {
       onlyUploadedFiles: false,
     );
     final newUploadedMap = service.debugGetFilesByUploadedID();
-    await Future<void>.delayed(Duration.zero);
-    expect(baseLoader.invocationCount, 1);
-
-    baseLoader.completeNext([_file(generatedID: 1, uploadedID: 1)]);
-    await Future.wait(oldExpectations);
     await baseLoader.waitForInvocationCount(2);
+    expect(baseLoader.activeCount, 2);
+
     final newAccountFile = _file(generatedID: 2, uploadedID: 2);
-    baseLoader.completeNext([newAccountFile]);
+    baseLoader.completeLast([newAccountFile]);
 
     expect(await newSearch, [newAccountFile]);
     expect(await newHierarchy, [newAccountFile]);
@@ -199,7 +197,12 @@ void main() {
     expect(await newOfflineGallery, [newAccountFile]);
     expect((await newUploadedMap)[2], same(newAccountFile));
     expect(await service.getAllFilesForSearch(), [newAccountFile]);
-    expect(service.debugMaximumActiveBaseLoads, 1);
+
+    baseLoader.completeNext([_file(generatedID: 1, uploadedID: 1)]);
+    await Future<void>.delayed(Duration.zero);
+    expect(await service.getAllFilesForSearch(), [newAccountFile]);
+    expect(baseLoader.activeCount, 0);
+    expect(service.debugMaximumActiveBaseLoads, 2);
   });
 
   test(
@@ -278,6 +281,8 @@ class _ControlledFileLoader {
   final List<({int target, Completer<void> completer})> _waiters = [];
   int invocationCount = 0;
 
+  int get activeCount => _pending.length;
+
   Future<List<EnteFile>> call() {
     invocationCount++;
     final completer = Completer<List<EnteFile>>();
@@ -300,6 +305,10 @@ class _ControlledFileLoader {
 
   void completeNext(List<EnteFile> files) {
     _pending.removeAt(0).complete(files);
+  }
+
+  void completeLast(List<EnteFile> files) {
+    _pending.removeLast().complete(files);
   }
 
   void failNext(Object error) {

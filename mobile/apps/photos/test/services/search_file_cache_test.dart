@@ -145,7 +145,7 @@ void main() {
   });
 
   test(
-    "hard reset isolates sessions while retaining the physical gate",
+    "hard reset lets a new session load without waiting for old physical work",
     () async {
       final loader = _ControlledLoader<String>();
       final logs = <String>[];
@@ -158,23 +158,89 @@ void main() {
       );
       await loader.waitForInvocationCount(1);
       cache.resetForAccountBoundary();
+      await oldExpectation;
       final newRequest = cache.request();
 
-      await Future<void>.delayed(Duration.zero);
-      expect(loader.invocationCount, 1);
-      loader.completeNext("old-account");
-      await oldExpectation;
-
       await loader.waitForInvocationCount(2);
+      expect(loader.activeCount, 2);
+      loader.completeNext("old-account");
+
       loader.completeNext("new-account");
       expect((await newRequest.future).value, "new-account");
       expect((await cache.request().future).value, "new-account");
-      expect(loader.maximumActiveCount, 1);
-      expect(cache.maximumActivePhysicalLoads, 1);
+      expect(loader.maximumActiveCount, 2);
+      expect(cache.maximumActivePhysicalLoads, 2);
       expect(
         logs.any((line) => line.contains("status=discardedReset")),
         isTrue,
       );
+    },
+  );
+
+  test("late old-session success cannot replace a newer result", () async {
+    final loader = _ControlledLoader<String>();
+    final cache = SearchFileCache<String>(loader: loader.call);
+
+    final oldRequest = cache.request();
+    final oldExpectation = expectLater(
+      oldRequest.future,
+      throwsA(isA<SearchFileCacheReset>()),
+    );
+    await loader.waitForInvocationCount(1);
+
+    cache.resetForAccountBoundary();
+    await oldExpectation;
+    final newRequest = cache.request();
+    await loader.waitForInvocationCount(2);
+    expect(loader.activeCount, 2);
+
+    loader.completeLast("new-account");
+    expect((await newRequest.future).value, "new-account");
+    expect(loader.activeCount, 1);
+
+    loader.completeNext("old-account");
+    await Future<void>.delayed(Duration.zero);
+    expect((await cache.request().future).value, "new-account");
+    expect(loader.activeCount, 0);
+    expect(loader.maximumActiveCount, 2);
+  });
+
+  test(
+    "new-session successors stay serial while an old-session load settles",
+    () async {
+      final loader = _ControlledLoader<String>();
+      final cache = SearchFileCache<String>(loader: loader.call);
+
+      final oldRequest = cache.request();
+      final oldExpectation = expectLater(
+        oldRequest.future,
+        throwsA(isA<SearchFileCacheReset>()),
+      );
+      await loader.waitForInvocationCount(1);
+
+      cache.resetForAccountBoundary();
+      await oldExpectation;
+      final newRequest = cache.request();
+      await loader.waitForInvocationCount(2);
+
+      cache.invalidate(eventType: "addedOrUpdated", source: "sameSession");
+      expect(identical(cache.request(), newRequest), isTrue);
+      await Future<void>.delayed(Duration.zero);
+      expect(loader.invocationCount, 2);
+      expect(loader.activeCount, 2);
+
+      loader.completeLast("stale-new-account");
+      await loader.waitForInvocationCount(3);
+      expect(loader.activeCount, 2);
+
+      loader.completeLast("fresh-new-account");
+      expect((await newRequest.future).value, "fresh-new-account");
+      loader.completeNext("old-account");
+      await Future<void>.delayed(Duration.zero);
+
+      expect((await cache.request().future).value, "fresh-new-account");
+      expect(loader.activeCount, 0);
+      expect(loader.maximumActiveCount, 2);
     },
   );
 
@@ -263,6 +329,10 @@ class _ControlledLoader<T> {
 
   void completeNext(T value) {
     _pending.removeAt(0).complete(value);
+  }
+
+  void completeLast(T value) {
+    _pending.removeLast().complete(value);
   }
 
   void failNext(Object error) {
