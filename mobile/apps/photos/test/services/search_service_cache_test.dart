@@ -254,6 +254,28 @@ void main() {
     expect(await retry, [hidden]);
   });
 
+  test("a synchronous hidden-file failure is retryable", () async {
+    final hidden = _file(generatedID: 13, uploadedID: 13);
+    var shouldFail = true;
+    final synchronousService = SearchService.forTesting(
+      allFilesLoader: baseLoader.call,
+      hiddenFilesLoader: () {
+        if (shouldFail) {
+          shouldFail = false;
+          throw StateError("synchronous hidden query failure");
+        }
+        return Future.value([hidden]);
+      },
+      localPhotosUpdatedEvents: events.stream,
+    );
+
+    await expectLater(
+      synchronousService.getHiddenFiles(),
+      throwsA(isA<StateError>()),
+    );
+    expect(await synchronousService.getHiddenFiles(), [hidden]);
+  });
+
   test("a base failure does not poison a derived view", () async {
     final first = service.getAllFilesForSearch();
     final expectation = expectLater(first, throwsA(isA<StateError>()));

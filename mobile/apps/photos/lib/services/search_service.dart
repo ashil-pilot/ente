@@ -588,7 +588,7 @@ class SearchService {
     late final Future<List<EnteFile>> load;
     load = () async {
       try {
-        return await _hiddenFilesLoader();
+        return await Future<List<EnteFile>>.sync(_hiddenFilesLoader);
       } catch (error, stackTrace) {
         if (identical(_cachedHiddenFilesFuture, load)) {
           _cachedHiddenFilesFuture = null;
