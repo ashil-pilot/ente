@@ -1,0 +1,1 @@
+- Preserved pending shared photos and videos when an upload fails because device storage is full.

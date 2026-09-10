@@ -31,6 +31,7 @@ import "package:photos/module/upload/service/existing_upload_resolver.dart";
 import "package:photos/module/upload/service/multipart.dart";
 import 'package:photos/module/upload/service/upload_artifact_lifecycle.dart';
 import 'package:photos/module/upload/service/upload_queue.dart';
+import 'package:photos/module/upload/service/upload_source_cleanup.dart';
 import 'package:photos/module/upload/service/upload_transport.dart';
 import "package:photos/module/upload/upload_data.dart";
 import "package:photos/module/upload/upload_metadata.dart";
@@ -443,6 +444,7 @@ class FileUploader {
 
     var uploadCompleted = false;
     var uploadHardFailure = false;
+    var uploadInvalidFile = false;
 
     try {
       final bool isUpdatedFile =
@@ -783,6 +785,7 @@ class FileUploader {
       if (e is InvalidFileError) {
         _logger.severe("File upload ignored for " + file.toString(), e);
         await _onInvalidFileError(file, e);
+        uploadInvalidFile = true;
       }
       if ((e is StorageLimitExceededError ||
           e is FileTooLargeForPlanError ||
@@ -806,6 +809,7 @@ class FileUploader {
         encryptedThumbnailPath,
         lockKey: lockKey,
         isMultiPartUpload: isMultipartUpload,
+        uploadInvalidFile: uploadInvalidFile,
       );
     }
   }
@@ -831,23 +835,19 @@ class FileUploader {
     String encryptedFilePath,
     String encryptedThumbnailPath, {
     required String lockKey,
+    required bool uploadInvalidFile,
     bool isMultiPartUpload = false,
   }) async {
     if (mediaUploadData != null) {
-      // delete the file from app's internal cache if it was copied to app
-      // for upload. On iOS, only remove the file from photo_manager/app cache
-      // when upload is either completed or cannot be retried automatically.
-      // Shared Media should only be cleared when the upload
-      // succeeds.
-      // A Live Photo source is an app-created archive, and each retry rebuilds
-      // it, so it must be removed after every attempt.
-      if ((Platform.isIOS &&
-              (file.fileType == FileType.livePhoto ||
-                  uploadCompleted ||
-                  uploadHardFailure)) ||
-          (uploadCompleted && file.isSharedMediaToAppSandbox)) {
-        await deleteFileSystemEntityIfPresent(mediaUploadData.sourceFile);
-      }
+      await cleanupUploadSource(
+        mediaUploadData.sourceFile,
+        isIOS: Platform.isIOS,
+        isSharedMedia: file.isSharedMediaToAppSandbox,
+        isLivePhoto: file.fileType == FileType.livePhoto,
+        uploadCompleted: uploadCompleted,
+        uploadHardFailure: uploadHardFailure,
+        uploadInvalidFile: uploadInvalidFile,
+      );
     }
     if (File(encryptedFilePath).existsSync()) {
       if (isMultiPartUpload && !uploadCompleted) {
