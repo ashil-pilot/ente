@@ -69,10 +69,8 @@ class FileViewerFilmstripLayout {
 const _cacheExtentInItems = 4;
 const _scrollAnimationDuration = Duration(milliseconds: 180);
 
-typedef FileViewerFilmstripSemanticValueBuilder = String Function(
-  int current,
-  int total,
-);
+typedef FileViewerFilmstripSemanticValueBuilder =
+    String Function(int current, int total);
 
 class FileViewerFilmstrip extends StatefulWidget {
   final int itemCount;
@@ -391,8 +389,9 @@ class _FileViewerFilmstripState extends State<FileViewerFilmstrip> {
   void _jumpToIndex(int index) {
     if (widget.itemCount == 0 || !_scrollController.hasClients) return;
     final position = _scrollController.position;
-    final target = _offsetForIndex(_clampIndex(index))
-        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final target = _offsetForIndex(
+      _clampIndex(index),
+    ).clamp(position.minScrollExtent, position.maxScrollExtent);
     if ((position.pixels - target).abs() < 0.5) return;
     _scrollController.jumpTo(target);
   }
@@ -400,8 +399,9 @@ class _FileViewerFilmstripState extends State<FileViewerFilmstrip> {
   void _animateToIndex(int index) {
     if (widget.itemCount == 0 || !_scrollController.hasClients) return;
     final position = _scrollController.position;
-    final target = _offsetForIndex(_clampIndex(index))
-        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    final target = _offsetForIndex(
+      _clampIndex(index),
+    ).clamp(position.minScrollExtent, position.maxScrollExtent);
     if ((position.pixels - target).abs() < 0.5) return;
     unawaited(
       _scrollController.animateTo(
