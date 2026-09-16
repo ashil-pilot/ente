@@ -1,0 +1,1 @@
+- Improved gallery performance when many items display the same face avatar.
