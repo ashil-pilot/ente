@@ -71,6 +71,7 @@ class MapView extends StatefulWidget {
 }
 
 class _MapViewState extends State<MapView> {
+  static const _previewEnabled = bool.fromEnvironment("MAP_MARKER_PREVIEW");
   late List<Marker> _markers;
 
   @override
@@ -82,7 +83,10 @@ class _MapViewState extends State<MapView> {
   @override
   void didUpdateWidget(MapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.imageMarkers, widget.imageMarkers)) {
+    if (!identical(oldWidget.imageMarkers, widget.imageMarkers) ||
+        oldWidget.markerSize != widget.markerSize ||
+        oldWidget.showControls != widget.showControls ||
+        oldWidget.maxZoom != widget.maxZoom) {
       _markers = _buildMarkers();
     }
   }
@@ -208,6 +212,7 @@ class _MapViewState extends State<MapView> {
         imageMarker,
         ValueKey(index),
         markerSize: widget.markerSize,
+        useRoundedMarker: _previewEnabled && widget.showControls,
         onTap: clusterBounds == null
             ? null
             : () {

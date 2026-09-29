@@ -5,7 +5,7 @@ class MapGalleryTileBadge extends StatelessWidget {
   final int size;
   const MapGalleryTileBadge({super.key, required this.size});
 
-  String formatNumber(int number) {
+  static String formatNumber(int number) {
     if (number <= 99) {
       return number.toString();
     } else if (number <= 999) {
