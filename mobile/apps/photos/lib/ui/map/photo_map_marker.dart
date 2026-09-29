@@ -98,6 +98,9 @@ class PhotoMapMarker extends StatelessWidget {
 }
 
 class _PhotoPinFramePainter extends CustomPainter {
+  static (Rect, double, Size)? _cachedGeometry;
+  static Path? _cachedFrame;
+
   final Rect body;
   final double radius;
   final Color color;
@@ -110,6 +113,17 @@ class _PhotoPinFramePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final geometry = (body, radius, size);
+    if (_cachedGeometry != geometry) {
+      _cachedFrame = _buildFrame(size);
+      _cachedGeometry = geometry;
+    }
+    final frame = _cachedFrame!;
+    canvas.drawShadow(frame, const Color(0x45000000), 3, false);
+    canvas.drawPath(frame, Paint()..color = color);
+  }
+
+  Path _buildFrame(Size size) {
     final center = body.center.dx;
     const halfWidth = 6.0;
     const pointerRadius = 1.0;
@@ -148,13 +162,11 @@ class _PhotoPinFramePainter extends CustomPainter {
       ..arcToPoint(Offset(center + halfWidth, body.bottom), radius: curveRadius)
       ..lineTo(center + halfWidth, body.bottom - 1)
       ..close();
-    final frame = Path.combine(
+    return Path.combine(
       PathOperation.union,
       Path()..addRRect(RRect.fromRectAndRadius(body, Radius.circular(radius))),
       pointer,
     );
-    canvas.drawShadow(frame, const Color(0x45000000), 3, false);
-    canvas.drawPath(frame, Paint()..color = color);
   }
 
   @override
