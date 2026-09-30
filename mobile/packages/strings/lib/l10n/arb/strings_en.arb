@@ -3972,6 +3972,10 @@
   "sendInvite": "Send invite",
   "sendLink": "Send link",
   "sendLogsDescription": "This will send across logs to help us debug your issue. While we take precautions to ensure that sensitive information is not logged, we encourage you to view these logs before sharing them.",
+  "sendPhoto": "Send photo",
+  "@sendPhoto": {
+    "description": "Share a copy of the current photo using the system share sheet, as opposed to sending a viewing link"
+  },
   "sendQrCode": "Send QR code",
   "sendToEmail": "Send to {email}",
   "@sendToEmail": {
@@ -3981,6 +3985,10 @@
         "example": "support@ente.com"
       }
     }
+  },
+  "sendVideo": "Send video",
+  "@sendVideo": {
+    "description": "Share a copy of the current video using the system share sheet, as opposed to sending a viewing link"
   },
   "serverEndpoint": "Server endpoint",
   "@serverEndpoint": {
