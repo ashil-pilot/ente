@@ -48,11 +48,20 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    if target.name == 'rive_native'
+      source = installer.pods_project.main_group.new_file(File.join(__dir__, 'RiveSimulatorArchInfo.c'))
+      target.source_build_phase.add_file_reference(source)
+    end
     target.build_configurations.each do |config|
       config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
 
       if target.name == 'ente_photos_frb' && config.name == 'Debug'
         config.build_settings['ONLY_ACTIVE_ARCH[sdk=iphonesimulator*]'] = 'YES'
+      end
+
+      if target.name == 'rive_native'
+        config.build_settings['OTHER_LDFLAGS[sdk=iphonesimulator*]'] =
+          '$(inherited) -Wl,-alias,_EnteRiveSimulatorArchInfo,_NXGetLocalArchInfo'
       end
     end
 

@@ -2,15 +2,13 @@ import AVFoundation
 import Flutter
 import UIKit
 import UserNotifications
-import app_links
 import ente_background_manager
 import workmanager_apple
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private static let workmanagerDebugThreadIdentifier =
     "io.ente.frame.workmanager.debug"
-  private let foregroundHeartbeat = ForegroundHeartbeat()
 
   override func application(
     _ application: UIApplication,
@@ -33,7 +31,6 @@ import workmanager_apple
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     }
 
-    GeneratedPluginRegistrant.register(with: self)
     BackgroundManagerPlugin.install(
       isEnabled: { Self.shouldUseNativeBackgroundManager() },
       registrant: { registry in GeneratedPluginRegistrant.register(with: registry) }
@@ -52,14 +49,11 @@ import workmanager_apple
     WorkmanagerPlugin.registerBGProcessingTask(
       withIdentifier: "io.ente.frame.iOSBackgroundProcessing")
 
-    if let url = AppLinks.shared.getLink(launchOptions: launchOptions) {
-      // only accept non-homewidget urls for AppLinks
-      if !url.absoluteString.contains("homeWidget") {
-        AppLinks.shared.handleLink(url: url)
-      }
-    }
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 
   private func configureWorkmanagerDebugHandler() {
@@ -104,21 +98,6 @@ import workmanager_apple
     }
 
     return json["internalUser"] as? Bool ?? false
-  }
-
-  override func applicationDidBecomeActive(_ application: UIApplication) {
-    foregroundHeartbeat.start()
-    signal(SIGPIPE, SIG_IGN)
-  }
-
-  override func applicationWillEnterForeground(_ application: UIApplication) {
-    foregroundHeartbeat.start()
-    signal(SIGPIPE, SIG_IGN)
-  }
-
-  override func applicationDidEnterBackground(_ application: UIApplication) {
-    foregroundHeartbeat.stop()
-    super.applicationDidEnterBackground(application)
   }
 
   override func userNotificationCenter(
