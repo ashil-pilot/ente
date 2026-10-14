@@ -101,6 +101,10 @@ pub fn create_directory(path: &Path) -> Result<()> {
 }
 
 pub fn set_time(path: &Path, micros: i64) -> Result<Properties> {
+    let properties = Properties::read(path)?;
+    if properties.modified == i128::from(micros) * 1000 {
+        return Ok(properties);
+    }
     let duration = Duration::from_micros(micros.unsigned_abs());
     let time = if micros >= 0 {
         UNIX_EPOCH.checked_add(duration)
@@ -128,6 +132,24 @@ pub fn sync_move(source: &Path, destination: &Path) -> Result<()> {
         sync_parent(source)?;
     }
     Ok(())
+}
+
+pub fn free_rename(source: &Path, destination: &Path) -> Result<()> {
+    ensure!(
+        !destination.try_exists()? || names::same_path(source, destination),
+        super::Conflict(format!(
+            "at {}: occupied rename target",
+            destination.display()
+        ))
+    );
+    Ok(())
+}
+
+pub fn move_file(source: &Path, destination: &Path) -> Result<()> {
+    free_rename(source, destination)?;
+    create_directory(destination.parent().context("move has no parent")?)?;
+    fs::rename(source, destination)?;
+    sync_move(source, destination)
 }
 
 pub struct Json {

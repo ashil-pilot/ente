@@ -1,4 +1,8 @@
 {
+  "bringMemoriesTogether": "Gắn kết những kỷ niệm của bạn",
+  "createMyAccount": "Tạo tài khoản của tôi",
+  "localGalleryPermissionDesc": "Cấp quyền truy cập và sắp xếp ảnh bằng tính năng nhận diện khuôn mặt. Mọi quá trình xử lý đều diễn ra trên thiết bị của bạn.",
+  "onboardingOrganizeDesc": "Sắp xếp ảnh và video của bạn. Mọi kỷ niệm ở cùng một nơi.",
   "wallpaper": "Hình nền",
   "setWallpaper": "Đặt hình nền",
   "wallpaperHome": "Màn hình chính",
@@ -44,28 +48,9 @@
     "description": "Title for active sessions page"
   },
   "add": "Thêm",
-  "addAdmin": "Thêm quản trị viên",
-  "addAdmins": "{count, plural, =0{Thêm quản trị viên} other{Thêm các quản trị viên}}",
-  "@addAdmins": {
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
-      }
-    },
-    "description": "Button text to add admins"
-  },
   "addAlbumWidgetPrompt": "Thêm một widget album vào màn hình chính để tùy chỉnh nó ở đây.",
   "addANameAndPhoto": "Thêm tên và ảnh",
-  "addANewEmail": "Thêm một email mới",
   "addCode": "Thêm mã",
-  "addCollaborator": "Thêm cộng tác viên",
-  "addCollaborators": "{count, plural, =0{Thêm cộng tác viên} other{Thêm cộng tác viên}}",
-  "@addCollaborators": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "addedAMemoryTo": "đã thêm một kỷ niệm vào {albumName}",
   "@addedAMemoryTo": {
     "description": "Social notification action text shown after a person's name, for example 'John added a memory to Recents'. Make sure the translation reads naturally with a name before it, and do not capitalize the first letter.",
@@ -75,7 +60,6 @@
       }
     }
   },
-  "addedAs": "Đã thêm như",
   "addedBy": "Được thêm bởi {emailOrName}",
   "@addedBy": {
     "placeholders": {
@@ -142,7 +126,6 @@
   "addMember": "Thêm thành viên",
   "addMemoriesWidgetPrompt": "Thêm một widget kỷ niệm vào màn hình chính để tùy chỉnh nó ở đây.",
   "addMore": "Thêm nhiều hơn",
-  "addMoreAdmins": "Thêm quản trị viên khác",
   "addName": "Thêm tên",
   "addNew": "Thêm mới",
   "@addNew": {
@@ -162,7 +145,6 @@
   "@addPage": {
     "description": "Button to capture another page in the document scanner"
   },
-  "addParticipants": "Thêm người tham gia",
   "addPeopleWidgetPrompt": "Thêm một widget người vào màn hình chính để tùy chỉnh nó ở đây.",
   "addPerson": "Thêm người",
   "@addPerson": {
@@ -183,30 +165,10 @@
   "addTrustedContact": "Thêm liên hệ tin cậy",
   "addTrustedPerson": "Thêm một người tin cậy",
   "addUpTo5MembersFree": "Tối đa 5 thành viên miễn phí",
-  "addViewer": "Thêm người xem",
-  "addViewers": "{count, plural, =0{Thêm người xem} other{Thêm người xem}}",
-  "@addViewers": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "addYourPhotosNow": "Thêm ảnh của bạn ngay bây giờ",
   "adjust": "Điều chỉnh",
   "adjustCrop": "Điều chỉnh khung hình",
   "admin": "Quản trị",
-  "admins": "Quản trị viên",
-  "adminsAndCollaboratorsCanAddPhotosDescription": "Quản trị viên và cộng tác viên có thể thêm ảnh. Quản trị viên có thể quản lý ảnh và người tham gia.",
-  "adminsCanManagePhotosAndParticipants": "Quản trị viên có thể quản lý ảnh và người tham gia.",
-  "adminsSuccessfullyAdded": "{count, plural, =0{Chưa thêm quản trị viên} other{{count} quản trị viên đã được thêm}}",
-  "@adminsSuccessfullyAdded": {
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
-      }
-    },
-    "description": "Number of admins that were successfully added."
-  },
   "admiringThem": "Ngưỡng mộ {name}",
   "@admiringThem": {
     "placeholders": {
@@ -224,20 +186,6 @@
   "albumEditsWillNotBeSaved": "Sửa đổi của bạn với album này sẽ không được lưu.",
   "albumLayout": "Bố cục album",
   "albumName": "Tên album",
-  "albumOwner": "Chủ sở hữu",
-  "@albumOwner": {
-    "description": "Role of the album owner"
-  },
-  "albumParticipantsCount": "{count, plural, =0{Không người tham gia} other{{count} Người tham gia}}",
-  "@albumParticipantsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "5"
-      }
-    },
-    "description": "Number of participants in an album, including the album owner."
-  },
   "albums": "Album",
   "albumsCount": "{count, plural, other{{count} album}}",
   "@albumsCount": {
@@ -249,20 +197,9 @@
     }
   },
   "albumsOnDevicePermissionCta": "Cho phép truy cập",
-  "albumsOnDevicePermissionFeatureAllowAccessFaceRecognition": "Cho phép Ente truy cập và sắp xếp ảnh của bạn bằng nhận dạng khuôn mặt",
-  "albumsOnDevicePermissionFeatureControlUploads": "Bạn có quyền kiểm soát những gì được tải lên",
-  "albumsOnDevicePermissionFeatureLocalProcessing": "Tất cả quá trình xử lý diễn ra trên thiết bị của bạn",
   "albumsOnEnteEmptyCta": "Chọn album để sao lưu",
-  "albumsOnEnteEmptyFeatureAccessAnyDevice": "Truy cập chúng từ mọi thiết bị",
-  "albumsOnEnteEmptyFeaturePrivacy": "Riêng tư hoàn toàn với mã hóa đầu cuối",
-  "albumsOnEnteEmptyFeatureShareLovedOnes": "Chia sẻ chúng với những người thân yêu - họ có thể thích và nhận xét mà không cần có tài khoản",
   "albumsOnEnteEmptyTitle": "Sao lưu những kỷ niệm của bạn",
-  "albumsReceivedEmptyFeatureAcceptInvites": "Chấp nhận lời mời để xem ảnh và video",
-  "albumsReceivedEmptyFeatureSaveToLibrary": "Lưu những kỷ niệm đã chia sẻ vào thư viện của bạn",
-  "albumsReceivedEmptyFeatureSharedByOthers": "Ảnh được chia sẻ từ người khác sẽ xuất hiện ở đây",
-  "albumsReceivedEmptyTitle": "Xem những kỷ niệm đã chia sẻ\n với bạn",
-  "albumsSharedEmptyFeatureReactAndComment": "Họ có thể xem, thích và nhận xét mà không cần có tài khoản",
-  "albumsSharedEmptyFeatureShareLovedOnes": "Chia sẻ chúng với những người thân yêu",
+  "albumsReceivedEmptyTitle": "Xem những kỷ niệm đã chia sẻ với bạn",
   "albumsSharedEmptyTitle": "Chia sẻ kỷ niệm của bạn",
   "albumsWidgetDesc": "Chọn những album bạn muốn thấy trên màn hình chính của mình.",
   "albumTitle": "Tiêu đề album",
@@ -281,7 +218,9 @@
   },
   "allowAppToOpenSharedAlbumLinks": "Cho phép ứng dụng mở liên kết album chia sẻ",
   "allowDownloads": "Cho phép tải xuống",
+  "allowJoining": "Cho phép tham gia",
   "allowJoiningAlbum": "Cho phép ghép album",
+  "allowJoiningDescription": "Người xem có tài khoản Ente có thể tham gia album của bạn và cập nhật thông tin",
   "allowPermBody": "Vui lòng cho phép truy cập vào ảnh của bạn từ Cài đặt để Ente có thể hiển thị và sao lưu thư viện của bạn.",
   "allowPermTitle": "Cho phép truy cập ảnh",
   "allPersonGroupingWillReset": "Tất cả nhóm của người này sẽ được đặt lại, và bạn sẽ mất tất cả các gợi ý đã được tạo ra cho người này",
@@ -581,12 +520,6 @@
       }
     }
   },
-  "cannotAddMorePhotosAfterBecomingViewer": "{user} sẽ không thể thêm ảnh vào album này\n\nHọ vẫn có thể xóa ảnh đã thêm bởi họ",
-  "@cannotAddMorePhotosAfterBecomingViewer": {
-    "placeholders": {
-      "user": {}
-    }
-  },
   "cannotDeleteSharedFiles": "Không thể xóa các tệp đã chia sẻ",
   "cannotMoveToSharedAlbums": "Không thể chuyển vào album đã chia sẻ",
   "cannotMoveToSharedAlbumsMessage": "Bạn chỉ có thể thêm mục vào album đã chia sẻ, không thể di chuyển. Bạn có muốn thêm thay vì di chuyển?",
@@ -623,7 +556,6 @@
     "description": "Change password title"
   },
   "changePermissions": "Thay doi quyen",
-  "changePermissionsQuestion": "Thay đổi quyền?",
   "changeYourReferralCode": "Thay đổi mã",
   "checkForUpdates": "Kiểm tra cập nhật",
   "checkInboxAndSpamFolder": "Vui lòng kiểm tra hộp thư đến (và thư rác) để hoàn tất xác minh",
@@ -682,17 +614,6 @@
   "codeIssuerHint": "Dịch vụ",
   "collabLinkSectionDescription": "Cho phép mọi người thêm ảnh mà không cần tài khoản Ente",
   "collaborator": "Cộng tác viên",
-  "collaboratorsCanAddPhotosAndVideosToTheSharedAlbum": "Cộng tác viên có thể thêm ảnh và video vào album chia sẻ.",
-  "collaboratorsSuccessfullyAdded": "{count, plural, =0{Chưa có cộng tác viên} other{Đã thêm {count} cộng tác viên}}",
-  "@collaboratorsSuccessfullyAdded": {
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
-      }
-    },
-    "description": "Number of collaborators that were successfully added."
-  },
   "collageLayout": "Bố cục",
   "collageSaved": "Ảnh ghép đã được lưu vào thư viện",
   "collectionCannotBeDeleted": "Không thể xóa bộ sưu tập này",
@@ -717,6 +638,7 @@
   "collectPhotos": "Thu thập ảnh",
   "color": "Màu sắc",
   "colorfulMarkets": "Khu chợ sắc màu",
+  "commentAndReact": "Bình luận và bày tỏ cảm xúc",
   "commentedOnAPhoto": "đã bình luận về một ảnh",
   "@commentedOnAPhoto": {
     "description": "Social notification action text shown after a person's name, for example 'John commented on a photo'. Make sure the translation reads naturally with a name before it, and do not capitalize the first letter."
@@ -1156,10 +1078,6 @@
   },
   "dontHaveAnAccount": "Chưa có tài khoản?",
   "dontSave": "Không lưu",
-  "doThisLater": "Để sau",
-  "@doThisLater": {
-    "description": "Do this later button label"
-  },
   "doubleTapToViewHiddenCode": "Bạn có thể nhấn đúp vào một mục để xem mã",
   "download": "Tải xuống",
   "downloadApplicationUpdate": "Tải xuống bản cập nhật",
@@ -1179,6 +1097,7 @@
       }
     }
   },
+  "downloadPhotos": "Tải xuống ảnh",
   "downloadSkippedAlreadyAvailableOnDevice": "{fileName} đã có sẵn trong album {albumName} trên thiết bị của bạn",
   "@downloadSkippedAlreadyAvailableOnDevice": {
     "description": "Toast shown in single-file download flow when the file already exists locally",
@@ -1348,6 +1267,7 @@
   "enableAutomaticBackups": "Sao lưu tự động",
   "enableBackupsIosInstruction": "Để bật tính năng sao lưu trên iOS, hãy chọn một thư mục trong ứng dụng Tệp (ví dụ: \"Trên iPhone của tôi\").",
   "enableComment": "Bình luận và bày tỏ cảm xúc",
+  "enableDownloadsToAllowJoining": "Bật tải xuống để cho phép tham gia.",
   "enabled": "Bật",
   "enableMaps": "Kích hoạt Bản đồ",
   "encrypted": "Được mã hóa",
@@ -1462,6 +1382,95 @@
       "name": {
         "type": "String",
         "description": "Person's name"
+      }
+    }
+  },
+  "memoryLaneAgeCaption": "{name} lúc {count, plural, other{{age} tuổi}}",
+  "@memoryLaneAgeCaption": {
+    "description": "Memory Lane age caption. The age placeholder is rendered as a separate, larger text widget; count selects the plural form.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "age": {
+        "type": "String",
+        "description": "Placeholder for the separately styled age number; retain this placeholder in every plural form."
+      }
+    }
+  },
+  "memoryLaneCaptionYearsAgo": "{name} {count, plural, other{{number} năm trước}}",
+  "@memoryLaneCaptionYearsAgo": {
+    "description": "Memory Lane caption in elapsed years. Always keep the number, including for one.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "number": {
+        "type": "String",
+        "description": "Placeholder rendered as a separate, larger number; retain in every plural form."
+      }
+    }
+  },
+  "memoryLaneCaptionMonthsAgo": "{name} {count, plural, other{{number} tháng trước}}",
+  "@memoryLaneCaptionMonthsAgo": {
+    "description": "Memory Lane caption in elapsed months. Always keep the number, including for one.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "number": {
+        "type": "String",
+        "description": "Placeholder rendered as a separate, larger number; retain in every plural form."
+      }
+    }
+  },
+  "memoryLaneCaptionWeeksAgo": "{name} {count, plural, other{{number} tuần trước}}",
+  "@memoryLaneCaptionWeeksAgo": {
+    "description": "Memory Lane caption in elapsed weeks. Always keep the number, including for one.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "number": {
+        "type": "String",
+        "description": "Placeholder rendered as a separate, larger number; retain in every plural form."
+      }
+    }
+  },
+  "memoryLaneCaptionDaysAgo": "{name} {count, plural, other{{number} ngày trước}}",
+  "@memoryLaneCaptionDaysAgo": {
+    "description": "Memory Lane caption in elapsed days. Always keep the number, including for one.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "number": {
+        "type": "String",
+        "description": "Placeholder rendered as a separate, larger number; retain in every plural form."
+      }
+    }
+  },
+  "memoryLaneCaptionToday": "{name} hôm nay",
+  "@memoryLaneCaptionToday": {
+    "description": "Memory Lane caption for a photo taken today, without a number.",
+    "placeholders": {
+      "name": {
+        "type": "String"
       }
     }
   },
@@ -1592,6 +1601,10 @@
   "fileDeletedSuccessfully": "Xoa muc thanh cong",
   "fileInfoAddDescHint": "Thêm mô tả...",
   "fileMarkedAsImportant": "Muc da duoc danh dau quan trong",
+  "fileNameTooLong": "Tên tệp quá dài. Thử giảm bớt.",
+  "@fileNameTooLong": {
+    "description": "Validation error when a renamed file exceeds the filesystem filename length limit"
+  },
   "fileNotUploadedYet": "Tệp chưa được tải lên",
   "fileRemovedFromImportant": "Muc da duoc xoa khoi quan trong",
   "files": "Tệp",
@@ -1898,6 +1911,7 @@
       "count": {}
     }
   },
+  "itemWillBeRemovedFromThisAlbum": "Mục này sẽ bị xóa khỏi album này",
   "items": "{count} muc",
   "@items": {
     "description": "Number of items in a collection",
@@ -1909,6 +1923,15 @@
     }
   },
   "itemsShowTheNumberOfDaysRemainingBeforePermanentDeletion": "Trên các mục là số ngày còn lại trước khi xóa vĩnh viễn",
+  "itemsWillBeDeletedFromAllCollections": "{count, plural, one{Mục này sẽ bị xóa khỏi tất cả các bộ sưu tập. Bạn có thể khôi phục mục đó từ Thùng rác.} other{Các mục này sẽ bị xóa khỏi tất cả các bộ sưu tập. Bạn có thể khôi phục chúng từ Thùng rác.}}",
+  "@itemsWillBeDeletedFromAllCollections": {
+    "description": "Confirmation message explaining that deleted items leave every collection and remain recoverable from Trash.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "itemsWillBeRemovedFromAlbum": "Các mục đã chọn sẽ bị xóa khỏi album này",
   "itLooksLikeSomethingWentWrongPleaseRetryAfterSome": "Có vẻ đã xảy ra sự cố. Vui lòng thử lại sau ít phút. Nếu lỗi vẫn tiếp diễn, hãy liên hệ với đội ngũ hỗ trợ của chúng tôi.",
   "@itLooksLikeSomethingWentWrongPleaseRetryAfterSome": {
@@ -1933,9 +1956,6 @@
   "lastYearsTrip": "Phượt năm ngoái",
   "layout": "Bố cục",
   "layoutGrouped": "Đã phân nhóm",
-  "layoutJustified": "Căn đều",
-  "layoutJustifiedComfort": "Căn đều · Thoải mái",
-  "layoutJustifiedFlex": "Căn đều · Linh hoạt",
   "layoutTrip": "Chuyến đi",
   "leave": "Rời",
   "leaveAlbum": "Rời khỏi album",
@@ -2143,6 +2163,7 @@
   "linkLabel": "Liên kết",
   "linkNeverExpires": "Không bao giờ",
   "linkRequestLimitExceeded": "Album này đang được xem trên quá nhiều thiết bị",
+  "linkSettings": "Cài đặt liên kết",
   "links": "Liên kết",
   "list": "Danh sách",
   "livePhotos": "Ảnh động",
@@ -2244,11 +2265,9 @@
   "@magic": {
     "description": "Section header for magic search results"
   },
-  "manage": "Quản lý",
   "manageDeviceStorage": "Quản lý bộ nhớ đệm thiết bị",
   "manageFamily": "Quản lý gia đình",
   "manageLink": "Quản lý liên kết",
-  "manageParticipants": "Quản lý",
   "managePaymentMethod": "Quản lý phương thức thanh toán",
   "manageSubscription": "Quản lý gói",
   "manualSort": "Tùy chỉnh",
@@ -2295,6 +2314,20 @@
       }
     }
   },
+  "memoryLaneCardTitle": "{nameEndsWithS, select, true{Ký ức của {name}} other{Ký ức của {name}}}",
+  "@memoryLaneCardTitle": {
+    "description": "Title for a person's Memory Lane, used on the home screen card, viewer page, and shared link",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Person's name"
+      },
+      "nameEndsWithS": {
+        "type": "String",
+        "description": "true if the trimmed name ends in s or S; false otherwise"
+      }
+    }
+  },
   "memoryLink": "Liên kết kỷ niệm",
   "memoryShareLinkDescription": "Liên kết này sẽ tự hết hạn sau 7 ngày.",
   "merchandise": "Vật phẩm",
@@ -2325,6 +2358,15 @@
   "message": "Nội dung tin nhắn",
   "minimizeAppOnCopy": "Thu nhỏ khi sao chép",
   "minimizeToTrayOnClose": "Thu nhỏ xuống khay khi đóng",
+  "minutesCountShort": "{count}m",
+  "@minutesCountShort": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
   "mixedGrouping": "Nhóm hỗn hợp?",
   "mlConsent": "Bật học máy",
   "mlConsentConfirmation": "Tôi hiểu và muốn bật học máy",
@@ -2413,6 +2455,7 @@
   "moveSelectedPhotosToOneDate": "Di chuyển ảnh đã chọn đến một ngày",
   "moveToAlbum": "Chuyển đến album",
   "moveToHiddenAlbum": "Di chuyển đến album ẩn",
+  "moveToTrashQuestion": "Chuyển vào thùng rác?",
   "movingFilesToAlbum": "Đang di chuyển tệp vào album...",
   "muteAudio": "Tắt âm thanh",
   "name": "Tên",
@@ -2434,7 +2477,7 @@
   "nextTotpTitle": "tiếp theo",
   "nightLights": "Đêm neon",
   "no": "Không",
-  "noAlbumsOnThisDevice": "Không có album\ntrên thiết bị này",
+  "noAlbumsOnThisDevice": "Không có album trên thiết bị này",
   "noChangesWereMade": "Khong co thay doi nao duoc thuc hien",
   "noCollections": "Khong co bo suu tap",
   "noDefaultBackupFolder": "Không thể tạo thư mục sao lưu mặc định.",
@@ -2524,6 +2567,7 @@
     }
   },
   "nothingToSeeHere": "Ở đây không có gì để xem",
+  "nothingToCleanUp": "Không có gì để dọn dẹp",
   "nothingToTidyUpHere": "Ở đây đã ngon lành rồi",
   "notifications": "Thông báo",
   "notifyMe": "Thông báo cho tôi",
@@ -2551,6 +2595,7 @@
   "offlineHomeSignupBannerAction": "Sao lưu ngay",
   "offlineHomeSignupBannerDescription": "Sao lưu mã hóa ở 3 nơi để giữ kỷ niệm của bạn luôn an toàn.",
   "offlineHomeSignupBannerTitle": "Bảo vệ vĩnh viễn kỷ niệm của bạn",
+  "offlineKeyUnavailableMessage": "Ente Auth không thể truy cập khóa cho mã ngoại tuyến của bạn.",
   "offlineModeWarning": "Bạn đã chọn tiếp tục mà không sao lưu. Vui lòng sao lưu thủ công để đảm bảo mã của bạn được an toàn.",
   "offlineNameFaceBannerSubtitle": "Đăng ký để gắn thẻ họ và dễ dàng tìm ảnh của họ sau.",
   "offlineNameFaceBannerTitle": "Đặt tên cho khuôn mặt này",
@@ -2598,7 +2643,6 @@
   "openstreetmapContributors": "Người đóng góp OpenStreetMap",
   "optionalAsShortAsYouLike": "Tùy chọn, ngắn dài tùy ý...",
   "organization": "Tổ chức",
-  "orPickAnExistingOne": "Hoặc chọn một cái có sẵn",
   "orRemoveYourself": "Hoặc gỡ bạn khỏi vai trò liên hệ tin cậy của {email}",
   "@orRemoveYourself": {
     "description": "Text shown before remove contact button in ready state",
@@ -2862,7 +2906,11 @@
       "folderName": {}
     }
   },
+  "publicLink": "Liên kết công khai",
+  "publicLinkAccessDescription": "Bất kỳ ai có liên kết đều có thể mở album mà không cần tài khoản Ente.",
+  "publicLinkCollectDescription": "Bất kỳ ai có liên kết đều có thể thêm ảnh vào album của bạn.",
   "publicLinkEnabled": "Liên kết công khai đã được bật",
+  "publicLinkViewDescription": "Bất kỳ ai có liên kết đều có thể truy cập album của bạn.",
   "qr": "QR",
   "qrCode": "Mã QR",
   "questionmark": "?",
@@ -3041,12 +3089,6 @@
   "remoteVideos": "Video bên ngoài",
   "remove": "Xóa",
   "removeAccess": "Xoa quyen truy cap",
-  "removeAlbumParticipantBody": "{userEmail} sẽ bị xóa khỏi album chia sẻ này\n\nBất kỳ ảnh nào được thêm bởi họ cũng sẽ bị xóa khỏi album",
-  "@removeAlbumParticipantBody": {
-    "placeholders": {
-      "userEmail": {}
-    }
-  },
   "removeCollectionParticipantBody": "{userEmail} se bi xoa khoi bo suu tap duoc chia se nay\n\nCac muc do ho them cung se bi xoa khoi bo suu tap",
   "@removeCollectionParticipantBody": {
     "placeholders": {
@@ -3062,6 +3104,14 @@
     "description": "Description for remove contact confirmation dialog"
   },
   "removeContactPhoto": "Xóa ảnh liên hệ",
+  "removedItems": "{count, plural, other{Đã gỡ {count} mục}}",
+  "@removedItems": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "removeFromAlbum": "Xóa khỏi album",
   "removeFromAlbumTitle": "Xóa khỏi album?",
   "removeFromFamily": "Xóa khỏi gia đình",
@@ -3181,6 +3231,7 @@
   "restoreToAlbum": "Khôi phục vào album",
   "restoringFiles": "Đang khôi phục tệp...",
   "resumableUploads": "Cho phép tiếp tục tải lên",
+  "retake": "Làm lại",
   "retry": "Thử lại",
   "review": "Xem lại",
   "reviewSuggestions": "Xem gợi ý",
@@ -3406,6 +3457,15 @@
       }
     }
   },
+  "secondsCountShort": "{count}s",
+  "@secondsCountShort": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
   "secret": "Khóa bí mật",
   "secretCanNotBeEmpty": "Không được để trống khóa bí mật",
   "security": "Bảo mật",
@@ -3488,7 +3548,6 @@
   "selectFile": "Chọn tệp",
   "selectFolder": "Chọn thư mục",
   "selectFolders": "Chọn nhiều thư mục",
-  "selectFoldersForBackup": "Chọn thư mục để sao lưu",
   "selectFolderToContinue": "Chọn một thư mục để tiếp tục",
   "selectItemsToAdd": "Chọn mục để thêm",
   "selectLanguage": "Chọn ngôn ngữ",
@@ -3583,7 +3642,6 @@
   "shareCodesDuration": "Chọn thời hạn bạn muốn chia sẻ mã.",
   "shareCollection": "Chia sẻ bộ sưu tập",
   "shared": "Đã chia sẻ",
-  "sharedAlbumSectionDescription": "Tạo album chia sẻ và cộng tác với người dùng Ente khác, bao gồm người dùng gói miễn phí.",
   "sharedAlbumsLabel": "Đã chia sẻ",
   "@sharedAlbumsLabel": {
     "description": "Albums tab label for albums shared by you"
@@ -3636,15 +3694,6 @@
   },
   "shareThisLink": "Lien ket nay cho phep bat ky ai nhan duoc truy cap muc cua ban. Ban co the xoa quyen truy cap bat ky luc nao bang cach xoa lien ket.",
   "shareWithNonenteUsers": "Chia sẻ với người không dùng Ente",
-  "shareWithPeopleSectionTitle": "{numberOfPeople, plural, =0{Chia sẻ với người cụ thể} other{Đã chia sẻ với {numberOfPeople} người}}",
-  "@shareWithPeopleSectionTitle": {
-    "placeholders": {
-      "numberOfPeople": {
-        "type": "int",
-        "example": "2"
-      }
-    }
-  },
   "shareYourSubscription": "Chia sẻ gói của bạn với người thân",
   "sharing": "Đang chia sẻ...",
   "sharingAndCollaboration": "Chia sẻ và cộng tác",
@@ -3771,7 +3820,6 @@
   },
   "startSnappingYourPhotosWillShowUpHere": "Bắt đầu chụp, ảnh của bạn sẽ hiển thị ở đây",
   "startWithAddingPhotosOrFamiliarFaces": "Bắt đầu bằng cách thêm\nảnh hoặc gương mặt gia đình",
-  "startWithLatestPhotos": "Bắt đầu với những ảnh mới nhất",
   "status": "Trạng thái",
   "stopCastingBody": "Bạn có muốn dừng phát không?",
   "stopCastingTitle": "Dừng phát",
@@ -4052,6 +4100,7 @@
       }
     }
   },
+  "unableToAccessYourCodes": "Không thể truy cập mã của bạn",
   "unableToCheckForUpdatesRightNow": "Không thể kiểm tra cập nhật bây giờ",
   "unarchive": "Bỏ lưu trữ",
   "@unarchive": {
@@ -4251,16 +4300,6 @@
   "viewAllExifData": "Xem thông số Exif",
   "viewAllHelpTopics": "Xem tất cả chủ đề trợ giúp",
   "viewer": "Người xem",
-  "viewersSuccessfullyAdded": "{count, plural, =0{Chưa thêm người xem} other{Đã thêm {count} người xem}}",
-  "@viewersSuccessfullyAdded": {
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "2"
-      }
-    },
-    "description": "Number of viewers that were successfully added."
-  },
   "viewLargeFiles": "Xóa tệp dung lượng lớn",
   "viewLogs": "Xem nhật ký",
   "@viewLogs": {
@@ -4449,5 +4488,86 @@
         "type": "String"
       }
     }
-  }
+  },
+  "sharedByYou": "Do bạn chia sẻ",
+  "sharedByOwner": "Được chia sẻ bởi {owner}",
+  "@sharedByOwner": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
+  "youAreViewer": "Bạn là một người xem",
+  "youAreCollaborator": "Bạn là một cộng tác viên",
+  "youAreAdmin": "Bạn là một quản trị viên",
+  "emptyAlbumShareMessage": "Bạn chưa chia sẻ album này với bất kỳ ai.",
+  "addPeople": "Thêm người",
+  "fromYourContacts": "Từ liên hệ của bạn",
+  "chooseAccess": "Chọn truy cập",
+  "permissions": "Quyền truy cập",
+  "viewerRoleDescription": "Xem và tải xuống ảnh",
+  "collaboratorRoleDescription": "Ngoài ra, có thể thêm ảnh của chính mình",
+  "adminRoleDescription": "Ngoài ra, có thể thêm và xóa người",
+  "addAsViewers": "{count, plural, other{Thêm làm người xem}}",
+  "@addAsViewers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addAsCollaborators": "{count, plural, other{Thêm làm cộng tác viên}}",
+  "@addAsCollaborators": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addAsAdmins": "{count, plural, other{Thêm làm quản trị viên}}",
+  "@addAsAdmins": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noEnteAccountWithThisEmail": "Không có tài khoản Ente nào được liên kết với email này.",
+  "shareALinkInline": "Chia sẻ một liên kết.",
+  "personAlreadyHasAccess": "Người này đã có quyền truy cập.",
+  "removePersonTitle": "Gỡ bỏ {name}?",
+  "@removePersonTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removePersonBody": "{count, plural, =0{Họ sẽ mất quyền truy cập vào album này ngay lập tức.} other{Họ sẽ mất quyền truy cập vào album này ngay lập tức. {count} ảnh mà họ đã thêm sẽ bị xóa.}}",
+  "@removePersonBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leaveAlbumTitle": "Rời khỏi {album}?",
+  "@leaveAlbumTitle": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveAlbumBody": "{count, plural, =0{Bạn sẽ mất quyền truy cập vào album này ngay lập tức.} other{Bạn sẽ mất quyền truy cập vào album này ngay lập tức. {count} ảnh mà bạn đã thêm sẽ bị xóa.}}",
+  "@leaveAlbumBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notEnoughStorageTitle": "Không đủ dung lượng",
+  "notEnoughStorageBody": "Bạn không đủ dung lượng trống trên Ente để thêm ảnh mới. Hãy giải phóng dung lượng hoặc nâng cấp gói dịch vụ để tiếp tục thêm ảnh."
 }

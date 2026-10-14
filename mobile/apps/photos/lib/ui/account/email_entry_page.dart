@@ -116,7 +116,7 @@ class _EmailEntryPageState extends State<EmailEntryPage> {
           onTap: _isFormValid() ? _submitCreateAccount : null,
         ),
       ),
-      bottomNavigationBar: isKeyboardOpen ? null : _getLoginPrompt(),
+      bottomNavigationBar: isKeyboardOpen ? null : const _LoginPrompt(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -341,33 +341,6 @@ class _EmailEntryPageState extends State<EmailEntryPage> {
     }
   }
 
-  Widget _getLoginPrompt() {
-    final colors = context.componentColors;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              context.strings.alreadyHaveAnAccount,
-              style: TextStyles.body.copyWith(color: colors.textLight),
-            ),
-            const SizedBox(width: 4),
-            ButtonComponent(
-              label: context.strings.logInLabel,
-              variant: ButtonComponentVariant.link,
-              size: ButtonComponentSize.small,
-              shouldSurfaceExecutionStates: false,
-              onTap: _goToLoginPage,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _onEmailChanged(String value) {
     _emailValidationTimer?.cancel();
 
@@ -475,11 +448,41 @@ class _EmailEntryPageState extends State<EmailEntryPage> {
         _hasAgreedToTOS &&
         _passwordIsValid;
   }
+}
 
-  Future<void> _goToLoginPage() async {
-    FocusScope.of(context).unfocus();
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const LoginPage()));
+class _LoginPrompt extends StatelessWidget {
+  const _LoginPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.componentColors;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              context.strings.alreadyHaveAnAccount,
+              style: TextStyles.body.copyWith(color: colors.textLight),
+            ),
+            const SizedBox(width: 4),
+            ButtonComponent(
+              label: context.strings.logInLabel,
+              variant: ButtonComponentVariant.link,
+              size: ButtonComponentSize.small,
+              shouldSurfaceExecutionStates: false,
+              onTap: () async {
+                FocusScope.of(context).unfocus();
+                await Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const LoginPage()));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

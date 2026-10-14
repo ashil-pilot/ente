@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.runtime.staticCompositionLocalOf
 import io.ente.ensu.bindings.GroundedExcerpt
 import io.ente.ensu.bindings.GroundedSource
+import io.ente.ensu.bindings.NotePassageLocator
 import io.ente.ensu.bindings.NoteSourceReference
 import io.ente.ensu.bindings.NotesCancellation
 import io.ente.ensu.bindings.NotesException
@@ -15,10 +16,12 @@ import io.ente.ensu.bindings.NotesProgress
 import io.ente.ensu.bindings.NotesProgressCallback
 import io.ente.ensu.bindings.NotesSummary
 import io.ente.ensu.bindings.notesLimits
+import io.ente.ensu.bindings.selectMixedGroundingCandidates
 import io.ente.ensu.bindings.withNotesCollectionLabel
 import io.ente.ensu.coroutines.runCatchingCancellable
 import io.ente.ensu.llm.LlmProvider
 import io.ente.ensu.llm.ModelMaintenance
+import io.ente.ensu.llm.ModelMemoryDeferred
 import io.ente.ensu.llm.withMaintenanceSuspended
 import io.ente.ensu.logging.FileLogRepository
 import io.ente.ensu.logging.LogLevel
@@ -271,15 +274,25 @@ class NotesStore(
                 } catch (error: CancellationException) {
                     throw error
                 } catch (_: NotesException.RebuildRequired) {
-                    enqueue(record.id, rebuild = true, immediate = true)
-                    update(record.id) {
-                        it.copy(status = NotesStatus.Pending, indexAvailable = false)
-                    }
+                    requestRebuild(record.id)
                 } catch (error: Exception) {
                     fail(record.id, error)
                 }
             }
             hits
+        }
+
+    suspend fun reload(locator: NotePassageLocator): GroundedExcerpt? =
+        withContext(Dispatchers.Main.immediate) {
+            if (_state.value.collections.none { it.id == locator.collectionId && it.eligible })
+                return@withContext null
+            try {
+                val hit = provider.reload(locator) ?: return@withContext null
+                verify(selectMixedGroundingCandidates(emptyList(), listOf(hit), 1u)).singleOrNull()
+            } catch (_: NotesException.RebuildRequired) {
+                requestRebuild(locator.collectionId)
+                null
+            }
         }
 
     suspend fun verify(excerpts: List<GroundedExcerpt>): List<GroundedExcerpt> =
@@ -345,6 +358,11 @@ class NotesStore(
                 _state.update { it.copy(error = error) }
             }
         }
+    }
+
+    private fun requestRebuild(id: String) {
+        enqueue(id, rebuild = true, immediate = true)
+        update(id) { it.copy(status = NotesStatus.Pending, indexAvailable = false) }
     }
 
     private fun enqueue(
@@ -507,6 +525,14 @@ class NotesStore(
                 } finally {
                     if (!completed) {
                         when (failure) {
+                            is ModelMemoryDeferred -> {
+                                pending[id]?.let {
+                                    pending[id] = it.copy(due = System.currentTimeMillis() + 30_000)
+                                }
+                                update(id) {
+                                    it.copy(status = NotesStatus.Pending, progress = null)
+                                }
+                            }
                             null,
                             is NotesException.Cancelled -> {
                                 if (snapshot == null) scans.add(id)
@@ -526,13 +552,7 @@ class NotesStore(
                             }
                             is NotesException.RebuildRequired -> {
                                 if (snapshot == null) {
-                                    enqueue(id, rebuild = true, immediate = true)
-                                    update(id) {
-                                        it.copy(
-                                            status = NotesStatus.Pending,
-                                            indexAvailable = false,
-                                        )
-                                    }
+                                    requestRebuild(id)
                                 } else fail(id, failure)
                             }
                             is Exception -> fail(id, failure)

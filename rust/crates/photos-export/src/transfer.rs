@@ -1,6 +1,7 @@
 use std::{
     fs::File,
     io::{Seek, SeekFrom},
+    path::Path,
 };
 
 use crate::{metadata::Role, snapshot::FileSnapshot};
@@ -23,6 +24,44 @@ pub struct Source {
     pub size: u64,
     pub hash: String,
     pub temporary: bool,
+    pub verified_properties: Option<Properties>,
+}
+
+impl Source {
+    fn existing(
+        run: &Run<'_>,
+        component: &Component,
+        (mut properties, hashed): (Properties, bool),
+        intended_time: i64,
+    ) -> Result<Self> {
+        if run.hardlinks
+            && (component.intended_time != Some(intended_time)
+                || component.properties.as_ref() != Some(&properties))
+        {
+            properties = fs::set_time(&run.path(&component.location)?, intended_time)?;
+        }
+        Ok(Self {
+            role: component.role.clone(),
+            extension: names::split(&component.location.name, false).1.into(),
+            location: component.location.clone(),
+            size: component.size,
+            hash: component.hash.clone(),
+            temporary: false,
+            verified_properties: hashed.then_some(properties),
+        })
+    }
+
+    pub fn verify(&mut self, run: &Run<'_>, path: &Path) -> Result<Properties> {
+        let properties = Properties::read(path)?;
+        if self.verified_properties.as_ref() != Some(&properties) {
+            ensure!(
+                fs::matches(path, self.size, &self.hash, run.cancel)?,
+                super::Conflict(format!("at {}: locally changed media", path.display()))
+            );
+            self.verified_properties = Some(properties.clone());
+        }
+        Ok(properties)
+    }
 }
 
 pub struct Prepared {
@@ -39,37 +78,40 @@ pub fn roles(file: &FileSnapshot) -> Vec<Role> {
     }
 }
 
-pub fn verify(
-    run: &Run<'_>,
-    component: &Component,
-    file: &FileSnapshot,
-    signature: &str,
-) -> Result<Option<Properties>> {
-    let path = run.path(&component.location)?;
-    let Some(properties) = Properties::optional(&path)? else {
-        return Ok(None);
-    };
-    if expected_hash(file, &component.role).is_some_and(|hash| hash != component.hash)
+fn source_changed(component: &Component, file: &FileSnapshot, signature: &str) -> bool {
+    !roles(file).contains(&component.role)
+        || expected_hash(file, &component.role).is_some_and(|hash| hash != component.hash)
         || (expected_hash(file, &component.role).is_none()
             && component
                 .signature
                 .as_ref()
                 .is_some_and(|original| original != signature))
-    {
+}
+
+fn verify(
+    run: &Run<'_>,
+    component: &Component,
+    replacing: bool,
+) -> Result<Option<(Properties, bool)>> {
+    let path = run.path(&component.location)?;
+    let Some(properties) = Properties::optional(&path)? else {
         return Ok(None);
+    };
+    let hashed = replacing || component.properties.as_ref() != Some(&properties);
+    if hashed {
+        ensure!(
+            fs::matches(&path, component.size, &component.hash, run.cancel)?,
+            super::Conflict(format!("at {}: locally changed media", path.display()))
+        );
     }
-    if component.properties.as_ref() != Some(&properties)
-        && !fs::matches(&path, component.size, &component.hash, run.cancel)?
-    {
-        return Ok(None);
-    }
-    Ok(Some(properties))
+    Ok(Some((properties, hashed)))
 }
 
 pub async fn prepare(run: &Run<'_>, session: &Session, file: &FileSnapshot) -> Result<Prepared> {
     let signature = signature(file)?;
     let roles = roles(file);
     let mut observed = Vec::new();
+    let mut reusable = Vec::new();
     let mut needs_bytes = false;
     let mut after = 0;
     loop {
@@ -87,24 +129,43 @@ pub async fn prepare(run: &Run<'_>, session: &Session, file: &FileSnapshot) -> R
         };
         after = album;
         let result = (|| {
-            let components = {
+            let (components, retained_folder) = {
                 let store = store::lock(run.store)?;
-                needs_bytes |= store
+                let retained_folder = store
                     .pending_file(album, file.id)?
-                    .is_some_and(|pending| pending.retained);
-                store
+                    .filter(|pending| pending.retained)
+                    .map(|pending| pending.folder);
+                let components = store
                     .placement(album, file.id)?
                     .map(|placement| store.components(&placement.id))
                     .transpose()?
-                    .unwrap_or_default()
+                    .unwrap_or_default();
+                (components, retained_folder)
             };
             let mut verified = Vec::new();
+            let replacing = components
+                .iter()
+                .any(|component| source_changed(component, file, &signature));
             for component in &components {
-                if !roles.contains(&component.role) {
+                if retained_folder.as_ref() == Some(&component.location.folder) {
                     continue;
                 }
-                if let Some(properties) = verify(run, component, file, &signature)? {
-                    verified.push((component.role.clone(), properties));
+                if let Some(verification) = verify(run, component, replacing)?
+                    && !source_changed(component, file, &signature)
+                {
+                    if run.hardlinks
+                        && !reusable
+                            .iter()
+                            .any(|source: &Source| source.role == component.role)
+                    {
+                        reusable.push(Source::existing(
+                            run,
+                            component,
+                            verification.clone(),
+                            file.intended_time,
+                        )?);
+                    }
+                    verified.push((component.role.clone(), verification.0));
                 }
             }
             needs_bytes |= roles
@@ -120,11 +181,10 @@ pub async fn prepare(run: &Run<'_>, session: &Session, file: &FileSnapshot) -> R
     if !needs_bytes {
         return Ok(Prepared {
             signature,
-            components: Vec::new(),
+            components: reusable,
             observed,
         });
     }
-    let mut reusable = Vec::new();
     let mut before = i64::MAX;
     loop {
         run.check_cancel()?;
@@ -159,20 +219,13 @@ pub async fn prepare(run: &Run<'_>, session: &Session, file: &FileSnapshot) -> R
             {
                 continue;
             }
-            let valid = (|| {
-                let path = run.path(&component.location)?;
-                Properties::read(&path)?;
-                fs::matches(&path, component.size, &component.hash, run.cancel)
-            })();
-            match valid {
-                Ok(true) => reusable.push(Source {
-                    role: component.role,
-                    extension: names::split(&component.location.name, false).1.into(),
-                    location: component.location,
-                    size: component.size,
-                    hash: component.hash,
-                    temporary: false,
-                }),
+            match verify(run, &component, true) {
+                Ok(Some(verification)) => reusable.push(Source::existing(
+                    run,
+                    &component,
+                    verification,
+                    file.intended_time,
+                )?),
                 Err(error) if super::fatal(&error) => return Err(error),
                 _ => {}
             }
@@ -250,6 +303,10 @@ pub async fn prepare(run: &Run<'_>, session: &Session, file: &FileSnapshot) -> R
             components.push(Source {
                 role,
                 extension,
+                verified_properties: run
+                    .hardlinks
+                    .then(|| fs::set_time(&run.path(&temporary)?, file.intended_time))
+                    .transpose()?,
                 location: temporary,
                 size,
                 hash,
@@ -270,6 +327,10 @@ pub async fn prepare(run: &Run<'_>, session: &Session, file: &FileSnapshot) -> R
         vec![Source {
             role: Role::Original,
             extension: names::split(&file.name, false).1.into(),
+            verified_properties: run
+                .hardlinks
+                .then(|| fs::set_time(&path, file.intended_time))
+                .transpose()?,
             location: temporary,
             size,
             hash,

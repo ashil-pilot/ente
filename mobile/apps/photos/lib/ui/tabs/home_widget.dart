@@ -3,7 +3,6 @@ import "dart:convert";
 import "dart:io";
 
 import "package:app_links/app_links.dart";
-import "package:ente_components/ente_components.dart";
 import "package:ente_crypto/ente_crypto.dart";
 import "package:ente_pure_utils/ente_pure_utils.dart";
 import "package:ente_strings/ente_strings.dart";
@@ -35,6 +34,7 @@ import "package:photos/models/collection/collection.dart";
 import "package:photos/models/collection/collection_items.dart";
 import "package:photos/models/file/file.dart";
 import "package:photos/models/gallery_type.dart";
+import "package:photos/models/home_tab.dart";
 import "package:photos/models/search/index_of_indexed_stack.dart";
 import "package:photos/models/selected_albums.dart";
 import "package:photos/models/selected_files.dart";
@@ -60,7 +60,6 @@ import "package:photos/ui/collections/collection_action_sheet.dart";
 import "package:photos/ui/components/buttons/button_widget.dart";
 import "package:photos/ui/components/models/button_type.dart";
 import "package:photos/ui/extents_page_view.dart";
-import "package:photos/ui/growth/referral_screen.dart";
 import "package:photos/ui/home/christmas/christmas_pull_animation.dart";
 import "package:photos/ui/home/christmas/christmas_utils.dart";
 import "package:photos/ui/home/christmas/snow_fall_overlay.dart";
@@ -150,6 +149,8 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   final DiffFetcher _diffFetcher = DiffFetcher();
 
+  List<int> get _tabIndices => homeTabIndices(showFeed: !isLocalGalleryMode);
+
   void _startWithoutAccountFlow() {
     setState(() {
       _startWithoutAccount = true;
@@ -191,11 +192,14 @@ class _HomeWidgetState extends State<HomeWidget> {
     _tabChangedEventSubscription = Bus.instance.on<TabChangedEvent>().listen((
       event,
     ) {
+      final tabIndices = _tabIndices;
+      final pageIndex = tabIndices.indexOf(event.selectedIndex);
+      if (pageIndex < 0) return;
       final previousTabIndex = _selectedTabIndex;
       _selectedTabIndex = event.selectedIndex;
       _selectedTabIndexNotifier.value = event.selectedIndex;
 
-      if (event.selectedIndex == 3) {
+      if (event.selectedIndex == searchTabIndex) {
         isOnSearchTabNotifier.value = true;
         unawaited(SemanticSearchService.instance.prepareForInteractiveSearch());
       } else {
@@ -206,15 +210,16 @@ class _HomeWidgetState extends State<HomeWidget> {
           "TabChange going from $previousTabIndex to ${event.selectedIndex} source: ${event.source}",
         );
         if (_pageController.hasClients) {
-          final pageDelta = (event.selectedIndex - previousTabIndex).abs();
-          if (pageDelta <= 1) {
+          final pageDelta = (pageIndex - tabIndices.indexOf(previousTabIndex))
+              .abs();
+          if (pageDelta <= 1 && event.source != TabChangedEventSource.appMode) {
             _pageController.animateToPage(
-              event.selectedIndex,
+              pageIndex,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
             );
           } else {
-            _pageController.jumpToPage(event.selectedIndex);
+            _pageController.jumpToPage(pageIndex);
           }
         }
       }
@@ -243,6 +248,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       _logger.info('logged out, selectTab index to 0');
       _selectedTabIndex = 0;
       _selectedTabIndexNotifier.value = 0;
+      isOnSearchTabNotifier.value = false;
       _startWithoutAccount = false;
       if (mounted) {
         setState(() {});
@@ -259,7 +265,19 @@ class _HomeWidgetState extends State<HomeWidget> {
         .on<AppModeChangedEvent>()
         .listen((event) async {
           if (mounted) {
+            final selectedTabIndex = _tabIndices.contains(_selectedTabIndex)
+                ? _selectedTabIndex
+                : 0;
             setState(() {});
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              Bus.instance.fire(
+                TabChangedEvent(
+                  selectedTabIndex,
+                  TabChangedEventSource.appMode,
+                ),
+              );
+            });
             _scheduleChangeLogCheck(delay: const Duration(milliseconds: 250));
           }
         });
@@ -405,6 +423,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         await routeToPage(
           context,
           CollectionPage(CollectionWithThumbnail(collection, null)),
+          useFadeTransition: true,
         );
         return;
       }
@@ -874,7 +893,7 @@ class _HomeWidgetState extends State<HomeWidget> {
               _isAlbumsSearchActiveNotifier.value = false;
             }
           }
-          if (_selectedTabIndex == 3) {
+          if (_selectedTabIndex == searchTabIndex) {
             if (_shouldSearchTabSearchConsumeBackNotifier.value) {
               Bus.instance.fire(ClearAndUnfocusSearchBar());
               return;
@@ -992,6 +1011,7 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   Widget _getBody(BuildContext context) {
     final bool localGalleryMode = isLocalGalleryMode;
+    final tabIndices = _tabIndices;
     if (!Configuration.instance.hasConfiguredAccount()) {
       _closeDrawerIfOpen();
       final shouldBootstrapLocalGalleryEntryFlow =
@@ -1059,8 +1079,12 @@ class _HomeWidgetState extends State<HomeWidget> {
                   builder: (context, selectedTabIndex, _) {
                     return ExtentsPageView(
                       onPageChanged: (page) {
+                        if (page >= tabIndices.length) return;
                         Bus.instance.fire(
-                          TabChangedEvent(page, TabChangedEventSource.pageView),
+                          TabChangedEvent(
+                            tabIndices[page],
+                            TabChangedEventSource.pageView,
+                          ),
                         );
                       },
                       controller: _pageController,
@@ -1081,13 +1105,15 @@ class _HomeWidgetState extends State<HomeWidget> {
                                 _shouldAlbumsSearchConsumeBackNotifier,
                           ),
                         ),
-                        _buildTabHeroMode(2, selectedTabIndex, _feedTab),
+                        if (!localGalleryMode)
+                          _buildTabHeroMode(2, selectedTabIndex, _feedTab),
                         _buildTabHeroMode(
                           3,
                           selectedTabIndex,
                           SearchTab(
                             shouldConsumeBackNotifier:
                                 _shouldSearchTabSearchConsumeBackNotifier,
+                            isOnSearchTab: isOnSearchTabNotifier,
                           ),
                         ),
                       ],
@@ -1153,6 +1179,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     _selectedFiles,
                     _selectedAlbums,
                     selectedTabIndex: _selectedTabIndex,
+                    showFeed: !localGalleryMode,
                   ),
                 ],
               );
@@ -1241,18 +1268,8 @@ class _HomeWidgetState extends State<HomeWidget> {
         return;
       }
       if (!context.mounted) return;
-      final sheetAction = await showBottomSheetComponent<ChangeLogPageAction>(
-        context: context,
-        builder: (context) => const ChangeLogPage(),
-      );
+      await showChangeLogSheet(context);
       await updateService.hideChangeLog();
-      if (!mounted) {
-        return;
-      }
-      if (sheetAction == ChangeLogPageAction.openReferrals) {
-        if (!context.mounted) return;
-        await openReferralScreen(context, showLoadingDialog: true);
-      }
     } finally {
       _isShowingChangeLog = false;
     }
@@ -1327,6 +1344,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           // ignore: unawaited_futures
           AppNavigationService.instance.pushPage(
             CollectionPage(CollectionWithThumbnail(collection, thumbnail)),
+            useFadeTransition: true,
           );
         }
       }

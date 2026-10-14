@@ -1,0 +1,1 @@
+- Improved cropping after straightening, renamed Crop to Crop & rotate, removed Sharpness and Luminance, added Tint, and corrected Fade.

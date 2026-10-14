@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
           onTap: _emailIsValid ? _submitLoginEmail : null,
         ),
       ),
-      bottomNavigationBar: isKeyboardOpen ? null : _getSignUpPrompt(),
+      bottomNavigationBar: isKeyboardOpen ? null : const _SignUpPrompt(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -126,34 +126,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 24),
             const Expanded(child: DeveloperSettingsTapArea()),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _getSignUpPrompt() {
-    final colors = context.componentColors;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              context.strings.dontHaveAnAccount,
-              style: TextStyles.body.copyWith(color: colors.textLight),
-            ),
-            const SizedBox(width: 4),
-
-            ButtonComponent(
-              label: context.strings.signUp,
-              variant: ButtonComponentVariant.link,
-              size: ButtonComponentSize.small,
-              shouldSurfaceExecutionStates: false,
-              onTap: _goToSignUpPage,
-            ),
           ],
         ),
       ),
@@ -233,11 +205,41 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
     FocusScope.of(context).unfocus();
   }
+}
 
-  Future<void> _goToSignUpPage() async {
-    FocusScope.of(context).unfocus();
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const EmailEntryPage()));
+class _SignUpPrompt extends StatelessWidget {
+  const _SignUpPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.componentColors;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              context.strings.dontHaveAnAccount,
+              style: TextStyles.body.copyWith(color: colors.textLight),
+            ),
+            const SizedBox(width: 4),
+            ButtonComponent(
+              label: context.strings.signUp,
+              variant: ButtonComponentVariant.link,
+              size: ButtonComponentSize.small,
+              shouldSurfaceExecutionStates: false,
+              onTap: () async {
+                FocusScope.of(context).unfocus();
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EmailEntryPage()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

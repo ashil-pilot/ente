@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:dio/dio.dart";
 import "package:ente_components/ente_components.dart";
 import "package:ente_strings/ente_strings.dart";
@@ -12,13 +14,10 @@ import "package:photos/models/file/dummy_file.dart";
 import "package:photos/models/file/file.dart";
 import "package:photos/models/file/file_type.dart";
 import "package:photos/models/file_load_result.dart";
-import "package:photos/models/gallery/justified_layout_strategy.dart";
-import "package:photos/models/gallery/justified_layout_tuning.dart";
 import "package:photos/models/metadata/file_magic.dart";
 import "package:photos/service_locator.dart";
 import "package:photos/settings/local_settings.dart";
 import "package:photos/ui/settings/gallery_settings_screen.dart";
-import "package:photos/ui/settings/justified_layout_tuning_screen.dart";
 import "package:photos/ui/viewer/gallery/component/group/group_header_widget.dart";
 import "package:photos/ui/viewer/gallery/component/group/type.dart";
 import "package:photos/ui/viewer/gallery/gallery.dart";
@@ -52,27 +51,109 @@ void main() {
     try {
       await Configuration.instance.init(preferences);
     } catch (_) {}
-
-    // Construct the delayed flag refresher outside the widget-test fake clock.
-    expect(flagService.internalUser, isTrue);
   });
 
   setUp(() async {
-    await localSettings.setInternalUserDisabled(false);
     await localSettings.setGalleryLayoutType(GalleryLayoutType.grid);
-    await localSettings.setJustifiedLayoutStrategy(
-      JustifiedLayoutStrategy.comfortLarge,
-    );
-    await localSettings.resetFlexLayoutTuning();
-    await localSettings.resetComfortLargeLayoutTuning();
   });
 
-  tearDown(() async {
-    await localSettings.setInternalUserDisabled(false);
+  testWidgets("keeps the current gallery controller after an animated swap", (
+    tester,
+  ) async {
+    final boundariesKey = GlobalKey<GalleryBoundariesProviderState>();
+    late StateSetter replaceGallery;
+    var generation = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: lightThemeData,
+        localizationsDelegates: StringsLocalizations.localizationsDelegates,
+        supportedLocales: StringsLocalizations.supportedLocales,
+        home: GalleryBoundariesProvider(
+          key: boundariesKey,
+          child: GalleryFilesState(
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                replaceGallery = setState;
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Gallery(
+                    key: ValueKey(generation),
+                    asyncLoader: (start, end, {limit, asc}) async =>
+                        FileLoadResult([_dummyFile("handoff")], false),
+                    tagPrefix: "handoff",
+                    enableFileGrouping: false,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final controllers = boundariesKey.currentState!.scrollControllerNotifier;
+    final previous = controllers.value;
+    replaceGallery(() => generation++);
+    await tester.pump();
+    final current = controllers.value;
+    expect(current, isNotNull);
+    expect(current, isNot(same(previous)));
+    await tester.pumpAndSettle();
+    expect(controllers.value, same(current));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets(
-    "both layout menus notify galleries when only the strategy changes",
+    "retries late headers, refreshes pinned dates immediately and stops on disposal",
+    (tester) async {
+      final pinnedHeader = find.byWidgetPredicate(
+        (widget) => widget is GroupHeaderWidget && widget.isPinnedHeader,
+      );
+      for (final disposeWhileLoading in [false, true]) {
+        final load = Completer<FileLoadResult>();
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: lightThemeData,
+            localizationsDelegates: StringsLocalizations.localizationsDelegates,
+            supportedLocales: StringsLocalizations.supportedLocales,
+            home: _galleryHost(
+              Gallery(
+                asyncLoader: (start, end, {limit, asc}) => load.future,
+                tagPrefix: "late_header",
+                groupType: GroupType.day,
+                header: const SizedBox(height: 80),
+                loadingWidget: const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 750));
+        if (!disposeWhileLoading) {
+          load.complete(
+            FileLoadResult(List.generate(100, _justifiedTestFile), false),
+          );
+          await tester.pumpAndSettle();
+          final pinned = tester.widget<PinnedGroupHeader>(
+            find.byType(PinnedGroupHeader),
+          );
+          expect(pinned.headerHeightNotifier.value, isNull);
+          pinned.scrollController.jumpTo(160);
+          await tester.pump();
+          expect(pinnedHeader, findsNothing);
+          await tester.pump(const Duration(milliseconds: 750));
+          expect(pinned.headerHeightNotifier.value, 80);
+          expect(pinnedHeader, findsOneWidget);
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(seconds: 1));
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  testWidgets(
+    "both entry points preserve grouping and the remembered Grid count",
     (tester) async {
       var events = 0;
       final subscription = Bus.instance.on<GalleryLayoutChangedEvent>().listen(
@@ -80,96 +161,88 @@ void main() {
       );
       addTearDown(subscription.cancel);
       for (final quickMenu in [true, false]) {
-        await localSettings.setGalleryLayoutType(GalleryLayoutType.justified);
-        await localSettings.setJustifiedLayoutStrategy(
-          JustifiedLayoutStrategy.comfortLarge,
-        );
+        await localSettings.setGalleryLayoutType(GalleryLayoutType.grid);
+        await localSettings.setPhotoGridSize(5);
+        await localSettings.setGalleryGroupType(GroupType.month);
         events = 0;
         await tester.pumpWidget(
           MaterialApp(
             theme: lightThemeData,
             localizationsDelegates: StringsLocalizations.localizationsDelegates,
             supportedLocales: StringsLocalizations.supportedLocales,
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => quickMenu
-                          ? const Scaffold(body: GalleryLayoutSettings())
-                          : const GallerySettingsScreen(
-                              fromGalleryLayoutSettingsCTA: true,
-                            ),
-                    ),
+            home: quickMenu
+                ? const Scaffold(body: GalleryLayoutSettings())
+                : const GallerySettingsScreen(
+                    fromGalleryLayoutSettingsCTA: true,
                   ),
-                  child: const Text("Open settings"),
-                ),
-              ),
-            ),
           ),
         );
-        await tester.tap(find.text("Open settings"));
         await tester.pumpAndSettle();
-        if (!quickMenu) {
-          await tester.tap(find.text("Layout (i)"));
-          await tester.pumpAndSettle();
+        expect(find.text("Photos per row"), findsOneWidget);
+        final cardTop = tester
+            .getTopLeft(find.byKey(const ValueKey(GalleryLayoutType.grid)))
+            .dy;
+        final groupingTop = tester.getTopLeft(find.text("Group by")).dy;
+        final sheetHeight = quickMenu
+            ? tester.getSize(find.byType(GalleryLayoutSettings)).height
+            : null;
+        expect(find.text("Grid"), findsNothing);
+        expect(find.text("Justified"), findsNothing);
+        await tester.tap(
+          find.byKey(const ValueKey(GalleryLayoutType.justified)),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 120));
+        if (quickMenu) {
+          expect(
+            tester.getSize(find.byType(GalleryLayoutSettings)).height,
+            sheetHeight,
+          );
+          expect(
+            tester
+                .getTopLeft(find.byKey(const ValueKey(GalleryLayoutType.grid)))
+                .dy,
+            cardTop,
+          );
         }
-        expect(find.text("Justified · Comfort"), findsNothing);
-        expect(find.text("Justified · Flex Full Rows"), findsNothing);
-        await tester.tap(find.text("Justified · Flex (i)"));
         await tester.pumpAndSettle();
         expect(
           localSettings.getGalleryLayoutType(),
           GalleryLayoutType.justified,
         );
-        expect(
-          localSettings.getJustifiedLayoutStrategy(),
-          JustifiedLayoutStrategy.flex,
-        );
+        expect(find.text("Photos per row").hitTestable(), findsNothing);
+        if (quickMenu) {
+          expect(
+            tester.getSize(find.byType(GalleryLayoutSettings)).height,
+            sheetHeight,
+          );
+          expect(
+            tester
+                .getTopLeft(find.byKey(const ValueKey(GalleryLayoutType.grid)))
+                .dy,
+            cardTop,
+          );
+          expect(
+            tester.getTopLeft(find.text("Group by")).dy,
+            lessThan(groupingTop),
+          );
+        }
+        expect(localSettings.getPhotoGridSize(), 5);
+        expect(localSettings.getGalleryGroupType(), GroupType.month);
         expect(events, 1);
+        await tester.tap(find.byKey(const ValueKey(GalleryLayoutType.grid)));
+        await tester.pumpAndSettle();
+        expect(find.text("5"), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey("more-photos-per-row")));
+        await tester.pumpAndSettle();
+        expect(localSettings.getPhotoGridSize(), 6);
+        expect(localSettings.getGalleryGroupType(), GroupType.month);
+        expect(events, 3);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pumpAndSettle();
       }
     },
   );
-
-  testWidgets("Flex tuning accepts arbitrary decimals and resets one field", (
-    tester,
-  ) async {
-    var events = 0;
-    final subscription = Bus.instance.on<GalleryLayoutChangedEvent>().listen(
-      (_) => events++,
-    );
-    addTearDown(subscription.cancel);
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: lightThemeData,
-        localizationsDelegates: StringsLocalizations.localizationsDelegates,
-        supportedLocales: StringsLocalizations.supportedLocales,
-        home: const JustifiedLayoutTuningScreen(),
-      ),
-    );
-
-    await tester.tap(find.text("Target height scale").first);
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), "1.1375");
-    await tester.tap(find.text("Save"));
-    await tester.pumpAndSettle();
-
-    expect(localSettings.getFlexLayoutTuning().targetHeightScale, 1.1375);
-    expect(events, 1);
-
-    await tester.tap(find.text("Target height scale").first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Reset to default"));
-    await tester.pumpAndSettle();
-
-    expect(
-      localSettings.getFlexLayoutTuning().targetHeightScale,
-      FlexLayoutTuning.defaults.targetHeightScale,
-    );
-    expect(events, 2);
-  });
 
   testWidgets(
     "layout changes rebuild every mounted gallery without loading files",
@@ -265,7 +338,7 @@ void main() {
     tester,
   ) async {
     await localSettings.setGalleryLayoutType(GalleryLayoutType.grid);
-    await localSettings.setPhotoGridSize(2);
+    await localSettings.setPhotoGridSize(3);
     final galleryKey = GlobalKey<GalleryState>();
     final files = List<EnteFile>.generate(1000, _justifiedTestFile);
 
@@ -292,7 +365,7 @@ void main() {
     await tester.pump();
 
     final oldGroups = galleryKey.currentState!.galleryGroups!;
-    final anchorFile = files[800];
+    final anchorFile = files[804];
     final oldGeometry = oldGroups.getGeometryOfFile(anchorFile)!;
     const rowProgress = 0.72;
     final oldAnchorOffset =
@@ -324,7 +397,7 @@ void main() {
     final justifiedGroups = galleryKey.currentState!.galleryGroups!;
     expect(justifiedGroups.layoutType, GalleryLayoutType.justified);
     final newGeometry = justifiedGroups.getGeometryOfFile(anchorFile)!;
-    expect(newGeometry.rowExtent, lessThan(oldGeometry.rowExtent));
+    expect(newGeometry.rowExtent, isNot(oldGeometry.rowExtent));
     final expectedAnchorOffset =
         newGeometry.rowOffset + newGeometry.rowExtent * rowProgress;
     expect(
@@ -446,7 +519,7 @@ void main() {
         same(anchorFile),
       );
 
-      await localSettings.setPhotoGridSize(2);
+      await localSettings.setPhotoGridSize(3);
       Bus.instance.fire(GalleryLayoutChangedEvent());
       await tester.pumpAndSettle();
 

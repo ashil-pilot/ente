@@ -24,7 +24,7 @@ import {
 
 const green = "#08C225";
 const textBase = spaceText;
-const profileCoverBackground = "#1F1F1F";
+const profileCoverBackground = spaceSurface;
 const profileAvatarSkeletonBackground = spaceSurface;
 export const friendProfileImageViewerBackground = "#000000";
 
@@ -208,7 +208,7 @@ export const ProfileImageViewerScreen: React.FC<
                 background: spaceAppBackground,
                 color: textBase,
                 display: "grid",
-                minHeight: "100svh",
+                minHeight: "var(--space-page-height, 100svh)",
                 overflowX: "hidden",
                 placeItems: { xs: "stretch", sm: "start center" },
             }}
@@ -218,8 +218,8 @@ export const ProfileImageViewerScreen: React.FC<
                     bgcolor: "transparent",
                     boxSizing: "border-box",
                     display: "grid",
-                    gridTemplateRows: "56px minmax(0, 1fr) auto",
-                    minHeight: "100svh",
+                    gridTemplateRows: "68px minmax(0, 1fr) auto",
+                    minHeight: "var(--space-page-height, 100svh)",
                     mx: "auto",
                     width: "100%",
                     "@media (min-width: 600px)": { maxWidth: 390 },
@@ -243,7 +243,7 @@ export const ProfileImageViewerScreen: React.FC<
                         alignItems: "center",
                         display: "grid",
                         gridTemplateColumns: `${spaceTouchTargetSize}px 1fr ${spaceTouchTargetSize}px`,
-                        height: 56,
+                        height: 68,
                         px: 2,
                         width: "100%",
                     }}
@@ -251,7 +251,7 @@ export const ProfileImageViewerScreen: React.FC<
                     <Box
                         component="button"
                         type="button"
-                        aria-label="Back to profile"
+                        aria-label="Back"
                         onClick={onBack}
                         sx={{
                             alignItems: "center",

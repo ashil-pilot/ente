@@ -21,8 +21,13 @@ import {
 } from "@/components/CollectionDialog/styles";
 import { CollectionsSortOptions } from "@/components/CollectionsSortOptions";
 import type { RemotePullOpts } from "@/components/gallery";
-import { StarIcon } from "@/components/icons/StarIcon";
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import {
+    albumFilters,
+    visibleAlbumFilters as getVisibleAlbumFilters,
+    matchesAlbumFilter,
+    type AlbumFilter,
+} from "@/utils/album-filters";
+import { Delete02Icon, StarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -79,59 +84,6 @@ import {
     type ListChildComponentProps,
 } from "react-window";
 
-type AlbumFilter = "all" | "shared" | "received" | "links" | "empty-albums";
-
-const albumFilters: {
-    value: AlbumFilter;
-    label: () => string;
-    title: () => string;
-}[] = [
-    { value: "all", label: () => t("all"), title: () => t("all_albums") },
-    {
-        value: "shared",
-        label: () => t("shared_albums_label"),
-        title: () => t("shared_albums_title"),
-    },
-    {
-        value: "received",
-        label: () => t("received_albums_label"),
-        title: () => t("received_albums_title"),
-    },
-    {
-        value: "links",
-        label: () => t("links_albums_label"),
-        title: () => t("links_albums_title"),
-    },
-    {
-        value: "empty-albums",
-        label: () => t("empty_albums"),
-        title: () => t("empty_albums_title"),
-    },
-];
-
-const matchesAlbumFilter = (
-    cs: CollectionSummary,
-    albumFilter: AlbumFilter,
-) => {
-    switch (albumFilter) {
-        case "all":
-            return true;
-        case "shared":
-            return (
-                !cs.attributes.has("sharedIncoming") &&
-                !cs.attributes.has("quickLink") &&
-                (cs.attributes.has("sharedOutgoing") ||
-                    cs.attributes.has("sharedViaLink"))
-            );
-        case "received":
-            return cs.attributes.has("sharedIncoming");
-        case "links":
-            return cs.attributes.has("quickLink");
-        case "empty-albums":
-            return isBulkDeletableEmptyAlbum(cs);
-    }
-};
-
 interface AllAlbums {
     open: boolean;
     onClose: () => void;
@@ -140,6 +92,7 @@ interface AllAlbums {
     collectionsSortBy: CollectionsSortBy;
     onChangeCollectionsSortBy: (by: CollectionsSortBy) => void;
     isInHiddenSection: boolean;
+    isInArchiveSection: boolean;
     canCreateAlbum: boolean;
     onRemotePull: (opts?: RemotePullOpts) => Promise<void>;
 }
@@ -152,12 +105,14 @@ export const AllAlbums: React.FC<AllAlbums> = ({
     collectionsSortBy,
     onChangeCollectionsSortBy,
     isInHiddenSection,
+    isInArchiveSection,
     canCreateAlbum,
     onRemotePull,
 }) => {
     const fullScreen = useMediaQuery(collectionDialogFullScreenQuery);
     const [searchTerm, setSearchTerm] = useState("");
-    const [albumFilter, setAlbumFilter] = useState<AlbumFilter>("all");
+    const [albumFilter, setAlbumFilter] = useState<AlbumFilter>("ente");
+    const showAlbumFilters = !isInHiddenSection && !isInArchiveSection;
     const { showMiniDialog } = useBaseContext();
     const { showNotification } = usePhotosAppContext();
     const { show: showAlbumNameInput, props: albumNameInputVisibilityProps } =
@@ -170,7 +125,7 @@ export const AllAlbums: React.FC<AllAlbums> = ({
 
     const handleExited = () => {
         setSearchTerm("");
-        setAlbumFilter("all");
+        setAlbumFilter("ente");
     };
 
     const onCollectionClick = (collectionID: number) => {
@@ -209,22 +164,14 @@ export const AllAlbums: React.FC<AllAlbums> = ({
     const hasEnoughEmptyAlbums = emptyAlbumCandidates.length >= 3;
 
     const showDeleteEmptyAlbums =
-        !isInHiddenSection &&
+        showAlbumFilters &&
         hasEnoughEmptyAlbums &&
         albumFilter == "empty-albums" &&
         !searchTerm.trim();
 
     const visibleAlbumFilters = useMemo(
-        () =>
-            albumFilters.filter(({ value }) => {
-                if (value == "all") return true;
-                if (value == "empty-albums") return hasEnoughEmptyAlbums;
-
-                return collectionSummaries.some((cs) =>
-                    matchesAlbumFilter(cs, value),
-                );
-            }),
-        [collectionSummaries, hasEnoughEmptyAlbums],
+        () => getVisibleAlbumFilters(collectionSummaries),
+        [collectionSummaries],
     );
 
     const activeFilterTitle = (
@@ -234,7 +181,7 @@ export const AllAlbums: React.FC<AllAlbums> = ({
 
     useEffect(() => {
         if (!visibleAlbumFilters.some(({ value }) => value == albumFilter)) {
-            setAlbumFilter("all");
+            setAlbumFilter("ente");
         }
     }, [albumFilter, visibleAlbumFilters]);
 
@@ -324,12 +271,11 @@ export const AllAlbums: React.FC<AllAlbums> = ({
     };
 
     const filteredCollectionSummaries = useMemo(() => {
-        const albumFilteredCollectionSummaries =
-            isInHiddenSection || albumFilter == "all"
-                ? collectionSummaries
-                : collectionSummaries.filter((cs) =>
-                      matchesAlbumFilter(cs, albumFilter),
-                  );
+        const albumFilteredCollectionSummaries = !showAlbumFilters
+            ? collectionSummaries
+            : collectionSummaries.filter((cs) =>
+                  matchesAlbumFilter(cs, albumFilter),
+              );
 
         if (!searchTerm.trim()) {
             return albumFilteredCollectionSummaries;
@@ -338,18 +284,18 @@ export const AllAlbums: React.FC<AllAlbums> = ({
         return albumFilteredCollectionSummaries.filter((cs) =>
             cs.name.toLowerCase().includes(searchLower),
         );
-    }, [albumFilter, collectionSummaries, isInHiddenSection, searchTerm]);
+    }, [albumFilter, collectionSummaries, showAlbumFilters, searchTerm]);
 
     const showCreateButton = useMemo(() => {
         if (!canCreateAlbum) return false;
-        if (!isInHiddenSection && albumFilter != "all") return false;
+        if (showAlbumFilters && albumFilter != "ente") return false;
         if (!searchTerm.trim()) {
             return true;
         }
         const searchLower = searchTerm.toLowerCase();
         const createText = t("new_album").toLowerCase();
         return createText.includes(searchLower);
-    }, [albumFilter, canCreateAlbum, isInHiddenSection, searchTerm]);
+    }, [albumFilter, canCreateAlbum, showAlbumFilters, searchTerm]);
 
     return (
         <>
@@ -370,7 +316,9 @@ export const AllAlbums: React.FC<AllAlbums> = ({
                             <Typography sx={titleSx}>
                                 {isInHiddenSection
                                     ? t("all_hidden_albums")
-                                    : activeFilterTitle}
+                                    : isInArchiveSection
+                                      ? t("section_archive")
+                                      : activeFilterTitle}
                             </Typography>
                             <Typography sx={bodyMutedSx}>
                                 {t("albums_count", {
@@ -394,7 +342,7 @@ export const AllAlbums: React.FC<AllAlbums> = ({
                             </IconButton>
                         </Stack>
                     </Stack>
-                    {!isInHiddenSection && visibleAlbumFilters.length > 1 && (
+                    {showAlbumFilters && visibleAlbumFilters.length > 1 && (
                         <ToggleButtonGroup
                             exclusive
                             value={albumFilter}
@@ -823,7 +771,13 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
                     }}
                 >
                     {isFavorite && (
-                        <StarIcon sx={{ fontSize: 20, color: "white" }} />
+                        <HugeiconsIcon
+                            icon={StarIcon}
+                            size={20}
+                            color="white"
+                            fill="currentColor"
+                            aria-hidden
+                        />
                     )}
                     {isPinned && (
                         <PushPinIcon sx={{ fontSize: 20, color: "white" }} />

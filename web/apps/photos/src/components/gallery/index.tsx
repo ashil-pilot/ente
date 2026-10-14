@@ -1,6 +1,9 @@
 // TODO: Move this code back into gallery.tsx.
 
-import { EnableML, FaceConsent } from "@/components/sidebar/MLSettings";
+import {
+    EnableML,
+    FaceConsent,
+} from "@/components/sidebar/preferences/MLSettings";
 import { useWrapAsyncOperation } from "@/components/utils/use-wrap-async";
 import CheckIcon from "@mui/icons-material/Check";
 import SortIcon from "@mui/icons-material/Sort";

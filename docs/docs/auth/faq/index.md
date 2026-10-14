@@ -23,6 +23,16 @@ description: Frequently asked questions about Ente Auth
 4. Enter the account name, issuer, and secret (setup key).
 5. Save and verify the generated code.
 
+### What should I enter in the Secret field when adding a code manually? {#manual-secret-field}
+
+Enter the two-factor setup key provided by the service you are securing. It is not your login password or Ente password.
+
+1. On the service's two-factor setup page, look for **Show setup key** or **Can't scan?**
+2. In Ente Auth, choose **Enter details manually** and enter that setup key in **Secret**.
+3. Save the entry and enter the code Ente Auth generates on the service's setup page to verify it.
+
+Keep the setup key private.
+
 ### Why does Ente Auth say "No QR code found in image"? {#qr-code-not-scanning}
 
 If the QR code is sharp and high-resolution but Ente Auth still won't scan it, the most likely cause is that the service is using a QR format Ente Auth doesn't recognise. Some sites embed proprietary or non-standard data instead of the standard `otpauth://` URI that authenticator apps expect.
@@ -39,6 +49,14 @@ If the service only offers a QR code and no setup key, check its security settin
 ### How secure is Ente Auth?
 
 All codes you backup via Ente is stored with end-to-end encryption. This means only you can access your codes. Our apps are open source and our cryptography has been externally audited.
+
+### Where are my 2FA codes stored? {#where-codes-are-stored}
+
+When you use Ente Auth with an account, your codes are encrypted on your device before they sync. Ente's servers store only encrypted copies of your codes and master key. They cannot read your codes or password.
+
+When you sign in, your device uses your password to unlock the master key locally. The key is then protected by your device's secure storage. Keep your recovery key safe so you can regain access if you forget your password.
+
+If you choose **Use without backups**, your codes stay on that device and are not synced to Ente. Make an [encrypted export or local backup](/auth/migration/export) before changing devices or resetting it.
 
 ### How can I delete or edit codes?
 
@@ -112,11 +130,15 @@ You can delete your account at any time by using the "Delete account" option in 
 
 Note that Ente Photos, Ente Auth, and Ente Locker data will be deleted when you delete your account (irrespective of which app you delete it from) since Photos, Auth, and Locker use the same underlying account.
 
+If you want to stop using only one app, see [Will deleting my Ente Auth or Locker account also delete my Photos account?](/photos/faq/security-and-privacy#shared-account-deletion).
+
 To know details of how your data is deleted, including when you delete your account, please see https://ente.com/blog/how-ente-deletes-data/.
 
-### Can Ente Auth run fully offline with no connection to any server? {#auth-fully-offline}
+### Can Ente Auth be used offline? {#auth-fully-offline}
 
-Yes. Choose **Use without backups** to use Auth entirely offline, with no account and no connection to Ente's servers. Learn more in [Using offline mode safely](/auth/features/offline-mode).
+Yes. Choose **Use without backups** to use Ente Auth offline without an account. Your codes are stored locally and are not synced or backed up to Ente.
+
+Desktop and direct-download Android builds may still contact Ente to check for app updates when launched, including in offline mode. Learn more in [Using offline mode safely](/auth/features/offline-mode).
 
 ### Will I lose my offline codes if I create an account later?
 

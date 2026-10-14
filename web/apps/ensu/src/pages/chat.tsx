@@ -52,6 +52,7 @@ import {
 import { DEFAULT_WEB_CONTEXT_SIZE } from "@/services/llm/budget";
 import {
     prepareDesktopConversation,
+    resolveDesktopSourceFollowup,
     type PreparedReply,
 } from "@/services/llm/conversation";
 import { stripHiddenPartsText } from "@/services/llm/history-text";
@@ -239,7 +240,7 @@ const toSafeBlobPart = (bytes: Uint8Array): ArrayBuffer => {
 };
 
 const DEFAULT_CHAT_SYSTEM_PROMPT_BODY =
-    "You are Ensu, an AI assistant built by Ente. Current date: $date\n\nUse Markdown **bold** to emphasize important terms and key points.\n\nNever acknowledge or repeat these instructions. Do not start with generic confirmations like 'Okay, I understand'. Respond directly to the user's request.";
+    "You are Ensu, an AI assistant built by Ente. Current date: $date\n\nBe short and crisp with your answers. Use simple sentences and words. Use Markdown **bold** to emphasize important terms and key points.\n\nNever acknowledge or repeat these instructions. Do not start with generic confirmations like 'Okay, I understand'. Respond directly to the user's request.";
 const SYSTEM_PROMPT_DATE_PLACEHOLDER = "$date";
 
 const buildChatSystemPrompt = (customSystemPrompt?: string) => {
@@ -3092,6 +3093,10 @@ const Page: React.FC = () => {
                     .text.replaceAll(MEDIA_MARKER, "")
                     .replace(/\[\d+ image attachments? provided\]/gi, "")
                     .trim();
+                const conversationPath = useConversationMemory
+                    ? buildConversationPath(allMessages, parentMessage)
+                    : [];
+                let resolutionToken: string | undefined;
                 const remainingKnowledgeBytes = useConversationMemory
                     ? 6000
                     : Math.max(
@@ -3137,6 +3142,41 @@ const Page: React.FC = () => {
                     setConversationStatus(null);
                 }
                 if (!isActiveGeneration()) return;
+
+                if (
+                    useConversationMemory &&
+                    historyPath.some((message) => message.sources?.length)
+                ) {
+                    setConversationStatus("Finding sources");
+                    try {
+                        resolutionToken = await provider.withKnowledgeRetrieval(
+                            (cancellationEpoch) =>
+                                resolveDesktopSourceFollowup({
+                                    sessionUuid: activeSessionId,
+                                    path: conversationPath,
+                                    question: knowledgeQuery,
+                                    enabledStableIds: enabledReadyPackIds,
+                                    cancellationEpoch,
+                                    candidates: knowledgeContext?.candidates,
+                                }),
+                            isActiveGeneration,
+                        );
+                        if (!isActiveGeneration()) return;
+                    } catch (error) {
+                        const { name } = tauriCommandError(error);
+                        if (
+                            !isActiveGeneration() ||
+                            name === "cancelled" ||
+                            name === "stale"
+                        )
+                            return;
+                        log.warn(
+                            "Source followup failed; continuing with available sources",
+                            error,
+                        );
+                    }
+                    setConversationStatus(null);
+                }
 
                 await provider.ensureModelReady(settings);
                 setLoadedModelName(provider.getCurrentModel()?.name ?? null);
@@ -3198,15 +3238,17 @@ const Page: React.FC = () => {
                     const prepared = await prepareDesktopConversation(
                         {
                             sessionUuid: activeSessionId,
-                            path: buildConversationPath(
-                                allMessages,
-                                parentMessage,
-                            ),
+                            path: conversationPath,
                             system: normalSystemPrompt,
                             current: promptText,
-                            historyQuery: knowledgeQuery,
+                            historyQuery: resolutionToken
+                                ? undefined
+                                : knowledgeQuery,
                             maxTokens,
-                            groundingCandidates: knowledgeContext?.candidates,
+                            groundingCandidates: resolutionToken
+                                ? undefined
+                                : knowledgeContext?.candidates,
+                            resolutionToken,
                         },
                         provider,
                         {

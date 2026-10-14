@@ -1,0 +1,1 @@
+- Updated the map with rounded photo markers and clearer photo counts.
