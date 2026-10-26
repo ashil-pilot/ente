@@ -154,6 +154,8 @@ class _VideoWidgetState extends State<VideoWidget> {
     final videoWidget = Video(
       controller: widget.controller,
       controls: NoVideoControls,
+      // The shared service owns wake locks across photo/video transitions.
+      wakelock: false,
     );
 
     return Stack(

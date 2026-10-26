@@ -8,19 +8,22 @@ enum WakeLockFor {
   largeBackupStandbyScreen,
   albumSlideshow,
   mlProgressBanner,
+  memoryViewer,
 }
 
 class EnteWakeLockService {
-  final Set<WakeLockFor> _activeWakeLocks = {};
+  final Set<(WakeLockFor, Object?)> _activeWakeLocks = {};
 
   void updateWakeLock({
     required bool enable,
     required WakeLockFor wakeLockFor,
+    Object? owner,
   }) {
+    final request = (wakeLockFor, owner);
     if (enable) {
-      _activeWakeLocks.add(wakeLockFor);
+      _activeWakeLocks.add(request);
     } else {
-      _activeWakeLocks.remove(wakeLockFor);
+      _activeWakeLocks.remove(request);
     }
     WakelockPlus.toggle(enable: _activeWakeLocks.isNotEmpty);
   }

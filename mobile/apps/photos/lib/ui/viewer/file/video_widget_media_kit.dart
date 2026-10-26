@@ -72,6 +72,7 @@ class _VideoWidgetMediaKitState extends State<VideoWidgetMediaKit>
   late StreamSubscription<PauseVideoEvent> pauseVideoSubscription;
   late StreamSubscription<ResumeVideoEvent> resumeVideoSubscription;
   StreamSubscription<VideoMuteChangedEvent>? _muteSubscription;
+  StreamSubscription<bool>? _wakeLockSubscription;
   bool isGuestView = false;
   late final StreamSubscription<GuestViewEvent> _guestViewEventSubscription;
   bool _isGuestView = false;
@@ -148,10 +149,8 @@ class _VideoWidgetMediaKitState extends State<VideoWidgetMediaKit>
       },
     );
 
-    wakeLockService.updateWakeLock(
-      enable: true,
-      wakeLockFor: WakeLockFor.videoPlayback,
-    );
+    _setWakeLock(true);
+    _wakeLockSubscription = player.stream.playing.listen(_setWakeLock);
   }
 
   @override
@@ -236,6 +235,7 @@ class _VideoWidgetMediaKitState extends State<VideoWidgetMediaKit>
 
   @override
   void dispose() {
+    _wakeLockSubscription?.cancel();
     _videoLoad++;
     _progressive?.dispose().ignore();
     _progressive = null;
@@ -254,11 +254,17 @@ class _VideoWidgetMediaKitState extends State<VideoWidgetMediaKit>
     }
     player.dispose();
     _transformationController.dispose();
-    wakeLockService.updateWakeLock(
-      enable: false,
-      wakeLockFor: WakeLockFor.videoPlayback,
-    );
+    _setWakeLock(false);
     super.dispose();
+  }
+
+  void _setWakeLock(bool enable) {
+    if (widget.isFromMemories) return;
+    wakeLockService.updateWakeLock(
+      enable: enable,
+      wakeLockFor: WakeLockFor.videoPlayback,
+      owner: this,
+    );
   }
 
   void _onInteractionLockChanged(bool shouldLock) {

@@ -1,0 +1,1 @@
+- Keep the screen awake while viewing memories.

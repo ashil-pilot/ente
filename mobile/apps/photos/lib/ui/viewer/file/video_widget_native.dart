@@ -190,10 +190,7 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
           });
     }
 
-    wakeLockService.updateWakeLock(
-      enable: true,
-      wakeLockFor: WakeLockFor.videoPlayback,
-    );
+    _setWakeLock(true);
   }
 
   @override
@@ -354,10 +351,7 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
     _seekController.dispose();
     _debouncer.cancelDebounceTimer();
     _transformationController.dispose();
-    wakeLockService.updateWakeLock(
-      enable: false,
-      wakeLockFor: WakeLockFor.videoPlayback,
-    );
+    _setWakeLock(false);
     super.dispose();
   }
 
@@ -863,18 +857,16 @@ class _VideoWidgetNativeState extends State<VideoWidgetNative>
   }
 
   void _handleWakeLockOnPlaybackChanges() {
-    final playbackStatus = _controller?.playbackStatus;
-    if (playbackStatus == PlaybackStatus.playing) {
-      wakeLockService.updateWakeLock(
-        enable: true,
-        wakeLockFor: WakeLockFor.videoPlayback,
-      );
-    } else {
-      wakeLockService.updateWakeLock(
-        enable: false,
-        wakeLockFor: WakeLockFor.videoPlayback,
-      );
-    }
+    _setWakeLock(_controller?.playbackStatus == PlaybackStatus.playing);
+  }
+
+  void _setWakeLock(bool enable) {
+    if (widget.isFromMemories) return;
+    wakeLockService.updateWakeLock(
+      enable: enable,
+      wakeLockFor: WakeLockFor.videoPlayback,
+      owner: this,
+    );
   }
 
   Widget _getLoadingWidget() {

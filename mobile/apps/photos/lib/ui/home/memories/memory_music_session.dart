@@ -9,6 +9,7 @@ import "package:photos/services/memories/just_audio_memory_music_player.dart";
 import "package:photos/services/memories/memory_music_controller.dart";
 import "package:photos/services/memories/memory_music_selector.dart";
 import "package:photos/services/memories/memory_music_service.dart";
+import "package:photos/ui/home/memories/memory_wake_lock.dart";
 
 class MemoryMusicSession extends StatefulWidget {
   final List<String> memoryIDs;
@@ -119,7 +120,7 @@ class _MemoryMusicSessionState extends State<MemoryMusicSession>
       isVideoMuted: _isVideoMuted,
       toggleMusicMuted: _toggleMusicMuted,
       toggleVideoMuted: _toggleVideoMuted,
-      child: widget.child,
+      child: MemoryWakeLock(service: wakeLockService, child: widget.child),
     );
   }
 }
