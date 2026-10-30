@@ -624,7 +624,23 @@ func (repo *CollectionRepository) RepairDeletedCollectionShare(ctx context.Conte
 	return updated, stacktrace.Propagate(err, "")
 }
 
+var errUnshareFilesChanged = errors.New("collection contributions changed while unsharing")
+
 func (repo *CollectionRepository) UnShareContext(
+	ctx context.Context,
+	collectionID int64,
+	toUserID int64,
+) (ente.CollectionShareStatus, error) {
+	for range 5 {
+		status, err := repo.unshareContext(ctx, collectionID, toUserID)
+		if !errors.Is(err, errUnshareFilesChanged) {
+			return status, err
+		}
+	}
+	return "", stacktrace.Propagate(errUnshareFilesChanged, "unshare retry limit exceeded")
+}
+
+func (repo *CollectionRepository) unshareContext(
 	ctx context.Context,
 	collectionID int64,
 	toUserID int64,
@@ -674,6 +690,16 @@ func (repo *CollectionRepository) UnShareContext(
 	}
 	if err != nil {
 		return "", stacktrace.Propagate(err, "")
+	}
+	var newContributions bool
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM collection_files
+		WHERE collection_id = $1 AND f_owner_id = $2 AND is_deleted = FALSE
+			AND NOT (file_id = ANY($3)))`, collectionID, toUserID, pq.Array(fileIDs)).Scan(&newContributions); err != nil {
+		return "", stacktrace.Propagate(err, "")
+	}
+	if newContributions {
+		// Release the parent lock before acquiring newly committed file memberships.
+		return "", errUnshareFilesChanged
 	}
 	if !isDeleted {
 		status = ente.CollectionUnshared
