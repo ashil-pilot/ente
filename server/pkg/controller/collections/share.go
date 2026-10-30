@@ -356,6 +356,9 @@ func (c *CollectionController) JoinViaLink(ctx *gin.Context, req ente.JoinCollec
 	if err != nil {
 		return response, stacktrace.Propagate(err, "")
 	}
+	if app, ok := auth.GetAuthenticatedApp(ctx); ok && collection.App != string(app) {
+		return response, stacktrace.Propagate(ente.ErrPermissionDenied, "collection app mismatch")
+	}
 	if collection.IsDeleted {
 		return response, ente.ErrCollectionDeleted
 	}
