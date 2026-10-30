@@ -271,6 +271,19 @@ func (repo *CollectionRepository) JoinPublicCollection(ctx context.Context, coll
 		if !containsInvitationID(changed, collectionID) {
 			changed = append(changed, collectionID)
 		}
+	} else if role == ente.COLLABORATOR {
+		result, err := tx.ExecContext(ctx, `UPDATE collection_shares SET role_type = 'COLLABORATOR'
+			WHERE collection_id = $1 AND to_user_id = $2 AND role_type = 'VIEWER'`, collectionID, userID)
+		if err != nil {
+			return nil, err
+		}
+		updated, err := result.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+		if updated > 0 {
+			changed = append(changed, collectionID)
+		}
 	}
 	if err := acceptInvitationRows(ctx, tx, userID, changed, updationTime); err != nil {
 		return nil, err
