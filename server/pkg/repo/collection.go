@@ -635,6 +635,28 @@ func (repo *CollectionRepository) UnShareContext(
 		return "", stacktrace.Propagate(err, "")
 	}
 	defer tx.Rollback()
+	// File mutations lock memberships before collections.
+	rows, err := tx.QueryContext(ctx, `SELECT file_id, updation_time FROM collection_files
+		WHERE collection_id = $1 AND f_owner_id = $2 AND is_deleted = FALSE
+		ORDER BY file_id FOR UPDATE`, collectionID, toUserID)
+	if err != nil {
+		return "", stacktrace.Propagate(err, "")
+	}
+	fileIDs := make([]int64, 0)
+	for rows.Next() {
+		var fileID, fileUpdationTime int64
+		if err := rows.Scan(&fileID, &fileUpdationTime); err != nil {
+			rows.Close()
+			return "", stacktrace.Propagate(err, "")
+		}
+		fileIDs = append(fileIDs, fileID)
+		updationTime = max(updationTime, fileUpdationTime+1)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return "", stacktrace.Propagate(err, "")
+	}
 	parents, err := lockInvitationCollections(ctx, tx, []int64{collectionID})
 	if err != nil {
 		return "", err
@@ -666,8 +688,7 @@ func (repo *CollectionRepository) UnShareContext(
 
 	_, err = tx.ExecContext(ctx, `UPDATE collection_files
 		SET is_deleted = TRUE, updation_time = $1
-		WHERE collection_id = $2 AND f_owner_id = $3 AND is_deleted = FALSE`,
-		updationTime, collectionID, toUserID)
+		WHERE collection_id = $2 AND file_id = ANY($3)`, updationTime, collectionID, pq.Array(fileIDs))
 	if err != nil {
 		return "", stacktrace.Propagate(err, "")
 	}

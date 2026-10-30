@@ -1,9 +1,11 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/ente/museum/ente"
 	"github.com/ente/museum/internal/testutil"
@@ -279,6 +281,85 @@ func TestInvitationSyncRemovesPreviousAlbumAndPreservesTimestampTies(t *testing.
 		if len(collection.Sharees) != 2 {
 			t.Fatalf("pagination truncated sharees: %+v", collection.Sharees)
 		}
+	}
+}
+
+func TestUnsharePreservesMembershipBeforeCollectionLockOrder(t *testing.T) {
+	repository, db := setupInvitationTest(t)
+	collectionID := insertObjectTestCollection(t, db, 1)
+	insertObjectTestCollectionShare(t, db, collectionID, 1, 2)
+	fileID := insertObjectTestFile(t, db, 2)
+	if _, err := db.Exec(`INSERT INTO collection_files
+		(collection_id, file_id, encrypted_key, key_decryption_nonce, updation_time, c_owner_id, f_owner_id)
+		VALUES ($1, $2, 'key', 'nonce', 1, 1, 2)`, collectionID, fileID); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	mutation, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mutation.Rollback()
+	var mutationPID int
+	if err := mutation.QueryRowContext(ctx, `SELECT pg_backend_pid()`).Scan(&mutationPID); err != nil {
+		t.Fatal(err)
+	}
+	// Pause a file mutation between its membership and collection updates.
+	const cursor int64 = 9000000000000000
+	if _, err := mutation.ExecContext(ctx, `UPDATE collection_files SET action = $1, updation_time = $4
+		WHERE collection_id = $2 AND file_id = $3`, ente.ActionRemove, collectionID, fileID, cursor); err != nil {
+		t.Fatal(err)
+	}
+	var status ente.CollectionShareStatus
+	var unshareErr error
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		status, unshareErr = repository.UnShareContext(ctx, collectionID, 2)
+	}()
+	defer func() {
+		cancel()
+		_ = mutation.Rollback()
+		<-done
+	}()
+	for {
+		var waiting bool
+		if err := db.QueryRowContext(ctx, `SELECT EXISTS (
+			SELECT 1 FROM pg_stat_activity WHERE datname = current_database()
+			AND $1 = ANY(pg_blocking_pids(pid))
+		)`, mutationPID).Scan(&waiting); err != nil {
+			t.Fatal(err)
+		}
+		if waiting {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if _, err := mutation.ExecContext(ctx, `UPDATE collections SET updation_time = $1
+		WHERE collection_id = $2`, cursor, collectionID); err != nil {
+		t.Fatalf("file mutation could not finish while unsharing waited: %v", err)
+	}
+	if err := mutation.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	<-done
+	if unshareErr != nil || status != ente.CollectionUnshared {
+		t.Fatalf("UnShareContext() = %s, %v", status, unshareErr)
+	}
+	assertInvitationState(t, db, collectionID, 2, ente.CollectionAccepted, true, 0)
+	if state := readCollectionMembershipState(t, db, collectionID, fileID); !state.isDeleted || state.updationTime <= cursor {
+		t.Fatalf("unsharing did not produce a file tombstone after the concurrent mutation: %+v", state)
+	}
+	var timestampsMatch bool
+	if err := db.QueryRow(`SELECT cs.updation_time = c.updation_time
+		FROM collection_shares cs JOIN collections c USING (collection_id)
+		WHERE cs.collection_id = $1 AND cs.to_user_id = 2`, collectionID).Scan(&timestampsMatch); err != nil {
+		t.Fatal(err)
+	}
+	if !timestampsMatch {
+		t.Fatal("share and collection sync timestamps differ")
 	}
 }
 
